@@ -1,1 +1,1 @@
-- **ORM:** [.cursor/skills/drizzle-orm/SKILL.md](.cursor/skills/drizzle-orm/SKILL.md) — Drizzle schemas, db token, repository adapters
+- **ORM:** [.agents/skills/drizzle-orm/SKILL.md](.agents/skills/drizzle-orm/SKILL.md) — Drizzle setup, adapters, queries/N+1, migrations, transactions

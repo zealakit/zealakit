@@ -1,1 +1,1 @@
-- **Forms:** [.cursor/skills/hookform-zod/SKILL.md](.cursor/skills/hookform-zod/SKILL.md) — schema factories + feature form hooks
+- **Forms:** [.agents/skills/hookform-zod/SKILL.md](.agents/skills/hookform-zod/SKILL.md) — schema factories + feature form hooks

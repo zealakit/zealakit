@@ -136,7 +136,7 @@ function verifyTarballContents(tarballPath: string): void {
     "package/recipes/eslint/overlays/next/eslint.config.js",
     "package/recipes/eslint/overlays/nest/eslint.config.js",
     "package/recipes/eslint/overlays/hono/eslint.config.js",
-    "package/recipes/hookform-zod/.cursor/skills/hookform-zod/SKILL.md",
+    "package/recipes/hookform-zod/.agents/skills/hookform-zod/SKILL.md",
     "package/recipes/antd/overlays/vite-react/src/app/antd-theme-provider.tsx",
     "package/recipes/antd/overlays/vite-react/src/configs/theme.ts",
     "package/recipes/antd/overlays/next/src/app/antd-theme-provider.tsx",
@@ -155,22 +155,22 @@ function verifyTarballContents(tarballPath: string): void {
     "package/recipes/shadcn-ui/overlays/vite-react/components.json",
     "package/recipes/storybook/overlays/vite-react/.storybook/main.ts",
     "package/recipes/storybook/overlays/next/.storybook/main.ts",
-    "package/recipes/storybook/.cursor/skills/storybook/SKILL.md",
+    "package/recipes/storybook/.agents/skills/storybook/SKILL.md",
     "package/templates/next/package.json",
     "package/templates/nest/package.json",
-    "package/templates/nest/.cursor/skills/structure-ddd/SKILL.md",
+    "package/templates/nest/.agents/skills/structure-ddd/SKILL.md",
     "package/templates/hono/package.json",
-    "package/templates/hono/.cursor/skills/structure-ddd/SKILL.md",
-    "package/templates/hono/.cursor/skills/hono/SKILL.md",
+    "package/templates/hono/.agents/skills/structure-ddd/SKILL.md",
+    "package/templates/hono/.agents/skills/hono/SKILL.md",
     "package/recipes/type-orm/overlays/nest/src/infrastructure/persistence/typeorm/typeorm.module.ts",
     "package/recipes/type-orm/overlays/hono/src/infrastructure/persistence/typeorm/typeorm.data-source.ts",
     "package/recipes/mikro-orm/overlays/nest/src/infrastructure/persistence/mikro-orm/mikro-orm.module.ts",
     "package/recipes/mikro-orm/overlays/hono/src/infrastructure/persistence/mikro-orm/mikro-orm.bootstrap.ts",
     "package/recipes/drizzle-orm/overlays/nest/src/infrastructure/persistence/drizzle/drizzle.module.ts",
     "package/recipes/drizzle-orm/overlays/hono/src/infrastructure/persistence/drizzle/drizzle.bootstrap.ts",
-    "package/recipes/type-orm/.cursor/skills/type-orm/SKILL.md",
-    "package/recipes/mikro-orm/.cursor/skills/mikro-orm/SKILL.md",
-    "package/recipes/drizzle-orm/.cursor/skills/drizzle-orm/SKILL.md",
+    "package/recipes/type-orm/.agents/skills/type-orm/SKILL.md",
+    "package/recipes/mikro-orm/.agents/skills/mikro-orm/SKILL.md",
+    "package/recipes/drizzle-orm/.agents/skills/drizzle-orm/SKILL.md",
   ];
 
   for (const prefix of requiredPrefixes) {
@@ -238,17 +238,38 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/hookform-zod/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/hookform-zod/SKILL.md")),
     "hookform-zod recipe should copy the forms skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/rules/hookform-zod.mdc")),
+    pathExists(path.join(appDir, ".agents/rules/hookform-zod.mdc")),
     "hookform-zod recipe should copy the forms rule",
     errors,
   );
+  {
+    const cursorPath = path.join(appDir, ".cursor");
+    assert(pathExists(cursorPath), "scaffolded app should have .cursor", errors);
+    if (pathExists(cursorPath)) {
+      assert(
+        fs.lstatSync(cursorPath).isSymbolicLink(),
+        ".cursor should be a symlink to .agents",
+        errors,
+      );
+      assert(
+        fs.readlinkSync(cursorPath) === ".agents",
+        ".cursor symlink target should be .agents",
+        errors,
+      );
+      assert(
+        pathExists(path.join(appDir, ".cursor/skills/hookform-zod/SKILL.md")),
+        ".cursor symlink should resolve skills",
+        errors,
+      );
+    }
+  }
   assert(
-    !pathExists(path.join(appDir, ".cursor/skills/project-structure/forms.md")),
+    !pathExists(path.join(appDir, ".agents/skills/project-structure/forms.md")),
     "forms.md should not live under project-structure",
     errors,
   );
@@ -261,7 +282,7 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/hookform-zod/SKILL.md"),
+      agents.includes(".agents/skills/hookform-zod/SKILL.md"),
       "AGENTS.md should link the hookform-zod skill",
       errors,
     );
@@ -270,7 +291,7 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
   if (pathExists(path.join(appDir, "CLAUDE.md"))) {
     const claude = fs.readFileSync(path.join(appDir, "CLAUDE.md"), "utf-8");
     assert(
-      claude.includes(".cursor/skills/hookform-zod/SKILL.md"),
+      claude.includes(".agents/skills/hookform-zod/SKILL.md"),
       "CLAUDE.md should link the hookform-zod skill",
       errors,
     );
@@ -287,24 +308,10 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
     errors,
   );
   assert(
-    pathExists(path.join(appDir, "pnpm-workspace.yaml")),
-    "scaffolded app should ship pnpm-workspace.yaml allowBuilds",
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "scaffolded app should not ship pnpm-workspace.yaml (package-manager agnostic)",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes("esbuild: true"),
-      "vite-react allowBuilds should approve esbuild",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@biomejs/biome": true') ||
-        pnpmWorkspace.includes("@biomejs/biome: true"),
-      "biome recipe should approve @biomejs/biome builds",
-      errors,
-    );
-  }
 
   if (pathExists(path.join(appDir, "biome.json"))) {
     const biomeConfig = JSON.parse(fs.readFileSync(path.join(appDir, "biome.json"), "utf-8")) as {
@@ -427,7 +434,7 @@ async function testCase3EslintStandalone(tarballPath: string): Promise<TestCaseR
     errors,
   );
   assert(
-    !pathExists(path.join(appDir, ".cursor/skills/hookform-zod/SKILL.md")),
+    !pathExists(path.join(appDir, ".agents/skills/hookform-zod/SKILL.md")),
     "hookform-zod skill should NOT exist when the form recipe is not selected",
     errors,
   );
@@ -435,7 +442,7 @@ async function testCase3EslintStandalone(tarballPath: string): Promise<TestCaseR
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      !agents.includes(".cursor/skills/hookform-zod/SKILL.md"),
+      !agents.includes(".agents/skills/hookform-zod/SKILL.md"),
       "AGENTS.md should not link hookform-zod when the form recipe is not selected",
       errors,
     );
@@ -577,7 +584,7 @@ async function testCase7AntdPass(tarballPath: string): Promise<TestCaseResult> {
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/antd/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/antd/SKILL.md")),
     "antd recipe should copy the UI kit skill",
     errors,
   );
@@ -608,7 +615,7 @@ async function testCase7AntdPass(tarballPath: string): Promise<TestCaseResult> {
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/antd/SKILL.md"),
+      agents.includes(".agents/skills/antd/SKILL.md"),
       "AGENTS.md should link the antd skill",
       errors,
     );
@@ -668,22 +675,22 @@ async function testCase8MuiPass(tarballPath: string): Promise<TestCaseResult> {
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/mui/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/mui/SKILL.md")),
     "mui recipe should copy the UI kit skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/material-ui-nextjs/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/material-ui-nextjs/SKILL.md")),
     "mui recipe should copy material-ui-nextjs skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/material-ui-theming/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/material-ui-theming/SKILL.md")),
     "mui recipe should copy material-ui-theming skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/material-ui-styling/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/material-ui-styling/SKILL.md")),
     "mui recipe should copy material-ui-styling skill",
     errors,
   );
@@ -714,12 +721,12 @@ async function testCase8MuiPass(tarballPath: string): Promise<TestCaseResult> {
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/mui/SKILL.md"),
+      agents.includes(".agents/skills/mui/SKILL.md"),
       "AGENTS.md should link the mui skill",
       errors,
     );
     assert(
-      agents.includes(".cursor/skills/material-ui-nextjs/SKILL.md"),
+      agents.includes(".agents/skills/material-ui-nextjs/SKILL.md"),
       "AGENTS.md should link the material-ui-nextjs skill",
       errors,
     );
@@ -785,7 +792,7 @@ async function testCase9ShadcnUiPass(tarballPath: string): Promise<TestCaseResul
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/shadcn-ui/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/shadcn-ui/SKILL.md")),
     "shadcn-ui recipe should copy the UI kit skill",
     errors,
   );
@@ -844,7 +851,7 @@ async function testCase9ShadcnUiPass(tarballPath: string): Promise<TestCaseResul
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/shadcn-ui/SKILL.md"),
+      agents.includes(".agents/skills/shadcn-ui/SKILL.md"),
       "AGENTS.md should link the shadcn-ui skill",
       errors,
     );
@@ -912,20 +919,11 @@ async function testCase10NextShadcnUiPass(tarballPath: string): Promise<TestCase
     "shadcn-ui next overlay should provide lib/utils/index.ts",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes('"@swc/core": true') || pnpmWorkspace.includes("@swc/core: true"),
-      "next allowBuilds should approve @swc/core",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@parcel/watcher": true') ||
-        pnpmWorkspace.includes("@parcel/watcher: true"),
-      "next allowBuilds should approve @parcel/watcher",
-      errors,
-    );
-  }
+  assert(
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "next scaffold should not ship pnpm-workspace.yaml",
+    errors,
+  );
 
   if (pathExists(path.join(appDir, "components.json"))) {
     const componentsJson = fs.readFileSync(path.join(appDir, "components.json"), "utf-8");
@@ -1081,12 +1079,12 @@ async function testCase12NextMuiPass(tarballPath: string): Promise<TestCaseResul
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/material-ui-nextjs/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/material-ui-nextjs/SKILL.md")),
     "mui next scaffold should include material-ui-nextjs skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/material-ui-theming/AGENTS.md")),
+    pathExists(path.join(appDir, ".agents/skills/material-ui-theming/AGENTS.md")),
     "mui next scaffold should include material-ui-theming AGENTS.md",
     errors,
   );
@@ -1176,12 +1174,12 @@ async function testCase14NestBiomePass(tarballPath: string): Promise<TestCaseRes
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/structure-ddd/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/structure-ddd/SKILL.md")),
     "nest template should ship structure-ddd skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/nestjs/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/nestjs/SKILL.md")),
     "nest template should ship nestjs skill",
     errors,
   );
@@ -1233,7 +1231,7 @@ async function testCase14NestBiomePass(tarballPath: string): Promise<TestCaseRes
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/structure-ddd/SKILL.md"),
+      agents.includes(".agents/skills/structure-ddd/SKILL.md"),
       "AGENTS.md should link structure-ddd",
       errors,
     );
@@ -1261,7 +1259,7 @@ async function testCase16NestTypeOrmPass(tarballPath: string): Promise<TestCaseR
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/type-orm/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/type-orm/SKILL.md")),
     "type-orm recipe should copy skill",
     errors,
   );
@@ -1300,7 +1298,7 @@ async function testCase16NestTypeOrmPass(tarballPath: string): Promise<TestCaseR
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/type-orm/SKILL.md"),
+      agents.includes(".agents/skills/type-orm/SKILL.md"),
       "AGENTS.md should link type-orm skill",
       errors,
     );
@@ -1407,12 +1405,12 @@ async function testCase19HonoBiomePass(tarballPath: string): Promise<TestCaseRes
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/structure-ddd/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/structure-ddd/SKILL.md")),
     "hono template should ship structure-ddd skill",
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/hono/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/hono/SKILL.md")),
     "hono template should ship hono skill",
     errors,
   );
@@ -1466,7 +1464,7 @@ async function testCase19HonoBiomePass(tarballPath: string): Promise<TestCaseRes
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/hono/SKILL.md"),
+      agents.includes(".agents/skills/hono/SKILL.md"),
       "AGENTS.md should link hono skill",
       errors,
     );
@@ -1659,29 +1657,15 @@ async function testCase13StorybookPass(tarballPath: string): Promise<TestCaseRes
     errors,
   );
   assert(
-    pathExists(path.join(appDir, ".cursor/skills/storybook/SKILL.md")),
+    pathExists(path.join(appDir, ".agents/skills/storybook/SKILL.md")),
     "storybook recipe should copy skill",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes("esbuild: true"),
-      "storybook allowBuilds should approve esbuild",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes("core-js-pure: true"),
-      "storybook allowBuilds should approve core-js-pure",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@parcel/watcher": true') ||
-        pnpmWorkspace.includes("@parcel/watcher: true"),
-      "storybook allowBuilds should approve @parcel/watcher",
-      errors,
-    );
-  }
+  assert(
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "storybook scaffold should not ship pnpm-workspace.yaml",
+    errors,
+  );
 
   if (pathExists(path.join(appDir, "package.json"))) {
     const pkg = readPackageJson(appDir);
@@ -1706,7 +1690,7 @@ async function testCase13StorybookPass(tarballPath: string): Promise<TestCaseRes
   if (pathExists(path.join(appDir, "AGENTS.md"))) {
     const agents = fs.readFileSync(path.join(appDir, "AGENTS.md"), "utf-8");
     assert(
-      agents.includes(".cursor/skills/storybook/SKILL.md"),
+      agents.includes(".agents/skills/storybook/SKILL.md"),
       "AGENTS.md should link the storybook skill",
       errors,
     );

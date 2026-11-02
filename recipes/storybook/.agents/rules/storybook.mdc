@@ -1,0 +1,11 @@
+---
+description: Storybook stories, config, and component documentation
+globs: "**/*.stories.*,**/.storybook/**"
+alwaysApply: false
+---
+
+# Storybook
+
+When adding or changing stories / `.storybook/` config, follow `.agents/skills/storybook/SKILL.md`.
+
+Use the framework package that matches the template (`@storybook/react-vite` or `@storybook/nextjs`). Prefer CSF3 + `autodocs` tags.

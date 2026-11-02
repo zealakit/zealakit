@@ -354,6 +354,58 @@ function resolveSafePackageJsonPath(relativeOrAbsolute: string): string {
   return absolute;
 }
 
+/** Previous non-whitespace char suggests `/` starts a RegExp, not division. */
+function isRegexLiteralStart(source: string, slashIndex: number): boolean {
+  let i = slashIndex - 1;
+  while (i >= 0 && /\s/.test(source[i] ?? "")) {
+    i--;
+  }
+  if (i < 0) {
+    return true;
+  }
+  const prev = source[i] ?? "";
+  // Covers `pattern: /.../` and similar in recipes.ts (after `:`, `(`, `,`, …).
+  return "([{=!&|?:;,~^%*-+<>".includes(prev);
+}
+
+/** Index of the last character of a regex literal starting at `start` (`/`). */
+function endOfRegexLiteral(source: string, start: number): number {
+  let escaped = false;
+  let inCharClass = false;
+
+  for (let i = start + 1; i < source.length; i++) {
+    const ch = source[i] ?? "";
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (ch === "\n") {
+      return start;
+    }
+    if (ch === "[" && !inCharClass) {
+      inCharClass = true;
+      continue;
+    }
+    if (ch === "]" && inCharClass) {
+      inCharClass = false;
+      continue;
+    }
+    if (ch === "/" && !inCharClass) {
+      let j = i + 1;
+      while (j < source.length && /[a-z]/i.test(source[j] ?? "")) {
+        j++;
+      }
+      return j - 1;
+    }
+  }
+
+  return start;
+}
+
 function findMatchingBrace(source: string, openIndex: number): number {
   let depth = 0;
   let quote: '"' | "'" | "`" | null = null;
@@ -398,6 +450,14 @@ function findMatchingBrace(source: string, openIndex: number): number {
       inBlockComment = true;
       i++;
       continue;
+    }
+    // fileTransforms use `/import \{ Module \}…/` — braces inside must not affect depth.
+    if (ch === "/" && isRegexLiteralStart(source, i)) {
+      const end = endOfRegexLiteral(source, i);
+      if (end > i) {
+        i = end;
+        continue;
+      }
     }
     if (ch === "'" || ch === '"' || ch === "`") {
       quote = ch;

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cancel, confirm, isCancel } from "@clack/prompts";
 import pc from "picocolors";
+import { UI_FRAMEWORK_CATEGORIES } from "./constants.js";
 import {
   getAllTemplateIds,
   getRecipe,
@@ -204,9 +205,12 @@ export function validateRecipeConflicts(recipeIds: string[]): ValidationResult {
       continue;
     }
 
-    if (category === "ui" && exclusiveIds.length >= 2) {
+    if (
+      (category === "ui" || (UI_FRAMEWORK_CATEGORIES as readonly string[]).includes(category)) &&
+      exclusiveIds.length >= 2
+    ) {
       errors.push(
-        `✖ Conflict: Cannot select both ${names} in the ui group. Please choose only one.`,
+        `✖ Conflict: Cannot select both ${names} in the ${category} group. Please choose only one.`,
       );
       continue;
     }

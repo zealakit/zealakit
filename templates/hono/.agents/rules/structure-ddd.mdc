@@ -1,0 +1,19 @@
+---
+description: Hexagonal / DDD layer layout and feature placement
+alwaysApply: true
+---
+
+# Structure DDD
+
+Follow `.agents/skills/structure-ddd/SKILL.md` when adding features, placing files, or wiring the composition root.
+
+Hard rules:
+
+- Layer-first paths: `domain/`, `application/`, `presentation/`, `infrastructure/`, `shared/`, `bootstrap/`
+- Dependency direction: `presentation → application → domain ← infrastructure`
+- Domain has **zero** Hono / ORM / HTTP imports
+- Features do not import each other’s adapters or handlers
+- kebab-case **files and folders**; composition factories live in `bootstrap/modules/`
+- Repository **ports** in domain (+ application `ports/output/`); **adapters** only in infrastructure
+- Prefer `type` over `interface` except when declaration merging is required
+- Cross-layer imports use `@/*` → `src/*` with `.js` extensions (`@/application/...`); keep short relatives inside the same feature folder

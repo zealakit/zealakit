@@ -15,7 +15,10 @@ README_TEMP.md
 /templates/**/coverage
 /templates/**/*.tsbuildinfo
 
-# Test scaffolding output
-/.sandbox/
+# Test scaffolding output (keep isolation config tracked)
+/.sandbox/**
+!/.sandbox/.npmrc
+!/.sandbox/package.json
+!/.sandbox/README.md
 /.temp/
 /.pnpm-store/

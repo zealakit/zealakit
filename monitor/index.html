@@ -317,17 +317,31 @@
       }
 
       #status-bar {
-        margin-bottom: 0.75rem;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin: 0 0 0.75rem;
         min-height: 1.25rem;
+        padding: 0.55rem 0.75rem;
         font-size: 0.85rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--pico-background-color, #111) 92%, #fff 8%);
+        border: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #444) 80%, transparent);
       }
 
       #status-bar[data-tone="error"] {
         color: #ffa8a8;
+        border-color: color-mix(in srgb, #ffa8a8 45%, transparent);
       }
 
       #status-bar[data-tone="ok"] {
         color: var(--ok-fg);
+        border-color: color-mix(in srgb, var(--ok-fg) 40%, transparent);
+      }
+
+      button.update.is-error {
+        border-color: #ffa8a8 !important;
+        color: #ffa8a8 !important;
       }
     </style>
   </head>
@@ -351,6 +365,8 @@
         statusBar.textContent = message;
         if (tone) statusBar.dataset.tone = tone;
         else delete statusBar.dataset.tone;
+        // Keep feedback visible when scrolled deep into recipe tables.
+        statusBar.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
 
       function npmUrl(name) {
@@ -403,10 +419,10 @@
                 data-file="${escapeHtml(group.filePath)}"
                 data-name="${escapeHtml(pkg.name)}"
                 data-latest="${escapeHtml(pkg.latest ?? "")}"
-                data-type="${pkg.depType}"
+                data-dep-type="${pkg.depType}"
                 data-recipe-id="${escapeHtml(recipeId)}"
                 data-overlay="${escapeHtml(overlay)}"
-                title="${isRoot ? "Updates package.json then runs pnpm up to refresh the lockfile" : "Update package.json version"}"
+                title="${isRoot ? "Updates package.json then runs pnpm up to refresh the lockfile" : recipeId ? "Update version in src/registry/recipes.ts" : "Update package.json version"}"
               >Update</button>
             </td>
           </tr>
@@ -596,18 +612,26 @@
         const filePath = button.dataset.file;
         const packageName = button.dataset.name;
         const newVersion = button.dataset.latest;
-        const depType = button.dataset.type;
+        // Prefer data-dep-type; fall back to data-type (legacy).
+        const depType = button.dataset.depType || button.dataset.type;
         const recipeId = button.dataset.recipeId || undefined;
         const overlay = button.dataset.overlay || undefined;
 
-        if (!filePath || !packageName || !newVersion || !depType) return;
+        if (!filePath || !packageName || !newVersion || !depType) {
+          setStatus(
+            `Update aborted: missing data (file=${filePath || "?"} name=${packageName || "?"} latest=${newVersion || "?"} depType=${depType || "?"})`,
+            "error",
+          );
+          return;
+        }
 
+        button.classList.remove("is-error");
         button.setAttribute("aria-busy", "true");
         button.disabled = true;
         setStatus(
           filePath === "package.json"
             ? `Updating ${packageName} + pnpm up (lockfile)…`
-            : `Updating ${packageName}…`,
+            : `Updating ${packageName} in ${filePath}…`,
         );
 
         try {
@@ -620,8 +644,8 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Update failed");
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || `Update failed (${res.status})`);
 
           const row = button.closest("tr");
           if (row) {
@@ -642,6 +666,7 @@
           );
         } catch (error) {
           button.disabled = false;
+          button.classList.add("is-error");
           setStatus(error instanceof Error ? error.message : String(error), "error");
         } finally {
           button.removeAttribute("aria-busy");
@@ -653,10 +678,20 @@
       });
 
       groupsEl.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        const button = target.closest("button.update");
+        const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+        const fromPath = path.find(
+          (node) => node instanceof HTMLButtonElement && node.classList.contains("update"),
+        );
+        const fallbackTarget = event.target;
+        const fromTarget =
+          fallbackTarget instanceof Element
+            ? fallbackTarget.closest("button.update")
+            : fallbackTarget instanceof Node
+              ? fallbackTarget.parentElement?.closest("button.update")
+              : null;
+        const button = fromPath || fromTarget;
         if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+        event.preventDefault();
         void updatePackage(button);
       });
 

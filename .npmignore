@@ -6,7 +6,9 @@ src/
 scripts/
 monitor/
 .github/
-.cursor/
+# Kit-maintainer agent docs only (templates/recipes ship their own .agents + .cursor symlink)
+/.agents/
+/.cursor
 .vscode/
 .sandbox/
 .temp/

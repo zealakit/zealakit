@@ -1,5 +1,6 @@
 export {
   getAllRecipeIds,
+  getExclusiveUiRecipes,
   getRecipe,
   getRecipeCategories,
   getRecipesByCategory,

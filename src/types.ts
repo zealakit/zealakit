@@ -1,6 +1,7 @@
-import type { RECIPE_CATEGORIES, SCOPES } from "./constants.js";
+import type { RECIPE_CATEGORIES, SCOPES, UI_FRAMEWORK_CATEGORIES } from "./constants.js";
 
 export type Scope = (typeof SCOPES)[number];
+export type UiFrameworkCategory = (typeof UI_FRAMEWORK_CATEGORIES)[number];
 
 export interface TemplateConfig {
   id: string;
@@ -30,7 +31,11 @@ export type RecipeFileTransform = {
 export interface RecipeConfig {
   id: string;
   name: string;
-  /** One or more categories (e.g. Storybook: ui + testing + documentation) */
+  /**
+   * One or more categories (e.g. Storybook: ui + testing + documentation).
+   * Exclusive UI kits: `ui` + framework tag (`ui-react` / `ui-vue` / `ui-svelte`).
+   * Cross-framework UI tooling: plain `ui` only (no framework tag).
+   */
   category: RecipeCategory | RecipeCategory[];
   /** Scopes this recipe supports */
   supportedScopes: Scope[] | "all";

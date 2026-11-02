@@ -18,7 +18,7 @@ const FeatureAShellContent = () => {
 };
 
 const FeatureAShell = () => {
-  // do something with the routes or auth here
+  // Optional pattern: shared list/detail chrome. Skip FeatureShell when UI diverges — see feature-b.
   return (
     <FeatureShell
       routes={{

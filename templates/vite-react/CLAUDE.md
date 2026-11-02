@@ -4,8 +4,8 @@ Read the project skills and rules before adding features, moving files, or writi
 
 ## Always follow
 
-- **Structure:** [.cursor/skills/project-structure/SKILL.md](.cursor/skills/project-structure/SKILL.md) — folder roles, naming, routing, placement
-- **UI:** [.cursor/skills/reactjs/SKILL.md](.cursor/skills/reactjs/SKILL.md) — generating, refactoring, and optimizing React UI
-- **Rules:** [.cursor/rules/](.cursor/rules/)
+- **Structure:** [.agents/skills/project-structure/SKILL.md](.agents/skills/project-structure/SKILL.md) — folder roles, naming, routing, placement
+- **UI:** [.agents/skills/reactjs/SKILL.md](.agents/skills/reactjs/SKILL.md) — generating, refactoring, and optimizing React UI
+- **Rules:** [.agents/rules/](.agents/rules/)
 
 Path alias: `@/*` → `src/*`.

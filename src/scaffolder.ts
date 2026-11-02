@@ -297,63 +297,45 @@ export async function scaffoldProject(
   }
 
   mergePackageJson(targetDir, config);
-  writePnpmAllowBuilds(targetDir, config);
+  ensureCursorAgentsSymlink(targetDir);
 
   return targetDir;
 }
 
 /**
- * pnpm ≥10 blocks dependency lifecycle scripts until approved.
- * Generated apps are standalone (not the kit workspace), so ship a minimal
- * `pnpm-workspace.yaml` with `allowBuilds` for known native tooling.
+ * Canonical agent docs live in `.agents/`. `.cursor` must be a relative symlink
+ * to `.agents` so Cursor IDE and package-agnostic tools both work.
  */
-function collectAllowBuilds(templateId: string, recipeIds: string[]): Record<string, true> {
-  const allow: Record<string, true> = {};
-  const hasStorybook = recipeIds.includes("storybook");
+function ensureCursorAgentsSymlink(targetDir: string): void {
+  const agentsDir = path.join(targetDir, ".agents");
+  const cursorPath = path.join(targetDir, ".cursor");
 
-  // Vite / Vitest / Storybook pull esbuild postinstall binaries.
-  if (
-    templateId === "vite-react" ||
-    templateId === "nest" ||
-    templateId === "hono" ||
-    hasStorybook
-  ) {
-    allow.esbuild = true;
-  }
-
-  if (templateId === "next") {
-    allow["@swc/core"] = true;
-    // Next / Turbopack file watching (also pulled by Storybook Next builder).
-    allow["@parcel/watcher"] = true;
-  }
-
-  if (hasStorybook) {
-    allow["@parcel/watcher"] = true;
-    // Storybook → @storybook/* → core-js-pure postinstall.
-    allow["core-js-pure"] = true;
-  }
-
-  if (recipeIds.includes("biome")) {
-    allow["@biomejs/biome"] = true;
-  }
-
-  return allow;
-}
-
-function writePnpmAllowBuilds(targetDir: string, config: ScaffoldConfig): void {
-  const allowBuilds = collectAllowBuilds(config.templateId, config.recipeIds);
-  const names = Object.keys(allowBuilds).sort();
-  if (names.length === 0) {
+  if (!fs.existsSync(agentsDir)) {
     return;
   }
 
-  const lines = ["allowBuilds:"];
-  for (const name of names) {
-    const key = name.includes("@") || name.includes("/") ? JSON.stringify(name) : name;
-    lines.push(`  ${key}: true`);
+  try {
+    const cursorStat = fs.lstatSync(cursorPath);
+    if (cursorStat.isSymbolicLink()) {
+      if (fs.readlinkSync(cursorPath) === ".agents") {
+        return;
+      }
+      fs.unlinkSync(cursorPath);
+    } else if (cursorStat.isDirectory()) {
+      // Copy may have dereferenced the symlink into a real directory. Prefer
+      // `.agents` as the source of truth and replace `.cursor` with a symlink.
+      fse.removeSync(cursorPath);
+    } else {
+      fs.unlinkSync(cursorPath);
+    }
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code !== "ENOENT") {
+      throw error;
+    }
   }
 
-  fs.writeFileSync(path.join(targetDir, "pnpm-workspace.yaml"), `${lines.join("\n")}\n`, "utf-8");
+  fs.symlinkSync(".agents", cursorPath);
 }
 
 function normalizeScaffoldedBiomeConfig(targetDir: string): void {

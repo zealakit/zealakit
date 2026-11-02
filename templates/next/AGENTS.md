@@ -14,9 +14,9 @@ This project uses Cursor skills and rules for **where files go** and **how to wr
 
 ## Always follow
 
-- **Structure:** [.cursor/skills/project-structure/SKILL.md](.cursor/skills/project-structure/SKILL.md) — route groups, `_components` / `_shared`, server vs client exports, i18n placement
-- **UI:** [.cursor/skills/reactjs/SKILL.md](.cursor/skills/reactjs/SKILL.md) — generating, refactoring, and optimizing React / Next UI
+- **Structure:** [.agents/skills/project-structure/SKILL.md](.agents/skills/project-structure/SKILL.md) — route groups, `_components` / `_shared`, server vs client exports, i18n placement
+- **UI:** [.agents/skills/reactjs/SKILL.md](.agents/skills/reactjs/SKILL.md) — generating, refactoring, and optimizing React / Next UI
 - **Next.js guides:** read `node_modules/next/dist/docs/` before using unfamiliar APIs (see block above)
-- **Rules:** [.cursor/rules/](.cursor/rules/)
+- **Rules:** [.agents/rules/](.agents/rules/)
 
 Path alias: `@/*` → `src/*`.

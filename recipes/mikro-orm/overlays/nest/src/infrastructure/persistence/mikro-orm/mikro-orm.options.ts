@@ -9,7 +9,7 @@ import { DatabaseDriver } from "./mikro-orm.driver.js";
 export function createMikroOrmOptions(): Record<string, unknown> {
   if (!DatabaseDriver) {
     throw new Error(
-      "MikroORM driver is not set: edit infrastructure/persistence/mikro-orm/mikro-orm.driver.ts and install @mikro-orm/postgresql | mysql | sqlite | …. See .cursor/skills/mikro-orm/SKILL.md.",
+      "MikroORM driver is not set: edit infrastructure/persistence/mikro-orm/mikro-orm.driver.ts and install @mikro-orm/postgresql | mysql | sqlite | …. See .agents/skills/mikro-orm/SKILL.md.",
     );
   }
 
@@ -18,7 +18,7 @@ export function createMikroOrmOptions(): Record<string, unknown> {
 
   if (!clientUrl && !dbName) {
     throw new Error(
-      "MikroORM is not configured: set DATABASE_URL or DB_NAME. See .cursor/skills/mikro-orm/SKILL.md.",
+      "MikroORM is not configured: set DATABASE_URL or DB_NAME. See .agents/skills/mikro-orm/SKILL.md.",
     );
   }
 
