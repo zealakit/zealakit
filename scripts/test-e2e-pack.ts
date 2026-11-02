@@ -1675,8 +1675,8 @@ async function testCase13StorybookPass(tarballPath: string): Promise<TestCaseRes
     assert("@mui/material" in deps, "mui should still install alongside storybook", errors);
     assert("storybook" in devDeps, "package.json should include storybook", errors);
     assert(
-      devDeps["storybook"] === "^10.6.1",
-      `storybook version should be ^10.6.1, got ${devDeps["storybook"]}`,
+      devDeps.storybook === "^10.6.1",
+      `storybook version should be ^10.6.1, got ${devDeps.storybook}`,
       errors,
     );
     assert(

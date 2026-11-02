@@ -216,6 +216,12 @@
         border: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #3a3f4a) 55%, transparent);
       }
 
+      td,
+      th {
+        vertical-align: middle;
+        padding: 0.4rem 0.5rem;
+      }
+
       thead th {
         padding: 0.45rem 0.5rem;
         font-size: 0.75rem;
@@ -238,12 +244,6 @@
 
       tbody tr:last-child td:last-child {
         border-bottom-right-radius: 6px;
-      }
-
-      td,
-      th {
-        vertical-align: middle;
-        padding: 0.4rem 0.5rem;
       }
 
       th:nth-child(1),
@@ -340,8 +340,8 @@
       }
 
       button.update.is-error {
-        border-color: #ffa8a8 !important;
-        color: #ffa8a8 !important;
+        border-color: #ffa8a8;
+        color: #ffa8a8;
       }
     </style>
   </head>

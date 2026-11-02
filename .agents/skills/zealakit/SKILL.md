@@ -1,11 +1,12 @@
 ---
+
 name: zealakit
 description: >-
-  Zealakit repo architecture: recipe-based scaffolding CLI (templates, recipes,
-  overlays, registry, scaffolder, monitor). Use when working in this repository
-  root — editing src/, templates/, recipes/, scripts/, or monitor/ — or when
-  asking where files belong, how scaffolding works, or how to extend the kit.
-  Not for coding inside a generated consumer app.
+Zealakit repo architecture: recipe-based scaffolding CLI (templates, recipes,
+overlays, registry, scaffolder, monitor). Use when working in this repository
+root — editing src/, templates/, recipes/, scripts/, or monitor/ — or when
+asking where files belong, how scaffolding works, or how to extend the kit.
+Not for coding inside a generated consumer app.
 ---
 
 # Zealakit
@@ -24,30 +25,30 @@ template → recipes (shared + overlay) → merge package.json → fileTransform
 
 ## Top-level layout
 
-| Path | Role |
-| --- | --- |
-| `src/` | CLI source (registry, scaffolder, prompts, validator) |
+| Path              | Role                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `src/`            | CLI source (registry, scaffolder, prompts, validator)    |
 | `templates/<id>/` | Base apps shipped with the kit (`vite-react`, `next`, …) |
-| `recipes/<id>/` | Optional layers applied on top of a template |
-| `scripts/` | Kit tooling (e.g. `test-e2e-pack.ts`) |
-| `monitor/` | Internal dependency dashboard (`pnpm monitor`) |
-| `dist/` | Built CLI (`tsup`) — do not hand-edit |
+| `recipes/<id>/`   | Optional layers applied on top of a template             |
+| `scripts/`        | Kit tooling (e.g. `test-e2e-pack.ts`)                    |
+| `monitor/`        | Internal dependency dashboard (`pnpm monitor`)           |
+| `dist/`           | Built CLI (`tsup`) — do not hand-edit                    |
 
 Published package contents: `dist` + `templates` + `recipes` (see root `package.json` `files`).
 
 ## Source (`src/`)
 
-| File / dir | Role |
-| --- | --- |
-| `index.ts` | Commander CLI entry |
-| `scaffolder.ts` | Copy template/recipes, merge deps, transforms, agent entries |
-| `prompts.ts` | Interactive `@clack/prompts` flow |
-| `validator.ts` | Name / exclusivity / scope checks |
-| `constants.ts` | **`SCOPES`**, **`RECIPE_CATEGORIES`**, **`UI_FRAMEWORK_CATEGORIES`** — single source of truth |
-| `types.ts` | Types derived from constants (`Scope`, `RecipeCategory`, configs) |
-| `registry/templates.ts` | Template registry |
-| `registry/recipes.ts` | Recipe registry (versions, overlays, transforms) |
-| `registry/index.ts` | Re-exports |
+| File / dir              | Role                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `index.ts`              | Commander CLI entry                                                                           |
+| `scaffolder.ts`         | Copy template/recipes, merge deps, transforms, agent entries                                  |
+| `prompts.ts`            | Interactive `@clack/prompts` flow                                                             |
+| `validator.ts`          | Name / exclusivity / scope checks                                                             |
+| `constants.ts`          | **`SCOPES`**, **`RECIPE_CATEGORIES`**, **`UI_FRAMEWORK_CATEGORIES`** — single source of truth |
+| `types.ts`              | Types derived from constants (`Scope`, `RecipeCategory`, configs)                             |
+| `registry/templates.ts` | Template registry                                                                             |
+| `registry/recipes.ts`   | Recipe registry (versions, overlays, transforms)                                              |
+| `registry/index.ts`     | Re-exports                                                                                    |
 
 Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 
@@ -96,14 +97,14 @@ Categories / scopes: always use / extend `src/constants.ts` — never duplicate 
 
 ## Do / don’t
 
-| Do | Don’t |
-| --- | --- |
-| Register templates/recipes in `src/registry/` | Add a template folder without registry entry |
-| Put cross-template recipe files in `shared/` | Put Next-only wiring in `shared/` |
-| Add an overlay per supported family (`vite-react`, `next`, `nest`) | Assume missing overlay is OK if `overlays/` exists |
-| Keep kit root `.agents/` (+ `.cursor` → `.agents`) for zealakit maintainers | Put kit maintainer docs only under `templates/*` |
-| Put skills/rules under `.agents/` | Put real files only under `.cursor/` (must stay a symlink) |
-| Derive types from `constants.ts` | Hardcode scope/category lists in monitor or prompts |
+| Do                                                                          | Don’t                                                      |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Register templates/recipes in `src/registry/`                               | Add a template folder without registry entry               |
+| Put cross-template recipe files in `shared/`                                | Put Next-only wiring in `shared/`                          |
+| Add an overlay per supported family (`vite-react`, `next`, `nest`)          | Assume missing overlay is OK if `overlays/` exists         |
+| Keep kit root `.agents/` (+ `.cursor` → `.agents`) for zealakit maintainers | Put kit maintainer docs only under `templates/*`           |
+| Put skills/rules under `.agents/`                                           | Put real files only under `.cursor/` (must stay a symlink) |
+| Derive types from `constants.ts`                                            | Hardcode scope/category lists in monitor or prompts        |
 
 ## Extending the kit
 

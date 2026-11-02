@@ -9,18 +9,18 @@ allowBuilds:
   esbuild: true
 
 minimumReleaseAgeExclude:
-  - '@next/env@16.4.0'
-  - '@next/swc-darwin-arm64@16.4.0'
-  - '@next/swc-darwin-x64@16.4.0'
-  - '@next/swc-linux-arm64-gnu@16.4.0'
-  - '@next/swc-linux-arm64-musl@16.4.0'
-  - '@next/swc-linux-x64-gnu@16.4.0'
-  - '@next/swc-linux-x64-musl@16.4.0'
-  - '@next/swc-win32-arm64-msvc@16.4.0'
-  - '@next/swc-win32-x64-msvc@16.4.0'
+  - "@next/env@16.4.0"
+  - "@next/swc-darwin-arm64@16.4.0"
+  - "@next/swc-darwin-x64@16.4.0"
+  - "@next/swc-linux-arm64-gnu@16.4.0"
+  - "@next/swc-linux-arm64-musl@16.4.0"
+  - "@next/swc-linux-x64-gnu@16.4.0"
+  - "@next/swc-linux-x64-musl@16.4.0"
+  - "@next/swc-win32-arm64-msvc@16.4.0"
+  - "@next/swc-win32-x64-msvc@16.4.0"
   - next@16.4.0
   - react-i18next@17.0.16 || 17.1.11
   - tsc-alias@1.9.9
-  - '@vitejs/plugin-react@6.2.1'
+  - "@vitejs/plugin-react@6.2.1"
   - i18next-browser-languagedetector@8.3.0
   - i18next@26.7.1
