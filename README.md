@@ -109,7 +109,6 @@ Every template includes:
 - `@/*` path alias
 - `.cursor/` skills and rules
 - `AGENTS.md` and `CLAUDE.md` for AI coding assistants
-- Generated `pnpm-workspace.yaml` with `allowBuilds` for native tooling (pnpm 10+)
 
 Start commands:
 
@@ -135,10 +134,10 @@ Pick **one** recipe per category. `storybook` is the exception — it can sit be
 | `hookform-zod` | Forms | Vite, Next | React Hook Form + Zod, example schema and types |
 | `kyjs` | HTTP | Vite, Next | Ky client with token refresh on 401 |
 | `axios` | HTTP | Vite, Next | Axios client with token refresh on 401 |
-| `antd` | UI | Vite, Next | ConfigProvider, theme tokens, UI wrappers |
-| `mui` | UI | Vite, Next | ThemeProvider, theme tokens, UI wrappers |
-| `shadcn-ui` | UI | Vite, Next | Tailwind v4, shadcn/ui (base-vega), lucide icons, `cn` helper |
-| `storybook` | Docs + testing | Vite, Next | `.storybook` config and Storybook scripts |
+| `antd` | UI + ui-react | Vite, Next | ConfigProvider, theme tokens, UI wrappers |
+| `mui` | UI + ui-react | Vite, Next | ThemeProvider, theme tokens, UI wrappers |
+| `shadcn-ui` | UI + ui-react | Vite, Next | Tailwind v4, shadcn/ui (base-vega), lucide icons, `cn` helper |
+| `storybook` | UI + docs + testing | Vite, Next | `.storybook` config and Storybook scripts (shared `ui` tag) |
 | `type-orm` | Database | Nest, Hono | TypeORM persistence adapter |
 | `mikro-orm` | Database | Nest, Hono | MikroORM persistence adapter |
 | `drizzle-orm` | Database | Nest, Hono | Drizzle persistence adapter and migration scripts |
@@ -173,9 +172,10 @@ my-app/
 ├─ AGENTS.md            # Guidance for coding agents
 ├─ CLAUDE.md
 ├─ package.json         # Merged dependencies and scripts
-├─ tsconfig.json
-└─ pnpm-workspace.yaml  # allowBuilds for pnpm 10+
+└─ tsconfig.json
 ```
+
+Use any package manager (`npm`, `pnpm`, `yarn`, `bun`, …) — Zealakit does not pin one.
 
 Recipe overlays are applied on top of the template, so the result is a single normal project — no runtime dependency on Zealakit.
 

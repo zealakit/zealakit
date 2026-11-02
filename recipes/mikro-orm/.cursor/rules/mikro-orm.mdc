@@ -6,7 +6,7 @@ alwaysApply: false
 
 # MikroORM
 
-Follow `.cursor/skills/mikro-orm/SKILL.md` when wiring MikroORM.
+Follow `.cursor/skills/mikro-orm/SKILL.md` (and its `references/`) when wiring MikroORM.
 
 Hard rules:
 
@@ -15,3 +15,5 @@ Hard rules:
 - Prefer `*.repository.adapter.ts` names (ORM-agnostic), not `mikro-*.ts`
 - Import decorators from `@mikro-orm/decorators/legacy` in Nest apps
 - Register `MikroOrmPersistenceModule` from bootstrap; use `MikroOrmModule.forFeature` when needed
+- Prefer Migrator over production schema sync; avoid N+1 with `populate` / joins inside adapters
+

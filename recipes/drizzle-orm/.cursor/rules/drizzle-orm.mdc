@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Drizzle ORM
 
-Follow `.cursor/skills/drizzle-orm/SKILL.md` when wiring Drizzle.
+Follow `.cursor/skills/drizzle-orm/SKILL.md` (and its `references/`) when wiring Drizzle.
 
 Hard rules:
 
@@ -14,3 +14,5 @@ Hard rules:
 - Repository **ports** stay in domain; inject `DRIZZLE` only inside adapters
 - Prefer `*.repository.adapter.ts` names (ORM-agnostic)
 - Register `DrizzlePersistenceModule` from bootstrap
+- Schema changes via drizzle-kit (`db:generate` / `db:migrate`); avoid query-per-row loops (join / `inArray`)
+

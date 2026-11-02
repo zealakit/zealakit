@@ -1,9 +1,11 @@
 ---
 name: nestjs
 description: >-
-  NestJS conventions for modules, DI, testing, ORM patterns, security, and API
-  design. Use when building, reviewing, or refactoring NestJS backends — alongside
-  structure-ddd for folder layout and typescript/javascript for language rules.
+  NestJS conventions for modules, DI, testing, security, and API design. Use when
+  building, reviewing, or refactoring NestJS backends — alongside structure-ddd
+  for folder layout and typescript/javascript for language rules. Persistence
+  (N+1, migrations, transactions) lives in the installed ORM recipe skill
+  (type-orm, mikro-orm, or drizzle-orm), not here.
 ---
 
 # NestJS
@@ -25,6 +27,16 @@ Aligns with [typescript](../typescript/SKILL.md) and [javascript](../javascript/
 9. **Test with `TestingModule`** — mock ports, not Nest internals; e2e with Supertest.
 10. **Config via `ConfigModule`** — no scattered `process.env` in domain code.
 
+## Persistence
+
+This Nest skill stays **ORM-agnostic**. Persistence guidance (setup, adapters, N+1, migrations, transactions) ships with the exclusive ORM recipe under `.cursor/skills/<orm>/SKILL.md`:
+
+- TypeORM → `.cursor/skills/type-orm/SKILL.md`
+- MikroORM → `.cursor/skills/mikro-orm/SKILL.md`
+- Drizzle → `.cursor/skills/drizzle-orm/SKILL.md`
+
+If none of those skills exist, no ORM recipe is installed yet — keep the in-memory adapter until one is chosen.
+
 ## Progressive disclosure
 
 | Topic | Reference |
@@ -35,7 +47,6 @@ Aligns with [typescript](../typescript/SKILL.md) and [javascript](../javascript/
 | JWT, guards, rate limit, XSS, validation | [security.md](references/security.md) |
 | Lifecycle hooks, lazy modules, caching, queries | [performance.md](references/performance.md) |
 | Unit TestingModule, mocks, e2e Supertest | [testing.md](references/testing.md) |
-| N+1, migrations, transactions | [database-orm.md](references/database-orm.md) |
 | DTOs, serialization, interceptors, pipes, versioning | [api-design.md](references/api-design.md) |
 | Health, message/event patterns, queues | [microservices.md](references/microservices.md) |
 | Graceful shutdown, config, structured logging | [devops.md](references/devops.md) |

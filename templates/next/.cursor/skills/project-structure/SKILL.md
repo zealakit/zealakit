@@ -53,13 +53,13 @@ src/
 │   ├── globals.css
 │   └── [locale]/
 │       ├── layout.tsx            # Validate locale + NextIntlClientProvider
-│       ├── _shared/              # Cross-page widgets (often server + client)
+│       ├── _shared/              # Widgets reused across multiple routes / groups
 │       ├── (site)/               # Public marketing / site route group
 │       │   ├── layout.tsx        # Site chrome (header, nav)
-│       │   ├── page.tsx          # Home
+│       │   ├── page.tsx          # Home (index)
 │       │   ├── about-us/page.tsx
 │       │   ├── _handlers/        # View models for this group (calls lib/apis)
-│       │   └── _components/      # Widgets owned by this route group
+│       │   └── _components/      # Only if layout.tsx and/or this group's index page.tsx use them
 │       ├── (entry)/              # Optional — unauthenticated entry flows
 │       ├── (console)/            # Optional — authenticated app / dashboard
 │       └── (landing)/            # Optional — campaign / one-off landing pages
@@ -96,13 +96,44 @@ Folders added by recipes (same **role**, library may vary):
 
 | Location | Role |
 | --- | --- |
-| `app/[locale]/(site)/` | Default public area: pages + `_components` + `_handlers` |
-| `app/[locale]/(site)/_components/<name>/` | UI used primarily by this group’s pages |
-| `app/[locale]/_shared/<name>/` | UI reused across **multiple pages / groups**; often needs both SSR and CSR exports |
+| `app/[locale]/(site)/` | Default public area: pages + optional `_components` / `_handlers` |
+| `app/[locale]/(<group>)/_components/<name>/` | Widgets imported by that group’s **`layout.tsx`** and/or the group’s **index** `page.tsx` only |
+| `app/[locale]/(<group>)/<route>/_components/<name>/` | Widgets used by **that route alone** (e.g. `(landing)/black-friday/_components/…`) |
+| `app/[locale]/_shared/<name>/` | Widgets reused across **multiple routes and/or groups**; often needs both SSR and CSR exports |
 | `app/[locale]/layout.tsx` | Locale boundary + i18n provider only |
 | `app/layout.tsx` | Global Next shell (`html` / `body` / fonts / CSS) |
 
-Route group folders `(…)` do **not** appear in the URL. Each group may have its own `layout.tsx`, `_components/`, and `_handlers/`.
+Route group folders `(…)` do **not** appear in the URL. Each group may have its own `layout.tsx` and `_handlers/`. Add a group-level `_components/` **only** when the group layout or index page actually imports widgets from it.
+
+### `_components` placement (hard rules)
+
+Inside a route group `(<group-name>)`:
+
+1. **Group-level `_components/`** — only when that group’s `layout.tsx` uses the widgets, **or** they belong to the group’s **index** `page.tsx` (no nested segment folder for that page). If the layout does not import any group widgets and the index page has none, **do not** create `(group)/_components/`.
+2. **Route-level `_components/`** — when a widget is used only by one nested route, put it under that route: `(group)/<route>/_components/<widget>/`. Example: flash-sale UI only on Black Friday → `(landing)/black-friday/_components/flash-sale-counter/`, **not** `(landing)/_components/…`.
+3. **`[locale]/_shared/`** — when the same widget is used in **more than one** place (multiple routes in the group, or across groups). Do **not** park single-route widgets in `_shared/` “just in case”, and do **not** use group-level `_components/` as a dumping ground for every child route.
+
+```
+# ✅ widget only for /black-friday
+(landing)/
+├── layout.tsx                      # sparse/custom; no _components unless layout imports widgets
+└── black-friday/
+    ├── page.tsx
+    └── _components/
+        └── flash-sale-counter/
+
+# ❌ group-level _components owned by a single child route
+(landing)/
+├── _components/
+│   └── flash-sale-counter/         # wrong — only black-friday uses it
+└── black-friday/
+    └── page.tsx
+
+# ✅ reused by black-friday + another campaign (or another group)
+[locale]/
+└── _shared/
+    └── flash-sale-counter/
+```
 
 ### Optional route groups
 
@@ -123,7 +154,7 @@ Route group folders `(…)` do **not** appear in the URL. Each group may have it
 - Do not force campaign pages through the marketing header — use `(landing)`.
 - `(entry)/layout.tsx` and `(console)/layout.tsx` are the App Router boundaries. Visual chrome (sidebar, header, logo) lives in `src/layouts/` and is rendered from those files.
 - `(site)` and `(landing)` chrome stays in that group’s `layout.tsx`. Do not fold marketing or campaign shells into `src/layouts/`.
-- Cross-group widgets (e.g. locale switcher) stay in `[locale]/_shared/`.
+- Cross-route / cross-group widgets (e.g. locale switcher) stay in `[locale]/_shared/`.
 - Delete unused optional groups rather than leaving empty placeholders in a real app.
 
 Example shapes (optional):
@@ -140,7 +171,11 @@ Example shapes (optional):
 └── console/page.tsx
 
 (landing)/
-└── campaign-example/page.tsx
+├── layout.tsx                 # Optional; add _components/ here only if this layout uses widgets
+└── campaign-example/
+    ├── page.tsx
+    └── _components/           # Only if these widgets are campaign-example–local
+        └── hero/
 ```
 
 ---
@@ -181,7 +216,7 @@ Shared composite for list/detail/create/update chrome: capabilities, overlay vs 
 
 Console pages wrap list/detail/create/update content with this chrome and read its context from the hook.
 
-If a widget is only used by one route group → keep it under that group’s `_components/`.
+If a widget is only used by one **nested route** → that route’s `_components/`. If only the group layout / index page uses it → that group’s `_components/`. If multiple routes/groups use it → `[locale]/_shared/`.
 
 ### `src/components/ui/` (when a UI recipe is applied)
 
@@ -249,11 +284,11 @@ Each widget folder under `_components/` or `_shared/`:
 
 ### Examples in this template
 
-| Widget | Mode | Why |
+| Widget | Mode | Why / placement |
 | --- | --- | --- |
-| `(site)/_components/hero-banner` | `server.tsx` only | SEO headline on homepage |
-| `(site)/_components/solutions` | `client.tsx` only | Deferred section, lighter server work |
-| `[locale]/_shared/locale-switcher` | both exports | Header SSR today; reusable inside client islands later |
+| `(site)/_components/hero-banner` | `server.tsx` only | Homepage index `page.tsx` only (group index → group `_components`) |
+| `(site)/_components/solutions` | `client.tsx` only | Homepage index only; deferred section |
+| `[locale]/_shared/locale-switcher` | both exports | Used from `(site)` layout (and reusable elsewhere) → `_shared` |
 
 Import examples:
 
@@ -322,21 +357,22 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
    - Auth / onboarding → `(entry)/` *(optional)*
    - Signed-in app → `(console)/` *(optional)*
    - Campaign / one-off → `(landing)/` *(optional)*
-2. **UI for one route group?** → `<group>/_components/<widget>/`
-3. **UI reused across pages/groups, possibly SSR + CSR?** → `[locale]/_shared/<widget>/`
-4. **Entry or console chrome (sidebar / auth frame)?** → `layouts/<name>-layout/`, rendered from that group’s `layout.tsx`
-5. **List/detail chrome reused across console pages?** → `components/feature-shell/`
-6. **Primitive control?** → `components/ui/` (when a UI recipe is applied)
-7. **SEO / first paint?** → export via `server.tsx`
-8. **Deferred / interactive?** → export via `client.tsx`
-9. **Loading state?** → `skeleton.tsx` + `Suspense`
-10. **Remote endpoint function?** → `lib/apis/`
-11. **Path or endpoint string?** → `lib/constants/` (`ROUTES`, `APIS`, `STORAGE`)
-12. **View model for one route group?** → `<group>/_handlers/` (calls `lib/apis`)
-13. **Pure helper?** → `lib/utils/`
-14. **Cross-route hook?** → `hooks/`
-15. **Theme or env bootstrap?** → `configs/`
-16. **Locale code or copy?** → `src/i18n/`
+2. **UI for one nested route only?** → `<group>/<route>/_components/<widget>/`
+3. **UI for this group’s `layout.tsx` or index `page.tsx` only?** → `<group>/_components/<widget>/` (omit the folder if neither needs it)
+4. **UI reused across multiple routes / groups?** → `[locale]/_shared/<widget>/`
+5. **Entry or console chrome (sidebar / auth frame)?** → `layouts/<name>-layout/`, rendered from that group’s `layout.tsx`
+6. **List/detail chrome reused across console pages?** → `components/feature-shell/`
+7. **Primitive control?** → `components/ui/` (when a UI recipe is applied)
+8. **SEO / first paint?** → export via `server.tsx`
+9. **Deferred / interactive?** → export via `client.tsx`
+10. **Loading state?** → `skeleton.tsx` + `Suspense`
+11. **Remote endpoint function?** → `lib/apis/`
+12. **Path or endpoint string?** → `lib/constants/` (`ROUTES`, `APIS`, `STORAGE`)
+13. **View model for one route group?** → `<group>/_handlers/` (calls `lib/apis`)
+14. **Pure helper?** → `lib/utils/`
+15. **Cross-route hook?** → `hooks/`
+16. **Theme or env bootstrap?** → `configs/`
+17. **Locale code or copy?** → `src/i18n/`
 
 ---
 
@@ -346,7 +382,7 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 [ ] Add app/[locale]/<group>/<route>/page.tsx
 [ ] Register nav Link via @/i18n/navigation; href from CONSTANTS.ROUTES (no locale prefix)
 [ ] Add locale keys in every language under src/i18n/locales/
-[ ] Put page widgets under <group>/_components/ (or _shared/ if reused)
+[ ] Put widgets under <route>/_components/ (one route), <group>/_components/ (layout/index only), or _shared/ (multi-route)
 [ ] Choose server.tsx OR client.tsx (both only for _shared dual use)
 [ ] Add skeleton.tsx when the section suspends or loads async
 [ ] Name CSS <page>-<component>.module.css when using CSS modules
@@ -363,7 +399,9 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 | --- | --- |
 | Import `./server` from `./client` (or vice versa) | Call sites import one entry; both wrap `template.tsx` |
 | Put `"use client"` on `template.tsx` by default | Keep template presentational; client entry owns interactivity |
-| Dump all widgets in `_shared/` | `_shared/` only for true multi-page reuse |
+| Dump all widgets in `_shared/` | `_shared/` only for true multi-route / multi-group reuse |
+| Group-level `_components/` for a single child route (e.g. only `black-friday`) | `<route>/_components/` under that route |
+| Empty `(group)/_components/` when layout/index never import it | Omit the folder until something needs it |
 | `HeroBanner.tsx` PascalCase file | `hero-banner/server.tsx` exporting `HeroBanner` |
 | Magic `/en/...` or raw paths in JSX | `Link` / `redirect` from `@/i18n/navigation`, href from `CONSTANTS.ROUTES` |
 | Fetch inside `template.tsx` or a second HTTP client in `_handlers/` | `lib/apis` for the call; `_handlers/` for the view model |

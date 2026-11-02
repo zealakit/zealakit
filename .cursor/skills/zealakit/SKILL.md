@@ -43,7 +43,7 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 | `scaffolder.ts` | Copy template/recipes, merge deps, transforms, agent entries |
 | `prompts.ts` | Interactive `@clack/prompts` flow |
 | `validator.ts` | Name / exclusivity / scope checks |
-| `constants.ts` | **`SCOPES`**, **`RECIPE_CATEGORIES`** — single source of truth |
+| `constants.ts` | **`SCOPES`**, **`RECIPE_CATEGORIES`**, **`UI_FRAMEWORK_CATEGORIES`** — single source of truth |
 | `types.ts` | Types derived from constants (`Scope`, `RecipeCategory`, configs) |
 | `registry/templates.ts` | Template registry |
 | `registry/recipes.ts` | Recipe registry (versions, overlays, transforms) |

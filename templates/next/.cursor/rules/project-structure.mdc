@@ -16,7 +16,8 @@ Hard rules:
 - Shared list/detail chrome in `src/components/feature-shell/`
 - Design-system primitives in `src/components/ui/` when a UI recipe is applied; import via `@/components/ui`
 - APIs, constants, and utils in `src/lib/`; group view models in `<group>/_handlers/`; rare shared hooks in `src/hooks/`; bootstrap in `src/configs/`
-- Route-group UI in `<group>/_components/`; multi-page dual SSR/CSR UI in `[locale]/_shared/`
+- Single nested route UI in `<group>/<route>/_components/`; group `_components/` only for that group’s `layout.tsx` / index `page.tsx`; multi-route UI in `[locale]/_shared/`
+- Do not create `(group)/_components/` when the group layout/index never import it; do not put one-route widgets at group level
 - `server.tsx` / `client.tsx` are export entries only — never import both from a sibling file
 - `template.tsx` is the view; `skeleton.tsx` is loading; CSS modules use `<page>-<component>.module.css`
 - Prefer `type` over `interface`; path alias `@/*` → `src/*`

@@ -2,12 +2,33 @@ import { cancel, confirm, intro, isCancel, outro, select, text } from "@clack/pr
 import pc from "picocolors";
 import {
   getAllTemplateIds,
+  getExclusiveUiRecipes,
   getRecipesByCategory,
   getTemplate,
+  getTemplateOverlayId,
   withDefaultRecipes,
 } from "./registry/index.js";
-import type { RecipeConfig, ScaffoldConfig, Scope } from "./types.js";
+import type { RecipeConfig, ScaffoldConfig, Scope, UiFrameworkCategory } from "./types.js";
 import { isValidNpmPackageName } from "./validator.js";
+
+/** Map template overlay family → UI framework tag (extend when Vue/Svelte templates land). */
+function getUiFrameworkCategory(templateId: string): UiFrameworkCategory | undefined {
+  const overlay = getTemplateOverlayId(templateId);
+
+  if (overlay === "vite-react" || overlay === "next") {
+    return "ui-react";
+  }
+
+  if (overlay === "vite-vue" || overlay === "nuxt") {
+    return "ui-vue";
+  }
+
+  if (overlay === "vite-svelte" || overlay === "sveltekit") {
+    return "ui-svelte";
+  }
+
+  return undefined;
+}
 
 type LinterChoice = "biome" | "eslint" | "none";
 
@@ -31,13 +52,17 @@ function mapLinterToRecipe(linter: LinterChoice): string | null {
   return null;
 }
 
-async function promptClientRecipes(): Promise<string[] | null> {
+async function promptClientRecipes(templateId: string): Promise<string[] | null> {
   const recipeIds: string[] = [];
   const stateRecipes = getRecipesByCategory("state");
   const formRecipes = getRecipesByCategory("form");
   const fetcherRecipes = getRecipesByCategory("fetcher");
-  // Exclusive UI kits only — Storybook (multi-category, non-exclusive) is prompted separately.
-  const uiRecipes = getRecipesByCategory("ui").filter((recipe) => recipe.exclusive);
+  // Exclusive UI kits for this template's framework (+ shared `ui`-only kits).
+  // Storybook (multi-category, non-exclusive) is prompted separately.
+  const uiFamily = getUiFrameworkCategory(templateId);
+  const uiRecipes = uiFamily
+    ? getExclusiveUiRecipes(uiFamily)
+    : getRecipesByCategory("ui").filter((recipe) => recipe.exclusive);
 
   const stateChoice = await select<string>({
     message: "Select state management:",
@@ -220,9 +245,9 @@ async function promptServerRecipes(): Promise<string[] | null> {
   return recipeIds;
 }
 
-async function promptRecipesForScope(scope: Scope): Promise<string[] | null> {
+async function promptRecipesForScope(scope: Scope, templateId: string): Promise<string[] | null> {
   if (scope === "client" || scope === "hybrid") {
-    return promptClientRecipes();
+    return promptClientRecipes(templateId);
   }
 
   if (scope === "server") {
@@ -291,7 +316,7 @@ export async function runInteractivePrompts(
     return null;
   }
 
-  const recipeIds = await promptRecipesForScope(template.scope);
+  const recipeIds = await promptRecipesForScope(template.scope, templateId);
   if (recipeIds === null) {
     return null;
   }

@@ -297,63 +297,8 @@ export async function scaffoldProject(
   }
 
   mergePackageJson(targetDir, config);
-  writePnpmAllowBuilds(targetDir, config);
 
   return targetDir;
-}
-
-/**
- * pnpm ≥10 blocks dependency lifecycle scripts until approved.
- * Generated apps are standalone (not the kit workspace), so ship a minimal
- * `pnpm-workspace.yaml` with `allowBuilds` for known native tooling.
- */
-function collectAllowBuilds(templateId: string, recipeIds: string[]): Record<string, true> {
-  const allow: Record<string, true> = {};
-  const hasStorybook = recipeIds.includes("storybook");
-
-  // Vite / Vitest / Storybook pull esbuild postinstall binaries.
-  if (
-    templateId === "vite-react" ||
-    templateId === "nest" ||
-    templateId === "hono" ||
-    hasStorybook
-  ) {
-    allow.esbuild = true;
-  }
-
-  if (templateId === "next") {
-    allow["@swc/core"] = true;
-    // Next / Turbopack file watching (also pulled by Storybook Next builder).
-    allow["@parcel/watcher"] = true;
-  }
-
-  if (hasStorybook) {
-    allow["@parcel/watcher"] = true;
-    // Storybook → @storybook/* → core-js-pure postinstall.
-    allow["core-js-pure"] = true;
-  }
-
-  if (recipeIds.includes("biome")) {
-    allow["@biomejs/biome"] = true;
-  }
-
-  return allow;
-}
-
-function writePnpmAllowBuilds(targetDir: string, config: ScaffoldConfig): void {
-  const allowBuilds = collectAllowBuilds(config.templateId, config.recipeIds);
-  const names = Object.keys(allowBuilds).sort();
-  if (names.length === 0) {
-    return;
-  }
-
-  const lines = ["allowBuilds:"];
-  for (const name of names) {
-    const key = name.includes("@") || name.includes("/") ? JSON.stringify(name) : name;
-    lines.push(`  ${key}: true`);
-  }
-
-  fs.writeFileSync(path.join(targetDir, "pnpm-workspace.yaml"), `${lines.join("\n")}\n`, "utf-8");
 }
 
 function normalizeScaffoldedBiomeConfig(targetDir: string): void {

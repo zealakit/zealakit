@@ -1,1 +1,1 @@
-- **ORM:** [.cursor/skills/mikro-orm/SKILL.md](.cursor/skills/mikro-orm/SKILL.md) — MikroORM persistence, entities, repository adapters
+- **ORM:** [.cursor/skills/mikro-orm/SKILL.md](.cursor/skills/mikro-orm/SKILL.md) — MikroORM setup, adapters, queries/N+1, migrations, transactions

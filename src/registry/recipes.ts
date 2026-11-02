@@ -1,4 +1,5 @@
-import type { RecipeCategory, RecipeConfig, Scope } from "../types.js";
+import { UI_FRAMEWORK_CATEGORIES } from "../constants.js";
+import type { RecipeCategory, RecipeConfig, Scope, UiFrameworkCategory } from "../types.js";
 
 export function getRecipeCategories(recipe: RecipeConfig): RecipeCategory[] {
   return Array.isArray(recipe.category) ? [...recipe.category] : [recipe.category];
@@ -138,7 +139,7 @@ export const recipes: Record<string, RecipeConfig> = {
   antd: {
     id: "antd",
     name: "Ant Design",
-    category: "ui",
+    category: ["ui", "ui-react"],
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
@@ -195,7 +196,7 @@ export const recipes: Record<string, RecipeConfig> = {
   mui: {
     id: "mui",
     name: "MUI",
-    category: "ui",
+    category: ["ui", "ui-react"],
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
@@ -256,7 +257,7 @@ export const recipes: Record<string, RecipeConfig> = {
   "shadcn-ui": {
     id: "shadcn-ui",
     name: "shadcn/ui (core: base-ui | theme: vega | icons: lucide)",
-    category: "ui",
+    category: ["ui", "ui-react"],
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
@@ -478,6 +479,30 @@ export function getAllRecipeIds(): string[] {
 
 export function getRecipesByCategory(category: RecipeCategory): RecipeConfig[] {
   return Object.values(recipes).filter((recipe) => recipeHasCategory(recipe, category));
+}
+
+/**
+ * Exclusive UI kits for a UI framework family.
+ * - Shared kits tagged only `ui` (no ui-react/ui-vue/ui-svelte) are always included.
+ * - Framework-specific kits must include that family tag (e.g. `ui-react`).
+ */
+export function getExclusiveUiRecipes(family: UiFrameworkCategory): RecipeConfig[] {
+  return getRecipesByCategory("ui").filter((recipe) => {
+    if (!recipe.exclusive) {
+      return false;
+    }
+
+    const cats = getRecipeCategories(recipe);
+    const frameworkTags = cats.filter((category): category is UiFrameworkCategory =>
+      (UI_FRAMEWORK_CATEGORIES as readonly string[]).includes(category),
+    );
+
+    if (frameworkTags.length === 0) {
+      return true;
+    }
+
+    return frameworkTags.includes(family);
+  });
 }
 
 export function isDefaultRecipeSupportedForScope(recipe: RecipeConfig, scope: Scope): boolean {

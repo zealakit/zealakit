@@ -6,7 +6,7 @@ alwaysApply: false
 
 # TypeORM
 
-Follow `.cursor/skills/type-orm/SKILL.md` when wiring TypeORM.
+Follow `.cursor/skills/type-orm/SKILL.md` (and its `references/`) when wiring TypeORM.
 
 Hard rules:
 
@@ -14,3 +14,5 @@ Hard rules:
 - Repository **ports** stay in domain; TypeORM lives only in adapters
 - Prefer `*.repository.adapter.ts` names (ORM-agnostic), not `typeorm-*.ts`
 - Uncomment `TypeormPersistenceModule` in `bootstrap/app.module.ts` (or Hono composition) after driver + env are set; feature modules import `TypeOrmModule.forFeature([...])` when needed
+- No `synchronize: true` in production — use migrations; avoid N+1 with joins/`relations` inside adapters
+

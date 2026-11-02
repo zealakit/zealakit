@@ -287,24 +287,10 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
     errors,
   );
   assert(
-    pathExists(path.join(appDir, "pnpm-workspace.yaml")),
-    "scaffolded app should ship pnpm-workspace.yaml allowBuilds",
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "scaffolded app should not ship pnpm-workspace.yaml (package-manager agnostic)",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes("esbuild: true"),
-      "vite-react allowBuilds should approve esbuild",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@biomejs/biome": true') ||
-        pnpmWorkspace.includes("@biomejs/biome: true"),
-      "biome recipe should approve @biomejs/biome builds",
-      errors,
-    );
-  }
 
   if (pathExists(path.join(appDir, "biome.json"))) {
     const biomeConfig = JSON.parse(fs.readFileSync(path.join(appDir, "biome.json"), "utf-8")) as {
@@ -912,20 +898,11 @@ async function testCase10NextShadcnUiPass(tarballPath: string): Promise<TestCase
     "shadcn-ui next overlay should provide lib/utils/index.ts",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes('"@swc/core": true') || pnpmWorkspace.includes("@swc/core: true"),
-      "next allowBuilds should approve @swc/core",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@parcel/watcher": true') ||
-        pnpmWorkspace.includes("@parcel/watcher: true"),
-      "next allowBuilds should approve @parcel/watcher",
-      errors,
-    );
-  }
+  assert(
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "next scaffold should not ship pnpm-workspace.yaml",
+    errors,
+  );
 
   if (pathExists(path.join(appDir, "components.json"))) {
     const componentsJson = fs.readFileSync(path.join(appDir, "components.json"), "utf-8");
@@ -1663,25 +1640,11 @@ async function testCase13StorybookPass(tarballPath: string): Promise<TestCaseRes
     "storybook recipe should copy skill",
     errors,
   );
-  if (pathExists(path.join(appDir, "pnpm-workspace.yaml"))) {
-    const pnpmWorkspace = fs.readFileSync(path.join(appDir, "pnpm-workspace.yaml"), "utf-8");
-    assert(
-      pnpmWorkspace.includes("esbuild: true"),
-      "storybook allowBuilds should approve esbuild",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes("core-js-pure: true"),
-      "storybook allowBuilds should approve core-js-pure",
-      errors,
-    );
-    assert(
-      pnpmWorkspace.includes('"@parcel/watcher": true') ||
-        pnpmWorkspace.includes("@parcel/watcher: true"),
-      "storybook allowBuilds should approve @parcel/watcher",
-      errors,
-    );
-  }
+  assert(
+    !pathExists(path.join(appDir, "pnpm-workspace.yaml")),
+    "storybook scaffold should not ship pnpm-workspace.yaml",
+    errors,
+  );
 
   if (pathExists(path.join(appDir, "package.json"))) {
     const pkg = readPackageJson(appDir);

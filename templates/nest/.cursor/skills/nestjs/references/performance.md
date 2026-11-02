@@ -358,7 +358,7 @@ export class OrdersService {
 }
 ```
 
-Reference: [TypeORM Query Builder](https://typeorm.io/select-query-builder)
+Persistence query patterns (joins, N+1, pagination) live in the installed ORM skill under `.cursor/skills/<type-orm|mikro-orm|drizzle-orm>/references/queries.md` — keep Nest performance guidance ORM-agnostic at the port boundary.
 
 ---
 
