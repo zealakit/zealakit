@@ -1,5 +1,9 @@
 # Zealakit
 
+<p align="center">
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" width="420" />
+</p>
+
 **Scaffold dự án TypeScript theo kiểu ghép recipe.**
 
 Chọn template, thêm đúng những recipe cần dùng, nhận project sẵn sàng cài đặt — kèm dependencies, scripts và tài liệu cho AI agent. Không cần cài CLI global.

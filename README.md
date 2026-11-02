@@ -1,5 +1,9 @@
 # Zealakit
 
+<p align="center">
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" width="420" />
+</p>
+
 **Recipe-based scaffolding for TypeScript projects.**
 
 Pick a template, add only the recipes you need, and get a ready-to-install project — dependencies, scripts, and AI-agent docs included. No global install required.
