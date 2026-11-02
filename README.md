@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" width="420" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" />
 </p>
 
 **Recipe-based scaffolding for TypeScript projects.**
