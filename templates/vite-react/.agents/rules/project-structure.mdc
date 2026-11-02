@@ -10,7 +10,7 @@ Follow `.agents/skills/project-structure/SKILL.md` when adding features, placing
 Hard rules:
 
 - kebab-case **files and folders**; PascalCase **component exports**
-- Screens live in `src/app/features/<feature>/` (`shell.tsx`, `list.tsx`, `login.tsx`, …)
+- Screens live in `src/app/features/<feature>/` (`list.tsx`, `login.tsx`, …). `shell.tsx` / `FeatureShell` are **optional** (use when chrome is shared; see `feature-a` vs `feature-b`)
 - Routes are composed in `src/app/router/` (lazy-loaded screens, paths from `CONSTANTS.ROUTES`)
 - APIs and models in `src/lib/apis/`; no `src/pages/`, `src/api/`, or PascalCase `*Page.tsx`
 - Folders are roles; recipes choose libraries (e.g. store, schema, HTTP client)

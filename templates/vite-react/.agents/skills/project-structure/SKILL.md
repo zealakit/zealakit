@@ -1,11 +1,11 @@
 ---
 name: project-structure
 description: >-
-  Defines folder layout, file naming, routing, shared feature chrome, and form
-  placement for this SPA. Use when adding features, placing files, naming
-  routes/hooks/components, wiring APIs, building forms/schemas, or answering
-  “where does this belong?”. Does not prescribe a UI kit, HTTP client, or
-  state library — those come from recipes.
+  Defines folder layout, file naming, routing, optional feature-shell chrome,
+  and form placement for this SPA. Use when adding features, placing files,
+  naming routes/hooks/components, wiring APIs, building forms/schemas, or
+  answering “where does this belong?”. Does not prescribe a UI kit, HTTP client,
+  or state library — those come from recipes.
 ---
 
 # Project structure
@@ -56,7 +56,7 @@ src/
 │   ├── console-layout/      # Authenticated app frame (sidebar, header, footer, …)
 │   └── entry-layout/        # Unauthenticated entry (login, sign-up, forgot password, …)
 ├── components/
-│   └── feature-shell/       # Shared feature chrome (list/detail/overlays)
+│   └── feature-shell/       # Optional shared list/detail chrome (see below)
 ├── lib/                     # Non-UI kernel (from client-shared-pieces recipe)
 │   ├── apis/                # Remote API functions + models
 │   ├── constants/           # Routes, endpoints, locale codes, storage keys
@@ -99,7 +99,7 @@ Assemble the route tree. Stay thin — **no feature UI here**.
 | Unit | Role |
 | --- | --- |
 | `index.tsx` | Create the router, compose area arrays |
-| `auth.tsx` / `overview.tsx` / `feature-a.tsx` | Split route tables by area |
+| `auth.tsx` / `overview.tsx` / `feature-a.tsx` / `feature-b.tsx` | Split route tables by area |
 
 **Rules**
 
@@ -129,7 +129,7 @@ Auth-style features skip shell and use one file per screen: `login.tsx`, `sign-u
 
 | Unit | Role |
 | --- | --- |
-| `shell.tsx` | Feature boundary: shared chrome + nested outlet |
+| `shell.tsx` | **Optional** feature boundary when using shared `FeatureShell` + nested `<Outlet />` |
 | `list.tsx` / `detail.tsx` | One screen = one file at the feature root |
 | `components/` | Feature-private UI; do not import from another feature’s `components/` |
 | `hooks/` | Feature logic |
@@ -138,13 +138,24 @@ Auth-style features skip shell and use one file per screen: `login.tsx`, `sign-u
 
 Default-export the screen component; router files lazy-import that module.
 
-### `src/components/feature-shell/`
+**Examples in this template**
+
+| Feature | Shell? | Role |
+| --- | --- | --- |
+| `feature-a/` | Yes — `shell.tsx` + `FeatureShell` | Reference when several screens share list/detail/create chrome |
+| `feature-b/` | No — routes use `<Outlet />` only | Reference when UI is unique; skip shell rather than force a bad fit |
+
+### `src/components/feature-shell/` (**optional**)
 
 Shared composite for list/detail/create/update chrome: capabilities, overlay vs route presentation, busy state.
 
-Features wrap shell content with this chrome and read its context from a hook (re-export a feature alias if useful).
+**Not required.** Use it only when multiple screens (or features) truly share that chrome. If layouts, interactions, or presentation differ, build plain feature screens like `feature-b/` — do not wrap everything in `FeatureShell` “for consistency”.
 
-If a widget is only used by one feature → move under that feature’s `components/`.
+When you do use it:
+
+- Add `features/<feature>/shell.tsx` that wraps `<FeatureShell>…<Outlet /></FeatureShell>`
+- Screens read context via a feature hook alias (e.g. `useFeatureAShell`)
+- If a widget is only used by one feature → keep it under that feature’s `components/`
 
 ### `src/layouts/`
 
@@ -168,7 +179,7 @@ layouts/
 - One kebab-case folder per layout; export the layout component from `index.tsx`.
 - Layouts may wrap an `<Outlet />` (or children) and shared chrome only.
 - No API calls, no form submit logic, no feature-specific copy beyond chrome labels.
-- Feature chrome (list/detail/create) stays in `components/feature-shell/` or `features/<feature>/shell.tsx` — do not fold that into `layouts/`.
+- Optional feature chrome (list/detail/create) stays in `components/feature-shell/` or `features/<feature>/shell.tsx` — do not fold that into `layouts/`.
 
 ### `src/components/ui/` (when a UI recipe is applied)
 
@@ -238,7 +249,7 @@ Global stylesheets and token files. Component-scoped styles live next to the com
 | Artifact | Pattern | Example |
 | --- | --- | --- |
 | Feature screens | `<intent>.tsx` at feature root | `shell.tsx`, `list.tsx`, `login.tsx` |
-| Router area | `app/router/<area>.tsx` | `feature-a.tsx` |
+| Router area | `app/router/<area>.tsx` | `feature-a.tsx`, `feature-b.tsx` |
 | Component folder | `kebab-case/` + `index.tsx` | `some-comp/index.tsx` |
 | App layout | `layouts/<name>-layout/` + `index.tsx` | `layouts/entry-layout/index.tsx` |
 | API module | `kebab-case.ts` | `example.ts` |
@@ -271,7 +282,7 @@ Use `interface` only for declaration merging (ambient `.d.ts`). Prefer `import t
 1. **Tied to one URL / screen?** → `app/features/<feature>/<intent>.tsx`
 2. **UI only that feature uses?** → `features/<feature>/components/`
 3. **App chrome around many routes (sidebar / auth frame)?** → `layouts/<name>-layout/`
-4. **List/detail chrome reused across features?** → `components/feature-shell/`
+4. **List/detail chrome truly shared across screens/features?** → optional `components/feature-shell/` (+ `shell.tsx`). Otherwise plain screens like `feature-b/`
 5. **Reusable composite?** → `components/<shared-widget>/`
 6. **Primitive control?** → `components/ui/` (when present)
 7. **API / path constant / schema / pure helper?** → `lib/`
@@ -284,12 +295,12 @@ Use `interface` only for declaration merging (ambient `.d.ts`). Prefer `import t
 
 ```
 [ ] Create src/app/features/<feature>/
-[ ] Add shell.tsx + list.tsx (and detail/create/update as needed)
+[ ] Add list.tsx (and detail/create/update as needed)
+[ ] Only if chrome is shared: add shell.tsx + FeatureShell (see feature-a); else skip (see feature-b)
 [ ] Register lazy routes in app/router/<feature>.tsx using CONSTANTS.ROUTES
 [ ] Compose the area into app/router/index.tsx
 [ ] Add lib/constants/routes + lib/constants/apis as needed
 [ ] Add lib/apis/<resource>.ts + models
-[ ] Wrap CRUD shells with the shared feature chrome
 [ ] Feature hooks under features/<feature>/hooks/
 [ ] Feature components under features/<feature>/components/
 [ ] Locale keys in every language under assets/locales/
@@ -314,7 +325,8 @@ Form validation: a form recipe may add a skill under `.agents/skills/`.
 | `interface` for props/models by default | `type` |
 | Hardcoded validation strings in schemas | Schema factory with `t` (form recipe skill, when present) |
 | API calls inside `components/ui` | `lib/apis` + feature/route |
-| Business logic / CRUD in `layouts/` | Feature hooks / screens; CRUD chrome → `feature-shell` |
+| Business logic / CRUD in `layouts/` | Feature hooks / screens; shared CRUD chrome → optional `feature-shell` |
+| Force `FeatureShell` when UI diverges | Plain screens (`feature-b`) without shell |
 | Layouts under `components/layouts/` | Top-level `src/layouts/<name>-layout/` |
 | Bind a folder to one library forever | Same folder, recipe picks the library |
 

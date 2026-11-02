@@ -10,7 +10,7 @@ description: >-
 
 # Project structure
 
-Opinionated App Router layout for a multilingual Next.js app. Page widgets live in route groups. `src/components/` is only for shared feature chrome (`feature-shell`) and design-system primitives (`ui`).
+Opinionated App Router layout for a multilingual Next.js app. Page widgets live in route groups. `src/components/` holds optional shared feature chrome (`feature-shell`, only when list/detail UI is truly shared) and design-system primitives (`ui`).
 
 **Naming hard rule:** all source **file and folder** names use **kebab-case** (including `.tsx`). React component **identifiers** use **PascalCase**. Never `HeroBanner.tsx` — use `hero-banner/` exporting `HeroBanner`.
 
@@ -67,7 +67,7 @@ src/
 │   ├── console-layout/           # Authenticated app frame (sidebar, header, footer, …)
 │   └── entry-layout/             # Unauthenticated entry (login, sign-up, forgot password, …)
 ├── components/
-│   └── feature-shell/            # Shared feature chrome (list/detail/overlays)
+│   └── feature-shell/            # Optional shared list/detail chrome (add only when reused)
 ├── lib/                          # Non-UI kernel (from client-shared-pieces recipe)
 │   ├── apis/                     # Remote API functions + models
 │   ├── constants/                # Routes, endpoints, storage keys
@@ -208,13 +208,15 @@ layouts/
 - `(site)` and `(landing)` keep their chrome in that group’s `layout.tsx`.
 - Layouts may wrap `children` and shared chrome only.
 - No API calls, no form submit logic, no feature-specific copy beyond chrome labels.
-- List/detail/create chrome stays in `components/feature-shell/` — do not fold that into `layouts/`.
+- Optional list/detail/create chrome may live in `components/feature-shell/` — do not fold that into `layouts/`. Skip `feature-shell` when console pages do not share chrome.
 
-### `src/components/feature-shell/`
+### `src/components/feature-shell/` (**optional**)
 
 Shared composite for list/detail/create/update chrome: capabilities, overlay vs route presentation, busy state.
 
-Console pages wrap list/detail/create/update content with this chrome and read its context from the hook.
+**Not required** and **not shipped** in this template by default. Add it only when several console screens truly share that chrome. If each page’s UI differs, build route-local widgets under `_components/` instead of forcing a shell.
+
+When used, console pages wrap list/detail/create/update content with this chrome and read its context from the hook.
 
 If a widget is only used by one **nested route** → that route’s `_components/`. If only the group layout / index page uses it → that group’s `_components/`. If multiple routes/groups use it → `[locale]/_shared/`.
 
@@ -361,7 +363,7 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 3. **UI for this group’s `layout.tsx` or index `page.tsx` only?** → `<group>/_components/<widget>/` (omit the folder if neither needs it)
 4. **UI reused across multiple routes / groups?** → `[locale]/_shared/<widget>/`
 5. **Entry or console chrome (sidebar / auth frame)?** → `layouts/<name>-layout/`, rendered from that group’s `layout.tsx`
-6. **List/detail chrome reused across console pages?** → `components/feature-shell/`
+6. **List/detail chrome truly shared across console pages?** → optional `components/feature-shell/`; otherwise route `_components/` only
 7. **Primitive control?** → `components/ui/` (when a UI recipe is applied)
 8. **SEO / first paint?** → export via `server.tsx`
 9. **Deferred / interactive?** → export via `client.tsx`
@@ -410,7 +412,8 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 | Marketing header inside `src/layouts/` | Keep `(site)` chrome in `(site)/layout.tsx` |
 | API calls inside `components/ui` or a page template | `lib/apis` from `_handlers/` |
 | Import the vendor UI package from a page | `@/components/ui` when a UI recipe is applied |
-| Business logic / CRUD in `layouts/` | Page handlers and screens; CRUD chrome → `feature-shell` |
+| Business logic / CRUD in `layouts/` | Page handlers and screens; shared CRUD chrome → optional `feature-shell` |
+| Force `feature-shell` when page UIs diverge | Route-local `_components/` without a shared shell |
 | Layouts under `components/layouts/` | Top-level `src/layouts/<name>-layout/` |
 | Login under `(site)` with marketing chrome | `(entry)/auth/...` composing `entry-layout` |
 | Dashboard under `(site)` | `(console)/...` with app chrome |
