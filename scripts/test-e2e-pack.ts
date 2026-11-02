@@ -365,7 +365,7 @@ async function testCase1ClientPass(tarballPath: string): Promise<TestCaseResult>
       errors,
     );
     assert("ky" in deps, "package.json should include ky", errors);
-    assert(deps.ky === "^2.1.0", `ky version should be ^2.1.0, got ${deps.ky}`, errors);
+    assert(deps.ky === "^2.2.0", `ky version should be ^2.2.0, got ${deps.ky}`, errors);
     assert(!("axios" in deps), "package.json should NOT include axios", errors);
     assert("@biomejs/biome" in devDeps, "package.json should include @biomejs/biome", errors);
     assert(!("antd" in deps), "package.json should NOT include antd", errors);
@@ -509,7 +509,7 @@ async function testCase5AxiosPass(tarballPath: string): Promise<TestCaseResult> 
     const pkg = readPackageJson(appDir);
     const deps = (pkg.dependencies ?? {}) as Record<string, string>;
     assert("axios" in deps, "package.json should include axios", errors);
-    assert(deps.axios === "^1.20.0", `axios version should be ^1.20.0, got ${deps.axios}`, errors);
+    assert(deps.axios === "^1.21.0", `axios version should be ^1.21.0, got ${deps.axios}`, errors);
     assert(!("ky" in deps), "package.json should NOT include ky", errors);
   }
 
@@ -625,7 +625,7 @@ async function testCase7AntdPass(tarballPath: string): Promise<TestCaseResult> {
     const pkg = readPackageJson(appDir);
     const deps = (pkg.dependencies ?? {}) as Record<string, string>;
     assert("antd" in deps, "package.json should include antd", errors);
-    assert(deps.antd === "^6.6.5", `antd version should be ^6.6.5, got ${deps.antd}`, errors);
+    assert(deps.antd === "^6.6.8", `antd version should be ^6.6.8, got ${deps.antd}`, errors);
   }
 
   return { name, passed: errors.length === 0, errors };
@@ -737,8 +737,8 @@ async function testCase8MuiPass(tarballPath: string): Promise<TestCaseResult> {
     const deps = (pkg.dependencies ?? {}) as Record<string, string>;
     assert("@mui/material" in deps, "package.json should include @mui/material", errors);
     assert(
-      deps["@mui/material"] === "^9.4.0",
-      `@mui/material version should be ^9.4.0, got ${deps["@mui/material"]}`,
+      deps["@mui/material"] === "^9.5.0",
+      `@mui/material version should be ^9.5.0, got ${deps["@mui/material"]}`,
       errors,
     );
     assert("@emotion/react" in deps, "package.json should include @emotion/react", errors);
@@ -862,8 +862,8 @@ async function testCase9ShadcnUiPass(tarballPath: string): Promise<TestCaseResul
     const deps = (pkg.dependencies ?? {}) as Record<string, string>;
     assert("shadcn" in deps, "package.json should include shadcn", errors);
     assert(
-      deps.shadcn === "^4.21.3",
-      `shadcn version should be ^4.21.3, got ${deps.shadcn}`,
+      deps.shadcn === "^4.23.0",
+      `shadcn version should be ^4.23.0, got ${deps.shadcn}`,
       errors,
     );
     assert("tailwindcss" in deps, "package.json should include tailwindcss", errors);
@@ -1675,8 +1675,8 @@ async function testCase13StorybookPass(tarballPath: string): Promise<TestCaseRes
     assert("@mui/material" in deps, "mui should still install alongside storybook", errors);
     assert("storybook" in devDeps, "package.json should include storybook", errors);
     assert(
-      devDeps.storybook === "^10.6.1",
-      `storybook version should be ^10.6.1, got ${devDeps.storybook}`,
+      devDeps.storybook === "^10.6.5",
+      `storybook version should be ^10.6.5, got ${devDeps.storybook}`,
       errors,
     );
     assert(
