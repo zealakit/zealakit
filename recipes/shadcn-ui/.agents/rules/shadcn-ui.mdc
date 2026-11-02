@@ -1,0 +1,11 @@
+---
+description: shadcn/ui Tailwind tokens and UI wrappers
+globs: "**/components/ui/**,**/styles/global.css,**/styles/globals.css,**/app/globals.css,components.json"
+alwaysApply: false
+---
+
+# UI kit
+
+When changing shadcn/ui primitives or theme tokens, follow `.agents/skills/shadcn-ui/SKILL.md`.
+
+Import primitives from `@/components/ui`. Theme tokens live in `src/styles/globals.css` (Vite) or `src/app/globals.css` (Next).

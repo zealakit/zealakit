@@ -1,0 +1,11 @@
+---
+description: Form schemas and feature form hooks (React Hook Form + Zod)
+globs: "**/{*.schema.ts,**/hooks/use-*-form.ts,**/hooks/use-*-form.tsx}"
+alwaysApply: false
+---
+
+# Forms
+
+When adding or changing forms, follow `.agents/skills/hookform-zod/SKILL.md`.
+
+Schemas go in `src/lib/schemas/`. Form hooks go in `src/app/features/<feature>/hooks/`.

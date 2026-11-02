@@ -334,7 +334,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/app.module.ts",
           pattern: /import \{ Module \} from "@nestjs\/common";/,
           replacement:
-            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .cursor/skills/type-orm/SKILL.md\n// import { TypeormPersistenceModule } from "@/infrastructure/persistence/typeorm/typeorm.module.js";',
+            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .agents/skills/type-orm/SKILL.md\n// import { TypeormPersistenceModule } from "@/infrastructure/persistence/typeorm/typeorm.module.js";',
         },
         {
           file: "src/bootstrap/app.module.ts",
@@ -348,7 +348,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/container.ts",
           pattern: /import \{ createFeatureA \} from "\.\/modules\/feature-a\.js";/,
           replacement:
-            '// Uncomment after configuring a DB driver + env — see .cursor/skills/type-orm/SKILL.md\n// import { createTypeOrmDataSource } from "@/infrastructure/persistence/typeorm/typeorm.data-source.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
+            '// Uncomment after configuring a DB driver + env — see .agents/skills/type-orm/SKILL.md\n// import { createTypeOrmDataSource } from "@/infrastructure/persistence/typeorm/typeorm.data-source.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
         },
         {
           file: "src/bootstrap/container.ts",
@@ -388,7 +388,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/app.module.ts",
           pattern: /import \{ Module \} from "@nestjs\/common";/,
           replacement:
-            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .cursor/skills/mikro-orm/SKILL.md\n// import { MikroOrmPersistenceModule } from "@/infrastructure/persistence/mikro-orm/mikro-orm.module.js";',
+            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .agents/skills/mikro-orm/SKILL.md\n// import { MikroOrmPersistenceModule } from "@/infrastructure/persistence/mikro-orm/mikro-orm.module.js";',
         },
         {
           file: "src/bootstrap/app.module.ts",
@@ -402,7 +402,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/container.ts",
           pattern: /import \{ createFeatureA \} from "\.\/modules\/feature-a\.js";/,
           replacement:
-            '// Uncomment after configuring a DB driver + env — see .cursor/skills/mikro-orm/SKILL.md\n// import { createMikroOrm } from "@/infrastructure/persistence/mikro-orm/mikro-orm.bootstrap.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
+            '// Uncomment after configuring a DB driver + env — see .agents/skills/mikro-orm/SKILL.md\n// import { createMikroOrm } from "@/infrastructure/persistence/mikro-orm/mikro-orm.bootstrap.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
         },
         {
           file: "src/bootstrap/container.ts",
@@ -442,7 +442,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/app.module.ts",
           pattern: /import \{ Module \} from "@nestjs\/common";/,
           replacement:
-            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .cursor/skills/drizzle-orm/SKILL.md\n// import { DrizzlePersistenceModule } from "@/infrastructure/persistence/drizzle/drizzle.module.js";',
+            'import { Module } from "@nestjs/common";\n// Uncomment after configuring a DB driver + env — see .agents/skills/drizzle-orm/SKILL.md\n// import { DrizzlePersistenceModule } from "@/infrastructure/persistence/drizzle/drizzle.module.js";',
         },
         {
           file: "src/bootstrap/app.module.ts",
@@ -456,7 +456,7 @@ export const recipes: Record<string, RecipeConfig> = {
           file: "src/bootstrap/container.ts",
           pattern: /import \{ createFeatureA \} from "\.\/modules\/feature-a\.js";/,
           replacement:
-            '// Uncomment after configuring a DB driver + env — see .cursor/skills/drizzle-orm/SKILL.md\n// import { createDrizzleClient } from "@/infrastructure/persistence/drizzle/drizzle.bootstrap.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
+            '// Uncomment after configuring a DB driver + env — see .agents/skills/drizzle-orm/SKILL.md\n// import { createDrizzleClient } from "@/infrastructure/persistence/drizzle/drizzle.bootstrap.js";\nimport { createFeatureA } from "./modules/feature-a.js";',
         },
         {
           file: "src/bootstrap/container.ts",

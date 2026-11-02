@@ -5,7 +5,7 @@ const url = process.env.DATABASE_URL?.trim();
 
 if (!dialect || !url) {
   throw new Error(
-    "drizzle-kit needs DB_DIALECT (postgresql | mysql | sqlite | …) and DATABASE_URL. See .cursor/skills/drizzle-orm/SKILL.md.",
+    "drizzle-kit needs DB_DIALECT (postgresql | mysql | sqlite | …) and DATABASE_URL. See .agents/skills/drizzle-orm/SKILL.md.",
   );
 }
 

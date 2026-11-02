@@ -1,1 +1,1 @@
-- **ORM:** [.cursor/skills/type-orm/SKILL.md](.cursor/skills/type-orm/SKILL.md) — TypeORM setup, adapters, queries/N+1, migrations, transactions
+- **ORM:** [.agents/skills/type-orm/SKILL.md](.agents/skills/type-orm/SKILL.md) — TypeORM setup, adapters, queries/N+1, migrations, transactions

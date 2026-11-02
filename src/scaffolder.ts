@@ -297,8 +297,45 @@ export async function scaffoldProject(
   }
 
   mergePackageJson(targetDir, config);
+  ensureCursorAgentsSymlink(targetDir);
 
   return targetDir;
+}
+
+/**
+ * Canonical agent docs live in `.agents/`. `.cursor` must be a relative symlink
+ * to `.agents` so Cursor IDE and package-agnostic tools both work.
+ */
+function ensureCursorAgentsSymlink(targetDir: string): void {
+  const agentsDir = path.join(targetDir, ".agents");
+  const cursorPath = path.join(targetDir, ".cursor");
+
+  if (!fs.existsSync(agentsDir)) {
+    return;
+  }
+
+  try {
+    const cursorStat = fs.lstatSync(cursorPath);
+    if (cursorStat.isSymbolicLink()) {
+      if (fs.readlinkSync(cursorPath) === ".agents") {
+        return;
+      }
+      fs.unlinkSync(cursorPath);
+    } else if (cursorStat.isDirectory()) {
+      // Copy may have dereferenced the symlink into a real directory. Prefer
+      // `.agents` as the source of truth and replace `.cursor` with a symlink.
+      fse.removeSync(cursorPath);
+    } else {
+      fs.unlinkSync(cursorPath);
+    }
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  fs.symlinkSync(".agents", cursorPath);
 }
 
 function normalizeScaffoldedBiomeConfig(targetDir: string): void {

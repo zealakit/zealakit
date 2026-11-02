@@ -13,7 +13,7 @@ Hexagonal / Clean Architecture NestJS + TypeScript base. Scaffolded by [zealakit
 | `src/shared/` | Pure cross-cutting helpers |
 | `src/bootstrap/` | `main.ts`, `app.module.ts`, feature Nest modules |
 
-See [.cursor/skills/structure-ddd/SKILL.md](.cursor/skills/structure-ddd/SKILL.md).
+See [.agents/skills/structure-ddd/SKILL.md](.agents/skills/structure-ddd/SKILL.md).
 
 ## Scripts
 
@@ -33,4 +33,4 @@ When a linter recipe is applied:
 ## Agent docs
 
 - [AGENTS.md](AGENTS.md)
-- Skills under [.cursor/skills/](.cursor/skills/)
+- Skills under [.agents/skills/](.agents/skills/)

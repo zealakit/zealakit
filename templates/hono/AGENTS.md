@@ -4,10 +4,10 @@ This project uses Cursor skills and rules for **where files go** and **how to wr
 
 ## Always follow
 
-- **Structure:** [.cursor/skills/structure-ddd/SKILL.md](.cursor/skills/structure-ddd/SKILL.md) — hexagonal layers, feature placement, composition root
-- **Hono:** [.cursor/skills/hono/SKILL.md](.cursor/skills/hono/SKILL.md) — routes, middleware, Node adapter, testing
-- **TypeScript:** [.cursor/skills/typescript/SKILL.md](.cursor/skills/typescript/SKILL.md) — types, tsconfig, narrowing
-- **JavaScript:** [.cursor/skills/javascript/SKILL.md](.cursor/skills/javascript/SKILL.md) — modules, async, idioms
-- **Rules:** [.cursor/rules/](.cursor/rules/)
+- **Structure:** [.agents/skills/structure-ddd/SKILL.md](.agents/skills/structure-ddd/SKILL.md) — hexagonal layers, feature placement, composition root
+- **Hono:** [.agents/skills/hono/SKILL.md](.agents/skills/hono/SKILL.md) — routes, middleware, Node adapter, testing
+- **TypeScript:** [.agents/skills/typescript/SKILL.md](.agents/skills/typescript/SKILL.md) — types, tsconfig, narrowing
+- **JavaScript:** [.agents/skills/javascript/SKILL.md](.agents/skills/javascript/SKILL.md) — modules, async, idioms
+- **Rules:** [.agents/rules/](.agents/rules/)
 
 Entry: `src/bootstrap/main.ts`. Path alias: `@/*` → `src/*`. Keep `.js` extensions under `nodenext` (e.g. `@/application/.../handler.js`).

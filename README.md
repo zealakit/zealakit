@@ -26,7 +26,7 @@ Each recipe brings its own files, dependencies, and scripts. Zealakit merges eve
 You also get:
 
 - A consistent, feature-based folder structure
-- `.cursor` skills and rules plus `AGENTS.md` / `CLAUDE.md`
+- `.agents` skills and rules (`.cursor` → `.agents` symlink) plus `AGENTS.md` / `CLAUDE.md`
 - No lock-in — generated projects are plain TypeScript apps
 
 ---
@@ -107,7 +107,7 @@ Every template includes:
 
 - Feature-based folders and a working sample feature
 - `@/*` path alias
-- `.cursor/` skills and rules
+- `.agents/` skills and rules (`.cursor` symlink for Cursor)
 - `AGENTS.md` and `CLAUDE.md` for AI coding assistants
 
 Start commands:
@@ -168,7 +168,8 @@ npx zealakit@latest api-hono -t hono -w biome,type-orm -y
 ```text
 my-app/
 ├─ src/                 # Application code
-├─ .cursor/             # Skills and rules for AI assistants
+├─ .agents/             # Skills and rules for AI assistants
+├─ .cursor -> .agents   # Symlink for Cursor IDE
 ├─ AGENTS.md            # Guidance for coding agents
 ├─ CLAUDE.md
 ├─ package.json         # Merged dependencies and scripts
@@ -237,7 +238,7 @@ npx --yes --package=./zealakit-<version>.tgz zealakit my-app -w biome -y
 - **Recipe:** add `recipes/<id>/`, register it in `src/registry/recipes.ts`, then add an overlay for every supported template.
 - **New category or scope:** update `src/constants.ts` first.
 
-See [.cursor/skills/zealakit/extending.md](.cursor/skills/zealakit/extending.md) for the full checklist.
+See [.agents/skills/zealakit/extending.md](.agents/skills/zealakit/extending.md) for the full checklist.
 
 ---
 

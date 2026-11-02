@@ -1,1 +1,1 @@
-- **UI kit:** [.cursor/skills/antd/SKILL.md](.cursor/skills/antd/SKILL.md) — AntdRegistry (Next) / AntdThemeProvider, theme tokens, `src/components/ui/`
+- **UI kit:** [.agents/skills/antd/SKILL.md](.agents/skills/antd/SKILL.md) — AntdRegistry (Next) / AntdThemeProvider, theme tokens, `src/components/ui/`

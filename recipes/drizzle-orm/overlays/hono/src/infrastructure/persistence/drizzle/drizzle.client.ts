@@ -17,6 +17,6 @@ import type { DrizzleDb } from "./drizzle.types.js";
  */
 export function createDrizzleClient(): DrizzleDb {
   throw new Error(
-    "Drizzle client is not configured: implement createDrizzleClient() in infrastructure/persistence/drizzle/drizzle.client.ts and install a DB driver. See .cursor/skills/drizzle-orm/SKILL.md.",
+    "Drizzle client is not configured: implement createDrizzleClient() in infrastructure/persistence/drizzle/drizzle.client.ts and install a DB driver. See .agents/skills/drizzle-orm/SKILL.md.",
   );
 }

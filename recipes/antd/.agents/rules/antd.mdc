@@ -1,0 +1,13 @@
+---
+description: Ant Design theme provider, tokens, and UI wrappers
+globs: "**/components/ui/**,**/app/antd-theme-provider.tsx,**/app/layout.tsx,**/app/[locale]/layout.tsx,**/main.tsx,**/configs/theme.ts"
+alwaysApply: false
+---
+
+# UI kit
+
+When changing theme wiring or `AntdThemeProvider` / `AntdRegistry`, follow `.agents/skills/antd/SKILL.md`.
+
+Import primitives from `@/components/ui`. Theme tokens live in `src/configs/theme.ts`.
+
+On Next: `AntdRegistry` in root `app/layout.tsx`; client `AntdThemeProvider` in `app/[locale]/layout.tsx`.

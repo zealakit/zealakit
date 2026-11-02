@@ -1,0 +1,21 @@
+---
+description: Zealakit kit architecture — templates, recipes, overlays, registry
+alwaysApply: true
+---
+
+# Zealakit (kit repo)
+
+This repository is the **zealakit scaffolding CLI**, not a generated app.
+
+Before changing structure, recipes, templates, or `src/`:
+
+1. Read [.agents/skills/zealakit/SKILL.md](../skills/zealakit/SKILL.md)
+2. When adding/changing templates or recipes, also read [.agents/skills/zealakit/extending.md](../skills/zealakit/extending.md)
+
+Hard rules:
+
+- Single source for scopes/categories: `src/constants.ts`
+- Register templates/recipes in `src/registry/`
+- Recipe `overlays/<id>/` must match `getTemplateOverlayId(template)`
+- Agent skills/rules live in **`.agents/`**; **`.cursor` → `.agents`** symlink everywhere (kit root, templates, recipes, generated apps)
+- Do not confuse kit root `.agents/` (maintainers) with `templates/*` / `recipes/*` `.agents/` (shipped to apps)

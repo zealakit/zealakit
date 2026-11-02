@@ -5,9 +5,9 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 
 ## Always follow
 
-- **Kit architecture:** [.cursor/skills/zealakit/SKILL.md](.cursor/skills/zealakit/SKILL.md) — layout, registry, scaffolder, conventions
-- **Extending:** [.cursor/skills/zealakit/extending.md](.cursor/skills/zealakit/extending.md) — add templates/recipes/overlays
-- **Rules:** [.cursor/rules/](.cursor/rules/)
+- **Kit architecture:** [.agents/skills/zealakit/SKILL.md](.agents/skills/zealakit/SKILL.md) — layout, registry, scaffolder, conventions
+- **Extending:** [.agents/skills/zealakit/extending.md](.agents/skills/zealakit/extending.md) — add templates/recipes/overlays
+- **Rules:** [.agents/rules/](.agents/rules/)
 
 ## Quick map
 

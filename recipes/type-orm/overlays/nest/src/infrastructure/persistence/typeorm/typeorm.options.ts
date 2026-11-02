@@ -13,7 +13,7 @@ export function createTypeOrmModuleOptions(): TypeOrmModuleOptions {
   const type = process.env.DB_TYPE?.trim();
   if (!type) {
     throw new Error(
-      "TypeORM is not configured: set DB_TYPE and DATABASE_URL (or DB_HOST/DB_NAME/…). See .cursor/skills/type-orm/SKILL.md.",
+      "TypeORM is not configured: set DB_TYPE and DATABASE_URL (or DB_HOST/DB_NAME/…). See .agents/skills/type-orm/SKILL.md.",
     );
   }
 
@@ -32,7 +32,7 @@ export function createTypeOrmModuleOptions(): TypeOrmModuleOptions {
   const database = process.env.DB_NAME?.trim();
   if (!database) {
     throw new Error(
-      "TypeORM is not configured: set DATABASE_URL or DB_NAME (with host credentials). See .cursor/skills/type-orm/SKILL.md.",
+      "TypeORM is not configured: set DATABASE_URL or DB_NAME (with host credentials). See .agents/skills/type-orm/SKILL.md.",
     );
   }
 

@@ -1,0 +1,17 @@
+---
+description: Folder layout, kebab-case files, and feature-module routing
+alwaysApply: true
+---
+
+# Project structure
+
+Follow `.agents/skills/project-structure/SKILL.md` when adding features, placing files, or naming modules.
+
+Hard rules:
+
+- kebab-case **files and folders**; PascalCase **component exports**
+- Screens live in `src/app/features/<feature>/` (`shell.tsx`, `list.tsx`, `login.tsx`, …)
+- Routes are composed in `src/app/router/` (lazy-loaded screens, paths from `CONSTANTS.ROUTES`)
+- APIs and models in `src/lib/apis/`; no `src/pages/`, `src/api/`, or PascalCase `*Page.tsx`
+- Folders are roles; recipes choose libraries (e.g. store, schema, HTTP client)
+- Prefer `type` over `interface`; path alias `@/*` → `src/*`
