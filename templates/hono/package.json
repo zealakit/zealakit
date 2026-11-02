@@ -16,16 +16,16 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.11",
-    "hono": "^4.13.13"
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.16"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "@vitest/coverage-v8": "^4.1.2",
-    "tsc-alias": "^1.9.9",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.0.5",
+    "tsc-alias": "^1.9.10",
     "tsx": "^4.23.15",
-    "typescript": "^6.0.2",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.2"
+    "typescript": "^7.0.2",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^5.0.5"
   }
 }

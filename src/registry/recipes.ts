@@ -18,10 +18,10 @@ export const recipes: Record<string, RecipeConfig> = {
     exclusive: true,
     packages: {},
     devDependencies: {
-      eslint: "^10.12.0",
+      eslint: "^10.14.0",
       "@eslint/js": "^10.0.1",
-      "typescript-eslint": "^8.71.1",
-      globals: "^17.13.0",
+      "typescript-eslint": "^8.72.1",
+      globals: "^17.14.0",
     },
     overlayDevDependencies: {
       "vite-react": {
@@ -46,7 +46,7 @@ export const recipes: Record<string, RecipeConfig> = {
     exclusive: true,
     packages: {},
     devDependencies: {
-      "@biomejs/biome": "^2.5.15",
+      "@biomejs/biome": "^2.6.4",
     },
     scripts: {
       check: "biome check .",
@@ -61,7 +61,7 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      zustand: "^5.0.15",
+      zustand: "^5.0.16",
     },
     devDependencies: {},
     scripts: {},
@@ -105,9 +105,9 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      "react-hook-form": "^7.89.0",
-      "@hookform/resolvers": "^5.9.1",
-      zod: "^4.6.5",
+      "react-hook-form": "^7.91.0",
+      "@hookform/resolvers": "^7.0.1",
+      zod: "^4.6.7",
     },
     devDependencies: {},
     scripts: {},
@@ -119,7 +119,7 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      ky: "^2.1.0",
+      ky: "^2.2.0",
     },
     devDependencies: {},
     scripts: {},
@@ -131,7 +131,7 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      axios: "^1.20.0",
+      axios: "^1.21.0",
     },
     devDependencies: {},
     scripts: {},
@@ -143,7 +143,7 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      antd: "^6.6.5",
+      antd: "^6.6.8",
     },
     overlayPackages: {
       next: {
@@ -200,13 +200,13 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      "@mui/material": "^9.4.0",
+      "@mui/material": "^9.5.0",
       "@emotion/react": "^11.14.0",
       "@emotion/styled": "^11.14.1",
     },
     overlayPackages: {
       next: {
-        "@mui/material-nextjs": "^9.4.0",
+        "@mui/material-nextjs": "^9.5.0",
         "@emotion/cache": "^11.14.0",
         "@emotion/server": "^11.11.0",
       },
@@ -261,12 +261,12 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["client", "hybrid"],
     exclusive: true,
     packages: {
-      shadcn: "^4.21.3",
-      "@base-ui/react": "^1.8.0",
+      shadcn: "^4.23.0",
+      "@base-ui/react": "^1.9.0",
       "@fontsource-variable/inter": "^5.3.0",
-      cn: "^0.4.0",
+      cn: "^0.5.2",
       "class-variance-authority": "^0.7.1",
-      "lucide-react": "^1.52.0",
+      "lucide-react": "^1.66.0",
       tailwindcss: "^4.3.3",
       "tw-animate-css": "^1.4.0",
     },
@@ -298,12 +298,12 @@ export const recipes: Record<string, RecipeConfig> = {
     packages: {},
     overlayDevDependencies: {
       "vite-react": {
-        storybook: "^10.6.1",
-        "@storybook/react-vite": "^10.6.1",
+        storybook: "^10.6.5",
+        "@storybook/react-vite": "^10.6.5",
       },
       next: {
-        storybook: "^10.6.1",
-        "@storybook/nextjs": "^10.6.1",
+        storybook: "^10.6.5",
+        "@storybook/nextjs": "^10.6.5",
       },
     },
     devDependencies: {},
@@ -372,8 +372,8 @@ export const recipes: Record<string, RecipeConfig> = {
     supportedScopes: ["server"],
     exclusive: true,
     packages: {
-      "@mikro-orm/core": "^7.2.5",
-      "@mikro-orm/decorators": "^7.2.5",
+      "@mikro-orm/core": "^7.2.6",
+      "@mikro-orm/decorators": "^7.2.6",
     },
     overlayPackages: {
       nest: {

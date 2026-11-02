@@ -1,0 +1,6 @@
+{
+  "name": "zealakit-sandbox",
+  "private": true,
+  "description": "Isolation boundary: stop Yarn/Corepack from inheriting the kit root packageManager (pnpm@…).",
+  "packageManager": "yarn@1.22.22"
+}

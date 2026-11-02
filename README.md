@@ -21,13 +21,14 @@ Zealakit lets you compose:
 - **Template** — the base app (Vite + React, Next.js, NestJS, or Hono)
 - **Recipes** — optional layers such as Biome, Zustand, shadcn/ui, Drizzle, Storybook
 
-Each recipe brings its own files, dependencies, and scripts. Zealakit merges everything into one ready-to-install project.
+Each recipe brings its own files, dependencies, scripts, and (when relevant) agent skills. Zealakit merges everything into one ready-to-install project.
 
 You also get:
 
-- A consistent, feature-based folder structure
-- `.agents` skills and rules (`.cursor` → `.agents` symlink) plus `AGENTS.md` / `CLAUDE.md`
-- No lock-in — generated projects are plain TypeScript apps
+- A consistent folder structure per template (features / App Router / hexagonal layers)
+- Agent docs under **`.agents/`** (skills + rules), with **`.cursor` → `.agents`** for Cursor IDE
+- `AGENTS.md` / `CLAUDE.md` entry points for coding agents
+- No package-manager lock-in — use `npm`, `pnpm`, `yarn`, or `bun`
 
 ---
 
@@ -54,8 +55,6 @@ cd my-app
 npm install
 npm run dev
 ```
-
-`pnpm`, `yarn`, and `bun` work too — Zealakit does not install packages for you.
 
 ### Non-interactive
 
@@ -105,10 +104,17 @@ npx zealakit@latest [project-name] [options]
 
 Every template includes:
 
-- Feature-based folders and a working sample feature
-- `@/*` path alias
-- `.agents/` skills and rules (`.cursor` symlink for Cursor)
-- `AGENTS.md` and `CLAUDE.md` for AI coding assistants
+- A working sample structure (`@/*` path alias)
+- **`.agents/`** skills and rules, plus **`.cursor` → `.agents`**
+- `AGENTS.md` and `CLAUDE.md`
+
+Template notes:
+
+| Template | What ships |
+| --- | --- |
+| `vite-react` | Feature modules: **`feature-a`** (optional shared `FeatureShell`) and **`feature-b`** (plain screens, no shell) |
+| `next` | App Router + `[locale]` groups (`(site)`, optional `(entry)` / `(console)` / `(landing)`); `feature-shell` is optional docs-only |
+| `nest` / `hono` | Hexagonal layers (`domain` / `application` / `presentation` / `infrastructure` / `bootstrap`) |
 
 Start commands:
 
@@ -123,7 +129,20 @@ Start commands:
 
 ## Recipes
 
-Pick **one** recipe per category. `storybook` is the exception — it can sit beside any UI kit. `client-shared-pieces` is added automatically on client and hybrid projects.
+Pick **one** exclusive recipe per category (linter, state, UI kit, fetcher, ORM, …). Exceptions:
+
+- **`storybook`** — non-exclusive; can sit beside any UI kit
+- **`client-shared-pieces`** — added automatically on client and hybrid projects
+
+### Categories (tags)
+
+| Tag | Meaning |
+| --- | --- |
+| `ui` | UI-related (kits and shared UI tooling) |
+| `ui-react` / `ui-vue` / `ui-svelte` | Framework-specific UI kits (today’s kits use **`ui` + `ui-react`**) |
+| Shared UI tooling (e.g. Storybook) | Keep plain **`ui`** (+ other tags) — no framework tag |
+
+### Recipe table
 
 | Recipe | Category | Works with | What it adds |
 | --- | --- | --- | --- |
@@ -137,13 +156,13 @@ Pick **one** recipe per category. `storybook` is the exception — it can sit be
 | `antd` | UI + ui-react | Vite, Next | ConfigProvider, theme tokens, UI wrappers |
 | `mui` | UI + ui-react | Vite, Next | ThemeProvider, theme tokens, UI wrappers |
 | `shadcn-ui` | UI + ui-react | Vite, Next | Tailwind v4, shadcn/ui (base-vega), lucide icons, `cn` helper |
-| `storybook` | UI + docs + testing | Vite, Next | `.storybook` config and Storybook scripts (shared `ui` tag) |
-| `type-orm` | Database | Nest, Hono | TypeORM persistence adapter |
-| `mikro-orm` | Database | Nest, Hono | MikroORM persistence adapter |
-| `drizzle-orm` | Database | Nest, Hono | Drizzle persistence adapter and migration scripts |
+| `storybook` | UI + docs + testing | Vite, Next | `.storybook` config and Storybook scripts |
+| `type-orm` | ORM | Nest, Hono | TypeORM adapters + `.agents/skills/type-orm` |
+| `mikro-orm` | ORM | Nest, Hono | MikroORM adapters + `.agents/skills/mikro-orm` |
+| `drizzle-orm` | ORM | Nest, Hono | Drizzle adapters + drizzle-kit scripts + skill |
 | `client-shared-pieces` | Shared | Vite, Next | i18n, API layer, constants, hooks, layouts *(automatic)* |
 
-Database recipes do **not** pin a driver. Install the driver for your target database (`pg`, `mysql2`, `better-sqlite3`, …) and follow the generated skill.
+ORM recipes are **driver-agnostic**. Install `pg` / `mysql2` / `better-sqlite3` (or the matching MikroORM driver) and follow the generated skill under `.agents/skills/<orm>/` (setup, adapters, queries/N+1, migrations, transactions).
 
 ### Recipe examples
 
@@ -168,7 +187,7 @@ npx zealakit@latest api-hono -t hono -w biome,type-orm -y
 ```text
 my-app/
 ├─ src/                 # Application code
-├─ .agents/             # Skills and rules for AI assistants
+├─ .agents/             # Skills and rules (source of truth)
 ├─ .cursor -> .agents   # Symlink for Cursor IDE
 ├─ AGENTS.md            # Guidance for coding agents
 ├─ CLAUDE.md
@@ -176,7 +195,7 @@ my-app/
 └─ tsconfig.json
 ```
 
-Use any package manager (`npm`, `pnpm`, `yarn`, `bun`, …) — Zealakit does not pin one.
+Zealakit does **not** write `pnpm-workspace.yaml` or pin a package manager.
 
 Recipe overlays are applied on top of the template, so the result is a single normal project — no runtime dependency on Zealakit.
 
@@ -189,6 +208,7 @@ Recipe overlays are applied on top of the template, so the result is a single no
 3. **Merge metadata** — dependencies, dev dependencies, and scripts into `package.json`.
 4. **Apply transforms** — surgical edits such as wrapping `<App />` with a theme provider.
 5. **Add agent notes** — recipe guidance is inserted into `AGENTS.md` and `CLAUDE.md`.
+6. **Ensure `.cursor` → `.agents`** so Cursor and other tools both resolve skills.
 
 Inputs are validated before any files are written, so invalid names, recipes, and combinations fail fast.
 
@@ -212,11 +232,24 @@ pnpm monitor      # internal dependency dashboard
 | Path | Role |
 | --- | --- |
 | `src/` | CLI source: registry, prompts, validator, scaffolder |
+| `src/constants.ts` | Scopes + recipe categories (`ui-react`, …) |
 | `src/registry/` | Template and recipe metadata |
-| `templates/<id>/` | Base apps shipped with the package |
-| `recipes/<id>/` | Optional overlays, shared files, and agent skills |
+| `templates/<id>/` | Base apps (each with `.agents/` + `.cursor` symlink) |
+| `recipes/<id>/` | Overlays, shared files, agent skills/rules |
+| `.agents/` | Kit-maintainer skills (not shipped in the npm package) |
 | `scripts/test-e2e-pack.ts` | Packed-package end-to-end tests |
 | `monitor/` | Maintainer dependency dashboard |
+
+### Sandbox (local tryouts)
+
+Scaffold into `.sandbox/` so trial apps do **not** join the kit workspace. `.sandbox/.npmrc` (`ignore-workspace=true`) plus `.sandbox/package.json` isolate installs from the kit lockfile / `packageManager` pin — use `npm`, `pnpm`, `yarn`, or `bun` inside the generated app.
+
+```bash
+pnpm test:sandbox
+# or:
+pnpm build && cd .sandbox && node ../dist/index.js my-app -t vite-react -w biome -y
+cd my-app && npm install && npm run dev
+```
 
 Run the CLI from source:
 
@@ -234,8 +267,9 @@ npx --yes --package=./zealakit-<version>.tgz zealakit my-app -w biome -y
 
 ### Adding a template or recipe
 
-- **Template:** add `templates/<id>/`, then register it in `src/registry/templates.ts`.
-- **Recipe:** add `recipes/<id>/`, register it in `src/registry/recipes.ts`, then add an overlay for every supported template.
+- **Template:** add `templates/<id>/` (include `.agents/` and `.cursor` → `.agents`), then register it in `src/registry/templates.ts`.
+- **Recipe:** add `recipes/<id>/`, register it in `src/registry/recipes.ts`, then add an overlay for every supported template family.
+- **UI kits:** tag `["ui", "ui-react"]` (or `ui-vue` / `ui-svelte`). Cross-framework UI tooling: plain `ui` only.
 - **New category or scope:** update `src/constants.ts` first.
 
 See [.agents/skills/zealakit/extending.md](.agents/skills/zealakit/extending.md) for the full checklist.
@@ -250,6 +284,12 @@ No. It writes files and `package.json`, then you choose your package manager.
 **Can I use more than one linter, state library, or UI kit?**
 No. Those categories are exclusive, and the CLI rejects conflicts. Storybook is the exception.
 
+**Why both `.agents` and `.cursor`?**
+Skills and rules live in `.agents/`. `.cursor` is a symlink so Cursor IDE keeps working without duplicating files.
+
+**Must every Vite feature use `FeatureShell`?**
+No. `feature-a` shows the shared-shell pattern; `feature-b` shows plain screens when UI does not share that chrome.
+
 **Can I change the generated code?**
 Yes. It is a normal project. Zealakit is only used once, at scaffold time.
 
@@ -262,4 +302,4 @@ Not yet. Each run creates one standalone project.
 
 [MIT](LICENSE)
 
-Source: [github.com/zealamic/zealakit](https://github.com/zealamic/zealakit)
+Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit)

@@ -8,7 +8,7 @@ export interface SomethingState {
 
 const initialState: SomethingState = {
   count: 0,
-  name: "Zealamic",
+  name: "Zealakit",
   isLoading: false,
 };
 

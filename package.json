@@ -29,7 +29,7 @@
     "test:pack": "tsx scripts/test-e2e-pack.ts",
     "monitor": "tsx monitor/server.ts",
     "prepublishOnly": "pnpm build",
-    "test:sandbox": "rm -rf .sandbox && mkdir -p .sandbox && cd .sandbox && tsx ../src/index.ts"
+    "test:sandbox": "rm -rf .sandbox/*/ && mkdir -p .sandbox && cd .sandbox && tsx ../src/index.ts"
   },
   "engines": {
     "node": ">=18"
@@ -48,12 +48,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zealamic/zealakit.git"
+    "url": "git+https://github.com/zealakit/zealakit.git"
   },
   "bugs": {
-    "url": "https://github.com/zealamic/zealakit/issues"
+    "url": "https://github.com/zealakit/zealakit/issues"
   },
-  "homepage": "https://github.com/zealamic/zealakit#readme",
+  "homepage": "https://github.com/zealakit/zealakit#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -64,10 +64,10 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15",
+    "@biomejs/biome": "^2.6.4",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.6.4",
-    "tsup": "^8.5.1",
+    "@types/node": "^26.6.6",
+    "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
