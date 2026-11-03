@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
 </p>
 
 **基于 Recipe 的 TypeScript 项目脚手架。**

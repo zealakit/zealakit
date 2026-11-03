@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-logo.jpg" alt="Zealakit logo" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
 </p>
 
 **Scaffold dự án TypeScript theo kiểu ghép recipe.**
