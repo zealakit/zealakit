@@ -35,6 +35,7 @@
     "prepack": "tsx scripts/pack-dotfiles.ts add",
     "postpack": "tsx scripts/pack-dotfiles.ts remove",
     "prepublishOnly": "pnpm build",
+    "release": "tsx scripts/publish.ts",
     "test:sandbox": "rm -rf .sandbox/*/ && mkdir -p .sandbox && cd .sandbox && tsx ../src/index.ts"
   },
   "engines": {

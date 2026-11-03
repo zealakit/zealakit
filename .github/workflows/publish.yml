@@ -1,8 +1,9 @@
 name: Publish to npm
 
+# Publishing is manual for now (`pnpm release`). Re-enable the release trigger to automate again.
 on:
-  release:
-    types: [published]
+  # release:
+  #   types: [published]
   workflow_dispatch:
 
 permissions:
