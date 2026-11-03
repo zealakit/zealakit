@@ -5,11 +5,5 @@
     "rootDir": "..",
     "types": ["node"]
   },
-  "include": [
-    "./**/*.ts",
-    "../src/constants.ts",
-    "../src/registry/recipes.ts",
-    "../src/registry/templates.ts",
-    "../src/types.ts"
-  ]
+  "include": ["./**/*.ts", "../src/**/*.ts"]
 }

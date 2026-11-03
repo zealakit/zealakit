@@ -30,7 +30,8 @@ template → recipes (shared + overlay) → merge package.json → fileTransform
 | `src/`            | CLI source (registry, scaffolder, prompts, validator)    |
 | `templates/<id>/` | Base apps shipped with the kit (`vite-react`, `next`, …) |
 | `recipes/<id>/`   | Optional layers applied on top of a template             |
-| `scripts/`        | Kit tooling (e.g. `test-e2e-pack.ts`)                    |
+| `scripts/`        | Kit tooling (test runner, pack smoke, pack dotfiles)     |
+| `tests/`          | `unit/` + in-process `scaffold/` tests (`pnpm test`)     |
 | `monitor/`        | Internal dependency dashboard (`pnpm monitor`)           |
 | `dist/`           | Built CLI (`tsup`) — do not hand-edit                    |
 
@@ -38,23 +39,25 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 
 ## Source (`src/`)
 
-| File / dir              | Role                                                                                          |
-| ----------------------- | --------------------------------------------------------------------------------------------- |
-| `index.ts`              | Commander CLI entry                                                                           |
-| `scaffolder.ts`         | Copy template/recipes, merge deps, transforms, agent entries                                  |
-| `prompts.ts`            | Interactive `@clack/prompts` flow                                                             |
-| `validator.ts`          | Name / exclusivity / scope checks                                                             |
-| `constants.ts`          | **`SCOPES`**, **`RECIPE_CATEGORIES`**, **`UI_FRAMEWORK_CATEGORIES`** — single source of truth |
-| `types.ts`              | Types derived from constants (`Scope`, `RecipeCategory`, configs)                             |
-| `registry/templates.ts` | Template registry                                                                             |
-| `registry/recipes.ts`   | Recipe registry (versions, overlays, transforms)                                              |
-| `registry/index.ts`     | Re-exports                                                                                    |
+| File / dir                   | Role                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| `index.ts`                   | Commander CLI entry (flag resolution, success output)                              |
+| `prompts.ts`                 | Interactive flow — declarative `STEPS_BY_SCOPE`, options filtered by `compat.ts`   |
+| `compat.ts`                  | **Single answer** to "can recipe X go on template Y?" (scope, framework, overlay)  |
+| `constants.ts`               | **`SCOPES`**, **`FRAMEWORKS`**, **`RECIPE_CATEGORIES`** — single source of truth   |
+| `types.ts`                   | Types derived from constants (`Scope`, `Framework`, `RecipeCategory`, configs)     |
+| `registry/templates.ts`      | Template registry (`framework`, `label`, `srcDir`, `devCommand`)                   |
+| `registry/recipes/<id>.ts`   | One module per recipe: `export default defineRecipe({ … })` (monitor edits these)  |
+| `registry/recipes/define.ts` | `defineRecipe` + transform helpers (Next/Vite providers, Nuxt modules, ORM wiring) |
+| `registry/recipes/index.ts`  | Ordered recipe list (= prompt order) + lookups                                     |
+| `scaffold/`                  | `index.ts` pipeline, `copy`, `transforms`, `agent-docs`, `package-json`, `paths`   |
+| `validation/`                | `project-name`, `target-dir`, `recipes` (ids, conflicts, compatibility), `index`   |
 
 Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 
 ## Templates
 
-- Registered in `src/registry/templates.ts` (`id`, `name`, `scope`, `path`, optional `overlay`).
+- Registered in `src/registry/templates.ts` (`id`, `name`, `label`, `scope`, `path`, optional `framework`, `overlay`, `srcDir`, `devCommand`).
 - Folder: `templates/<path>/` (usually `path === id`).
 - `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/*/overlays/<overlay>/`.
 - Current templates: `vite-react` / `vite-vue` (`client`), `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
@@ -75,17 +78,21 @@ recipes/<id>/
   …other files…    # copied unless inside shared|overlays|scaffold
 ```
 
-Copy order in `copyRecipeFiles`:
+Copy order in `copyRecipe` (`src/scaffold/copy.ts`):
 
 1. Recipe root (excluding meta dirs)
 2. `shared/`
 3. `overlays/<overlayId>/` (must exist if `overlays/` is present)
 
-For **`nuxt`**, after each recipe copy the scaffolder merges any recipe `src/` tree into `app/` and deletes `src/` (Nuxt `srcDir` is `app/`).
+Templates with `srcDir` other than `src` (**`nuxt`** → `app/`): after each recipe copy the scaffolder folds any recipe `src/` tree into `srcDir` and deletes `src/`.
 
-Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `category` (one or many).
+Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `frameworks`, `category` (one or many), `hint`, `finalize`.
 
-`fileTransforms` keys may be template id **or** overlay id. Failed pattern match throws.
+- `frameworks` (e.g. `["react"]`) restricts a recipe to templates with that `framework`; omit for framework-agnostic recipes. Never hardcode recipe ids in prompts/validation.
+- `supportedScopes` is matched strictly (`hybrid` does **not** accept `server`-only recipes).
+- `fileTransforms` keys may be template id **or** overlay id. Failed pattern match throws.
+- `finalize(targetDir)` runs after all recipes are copied (e.g. Biome drops nested `root: false`).
+- npm never packs `.gitignore`: `prepack` ships templates' `_gitignore`, the scaffolder renames it back.
 
 Categories / scopes: always use / extend `src/constants.ts` — never duplicate string unions elsewhere.
 
@@ -93,8 +100,8 @@ Categories / scopes: always use / extend `src/constants.ts` — never duplicate 
 
 - TypeScript ESM, strict; prefer `type` over `interface` when either works.
 - Match existing style in the file you edit; minimal diffs.
-- Recipe version pins live in `src/registry/recipes.ts` (and template `package.json` for base deps).
-- After scaffold-behavior changes, update / run `pnpm test:pack` when relevant.
+- Recipe version pins live in `src/registry/recipes/<id>.ts` (and template `package.json` for base deps).
+- After scaffold-behavior changes run `pnpm test` (seconds; filter with `pnpm test next mui`). `pnpm test:pack` is the release smoke test for the packed tarball.
 - Dependency UI for the kit: `pnpm monitor` (Root update runs `pnpm up`).
 
 ## Do / don’t
@@ -107,6 +114,7 @@ Categories / scopes: always use / extend `src/constants.ts` — never duplicate 
 | Keep kit root `.agents/` (+ `.cursor` → `.agents`) for zealakit maintainers | Put kit maintainer docs only under `templates/*`           |
 | Put skills/rules under `.agents/`                                           | Put real files only under `.cursor/` (must stay a symlink) |
 | Derive types from `constants.ts`                                            | Hardcode scope/category lists in monitor or prompts        |
+| Express compatibility via `scope` / `framework` / overlays (`compat.ts`)    | Special-case recipe or template ids in prompts/validation  |
 
 ## Extending the kit
 

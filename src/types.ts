@@ -1,12 +1,17 @@
-import type { RECIPE_CATEGORIES, SCOPES, UI_FRAMEWORK_CATEGORIES } from "./constants.js";
+import type { FRAMEWORKS, RECIPE_CATEGORIES, SCOPES } from "./constants.js";
 
 export type Scope = (typeof SCOPES)[number];
-export type UiFrameworkCategory = (typeof UI_FRAMEWORK_CATEGORIES)[number];
+export type Framework = (typeof FRAMEWORKS)[number];
+export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
 
-export interface TemplateConfig {
+export type TemplateConfig = {
   id: string;
   name: string;
+  /** Label shown in the interactive template picker */
+  label: string;
   scope: Scope;
+  /** UI framework; omit for server templates */
+  framework?: Framework;
   description: string;
   path: string;
   /**
@@ -15,9 +20,14 @@ export interface TemplateConfig {
    * template versions should share the same recipe overlays.
    */
   overlay?: string;
-}
-
-export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
+  /**
+   * App source root when it is not `src/` (Nuxt uses `app/`). Recipe `src/`
+   * trees are folded into it after each recipe copy.
+   */
+  srcDir?: string;
+  /** Command printed after scaffolding. Defaults to `npm run dev`. */
+  devCommand?: string;
+};
 
 export type RecipeFileTransform = {
   file: string;
@@ -28,17 +38,20 @@ export type RecipeFileTransform = {
   append?: string;
 };
 
-export interface RecipeConfig {
+export type RecipeConfig = {
   id: string;
   name: string;
-  /**
-   * One or more categories (e.g. Storybook: ui + testing + documentation).
-   * Exclusive UI kits: `ui` + framework tag (`ui-react` / `ui-vue` / `ui-svelte`).
-   * Cross-framework UI tooling: plain `ui` only (no framework tag).
-   */
+  /** Short hint shown next to the recipe in prompts */
+  hint?: string;
+  /** One or more categories (e.g. Storybook: ui + testing + documentation). */
   category: RecipeCategory | RecipeCategory[];
   /** Scopes this recipe supports */
   supportedScopes: Scope[] | "all";
+  /**
+   * UI frameworks this recipe targets (e.g. Zustand → react).
+   * Omit for framework-agnostic recipes (linters, fetchers, ORMs, Storybook).
+   */
+  frameworks?: Framework[];
   /**
    * Only one exclusive recipe may be selected per shared category.
    * Non-exclusive recipes (e.g. Storybook) can sit beside exclusive UI kits.
@@ -55,22 +68,24 @@ export interface RecipeConfig {
   scripts: Record<string, string>;
   /** Regex replacements applied per overlay (or template id) after the recipe overlay is copied */
   fileTransforms?: Record<string, RecipeFileTransform[]>;
-}
+  /** Runs once after every recipe has been copied, before package.json is merged */
+  finalize?: (targetDir: string) => void;
+};
 
-export interface ScaffoldConfig {
+export type ScaffoldConfig = {
   projectName: string;
   templateId: string;
   recipeIds: string[];
-}
+};
 
-export interface CliOptions {
+export type CliOptions = {
   projectName?: string;
   template?: string;
   with?: string;
   yes?: boolean;
-}
+};
 
-export interface ValidationResult {
+export type ValidationResult = {
   valid: boolean;
   errors: string[];
-}
+};

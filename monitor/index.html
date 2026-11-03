@@ -422,7 +422,7 @@
                 data-dep-type="${pkg.depType}"
                 data-recipe-id="${escapeHtml(recipeId)}"
                 data-overlay="${escapeHtml(overlay)}"
-                title="${isRoot ? "Updates package.json then runs pnpm up to refresh the lockfile" : recipeId ? "Update version in src/registry/recipes.ts" : "Update package.json version"}"
+                title="${isRoot ? "Updates package.json then runs pnpm up to refresh the lockfile" : recipeId ? `Update version in src/registry/recipes/${recipeId}.ts` : "Update package.json version"}"
               >Update</button>
             </td>
           </tr>
@@ -548,7 +548,7 @@
         const buckets = [
           { id: "root", title: "Root", blurb: "Workspace root package.json + lockfile" },
           { id: "templates", title: "Templates", blurb: "Starter apps under templates/" },
-          { id: "recipes", title: "Recipes", blurb: "Versions from src/registry/recipes.ts" },
+          { id: "recipes", title: "Recipes", blurb: "Versions from src/registry/recipes/*.ts" },
           { id: "other", title: "Other", blurb: "Additional package.json files" },
         ];
 
