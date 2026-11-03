@@ -1,0 +1,13 @@
+---
+description: Nuxt UI (U* components, UApp, Tailwind theme)
+globs: "**/*.{vue,ts,css},vite.config.ts,nuxt.config.ts,app.config.ts"
+alwaysApply: false
+---
+
+# Nuxt UI
+
+Follow `.agents/skills/nuxt-ui/SKILL.md`.
+
+- Keep `<UApp>` at the app root
+- Prefer auto-imported `U*` components
+- Theme via Vite `ui()` options or Nuxt `ui` / `app.config.ts`

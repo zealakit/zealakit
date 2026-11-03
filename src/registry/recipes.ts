@@ -32,6 +32,12 @@ export const recipes: Record<string, RecipeConfig> = {
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.7",
       },
+      "vite-vue": {
+        "eslint-plugin-vue": "^10.12.0",
+      },
+      nuxt: {
+        "eslint-plugin-vue": "^10.12.0",
+      },
     },
     scripts: {
       lint: "eslint .",
@@ -66,6 +72,49 @@ export const recipes: Record<string, RecipeConfig> = {
     devDependencies: {},
     scripts: {},
   },
+  pinia: {
+    id: "pinia",
+    name: "Pinia",
+    category: "state",
+    supportedScopes: ["client", "hybrid"],
+    exclusive: true,
+    packages: {
+      pinia: "^4.1.0",
+    },
+    overlayPackages: {
+      nuxt: {
+        "@pinia/nuxt": "^1.0.3",
+      },
+    },
+    devDependencies: {},
+    scripts: {},
+    fileTransforms: {
+      "vite-vue": [
+        {
+          file: "src/main.ts",
+          pattern: /import \{ createApp \} from "vue";/,
+          replacement: 'import { createApp } from "vue";\nimport { createPinia } from "pinia";',
+        },
+        {
+          file: "src/main.ts",
+          pattern: /app\.use\(router\)\.mount\(rootElement\);/,
+          replacement: "app.use(createPinia());\napp.use(router).mount(rootElement);",
+        },
+      ],
+      nuxt: [
+        {
+          file: "nuxt.config.ts",
+          pattern: /\/\/ zealakit-modules/,
+          replacement: '// zealakit-modules\n    "@pinia/nuxt",',
+        },
+        {
+          file: "nuxt.config.ts",
+          pattern: /\n\}\);\s*$/,
+          replacement: '\n  pinia: {\n    storesDirs: ["./app/stores/**"],\n  },\n});\n',
+        },
+      ],
+    },
+  },
   nanostores: {
     id: "nanostores",
     name: "Nanostores",
@@ -74,7 +123,20 @@ export const recipes: Record<string, RecipeConfig> = {
     exclusive: true,
     packages: {
       nanostores: "^1.5.5",
-      "@nanostores/react": "^2.0.1",
+    },
+    overlayPackages: {
+      "vite-react": {
+        "@nanostores/react": "^2.0.1",
+      },
+      next: {
+        "@nanostores/react": "^2.0.1",
+      },
+      "vite-vue": {
+        "@nanostores/vue": "^1.1.0",
+      },
+      nuxt: {
+        "@nanostores/vue": "^1.1.0",
+      },
     },
     devDependencies: {},
     scripts: {},
@@ -96,6 +158,20 @@ export const recipes: Record<string, RecipeConfig> = {
           replacement: 'import App from "./app";\nimport "./configs/i18n";',
         },
       ],
+      "vite-vue": [
+        {
+          file: "src/main.ts",
+          pattern: /import \{ createApp \} from "vue";/,
+          replacement:
+            'import { createApp } from "vue";\nimport { installI18n } from "./configs/i18n";',
+        },
+        {
+          file: "src/main.ts",
+          pattern: /createApp\(App\)\.use\(router\)\.mount\(rootElement\);/,
+          replacement:
+            "const app = createApp(App);\ninstallI18n(app);\napp.use(router).mount(rootElement);",
+        },
+      ],
     },
   },
   "hookform-zod": {
@@ -108,6 +184,20 @@ export const recipes: Record<string, RecipeConfig> = {
       "react-hook-form": "^7.91.0",
       "@hookform/resolvers": "^7.0.1",
       zod: "^4.6.7",
+    },
+    devDependencies: {},
+    scripts: {},
+  },
+  "vee-validate-zod": {
+    id: "vee-validate-zod",
+    name: "VeeValidate + Zod",
+    category: "form",
+    supportedScopes: ["client", "hybrid"],
+    exclusive: true,
+    packages: {
+      "vee-validate": "^4.15.1",
+      "@vee-validate/zod": "^4.15.1",
+      zod: "^3.25.76",
     },
     devDependencies: {},
     scripts: {},
@@ -289,6 +379,104 @@ export const recipes: Record<string, RecipeConfig> = {
       ],
     },
   },
+  "nuxt-ui": {
+    id: "nuxt-ui",
+    name: "Nuxt UI",
+    category: ["ui", "ui-vue"],
+    supportedScopes: ["client", "hybrid"],
+    exclusive: true,
+    packages: {
+      "@nuxt/ui": "^4.12.0",
+      tailwindcss: "^4.3.3",
+    },
+    overlayPackages: {},
+    devDependencies: {},
+    scripts: {},
+    fileTransforms: {
+      "vite-vue": [
+        {
+          file: "src/main.ts",
+          pattern: /import \{ createApp \} from "vue";/,
+          replacement:
+            'import { createApp } from "vue";\nimport ui from "@nuxt/ui/vue-plugin";',
+        },
+        {
+          file: "src/main.ts",
+          pattern: /app\.use\(router\)\.mount\(rootElement\);/,
+          replacement: "app.use(ui);\napp.use(router).mount(rootElement);",
+        },
+        {
+          file: "package.json",
+          pattern: /"build": "vue-tsc -b && vite build"/,
+          replacement: '"build": "vite build && vue-tsc -b --noEmit"',
+        },
+      ],
+      nuxt: [
+        {
+          file: "nuxt.config.ts",
+          pattern: /\/\/ zealakit-modules/,
+          replacement: '// zealakit-modules\n    "@nuxt/ui",',
+        },
+      ],
+    },
+  },
+  "shadcn-vue": {
+    id: "shadcn-vue",
+    name: "shadcn-vue (style: new-york | icons: lucide)",
+    category: ["ui", "ui-vue"],
+    supportedScopes: ["client", "hybrid"],
+    exclusive: true,
+    packages: {
+      "reka-ui": "^2.11.0",
+      "class-variance-authority": "^0.7.1",
+      clsx: "^2.1.1",
+      "tailwind-merge": "^3.7.0",
+      "@lucide/vue": "^1.67.0",
+      tailwindcss: "^4.3.3",
+      "tw-animate-css": "^1.4.0",
+    },
+    overlayPackages: {
+      "vite-vue": {
+        "@tailwindcss/vite": "^4.3.3",
+      },
+      nuxt: {
+        "@tailwindcss/vite": "^4.3.3",
+        "shadcn-nuxt": "^2.9.0",
+      },
+    },
+    devDependencies: {},
+    scripts: {},
+    fileTransforms: {
+      "vite-vue": [
+        {
+          file: "src/lib/utils/index.ts",
+          append: 'export * from "./other";',
+        },
+      ],
+      nuxt: [
+        {
+          file: "app/lib/utils/index.ts",
+          append: 'export * from "./other";',
+        },
+        {
+          file: "nuxt.config.ts",
+          pattern: /^/,
+          replacement: 'import tailwindcss from "@tailwindcss/vite";\n',
+        },
+        {
+          file: "nuxt.config.ts",
+          pattern: /\/\/ zealakit-modules/,
+          replacement: '// zealakit-modules\n    "shadcn-nuxt",',
+        },
+        {
+          file: "nuxt.config.ts",
+          pattern: /\n\}\);\s*$/,
+          replacement:
+            '\n  shadcn: {\n    prefix: "",\n    componentDir: "./app/components/ui",\n  },\n  vite: {\n    plugins: [tailwindcss()],\n  },\n});\n',
+        },
+      ],
+    },
+  },
   storybook: {
     id: "storybook",
     name: "Storybook",
@@ -304,6 +492,14 @@ export const recipes: Record<string, RecipeConfig> = {
       next: {
         storybook: "^10.6.5",
         "@storybook/nextjs": "^10.6.5",
+      },
+      "vite-vue": {
+        storybook: "^10.6.5",
+        "@storybook/vue3-vite": "^10.6.5",
+      },
+      nuxt: {
+        storybook: "^10.6.5",
+        "@storybook/vue3-vite": "^10.6.5",
       },
     },
     devDependencies: {},

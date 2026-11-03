@@ -8,12 +8,26 @@ export const templates: Record<string, TemplateConfig> = {
     description: "Minimal Vite + React + TypeScript starter",
     path: "vite-react",
   },
+  "vite-vue": {
+    id: "vite-vue",
+    name: "Vite + Vue",
+    scope: "client",
+    description: "Minimal Vite + Vue + TypeScript starter",
+    path: "vite-vue",
+  },
   next: {
     id: "next",
     name: "Next.js",
     scope: "hybrid",
     description: "Next.js App Router + TypeScript starter",
     path: "next",
+  },
+  nuxt: {
+    id: "nuxt",
+    name: "Nuxt",
+    scope: "hybrid",
+    description: "Nuxt + TypeScript starter",
+    path: "nuxt",
   },
   nest: {
     id: "nest",

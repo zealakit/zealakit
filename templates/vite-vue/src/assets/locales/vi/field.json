@@ -1,0 +1,14 @@
+{
+  "NAME": {
+    "LABEL": "Tên",
+    "PLACEHOLDER_INPUT": "Nhập tên"
+  },
+  "DESCRIPTION": {
+    "LABEL": "Mô tả",
+    "PLACEHOLDER_INPUT": "Nhập mô tả"
+  },
+  "SOME_SELECT": {
+    "LABEL": "Chọn",
+    "PLACEHOLDER_SELECT": "Chọn"
+  }
+}

@@ -1,0 +1,11 @@
+---
+description: Form schemas and feature form composables (VeeValidate + Zod)
+globs: "**/{*.schema.ts,**/composables/use-*-form.ts,**/composables/use-*-form.vue}"
+alwaysApply: false
+---
+
+# Forms
+
+When adding or changing forms, follow `.agents/skills/vee-validate-zod/SKILL.md`.
+
+Schemas go in `src/lib/schemas/`. Form composables go in `src/app/features/<feature>/composables/`.

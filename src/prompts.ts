@@ -32,10 +32,6 @@ function getUiFrameworkCategory(templateId: string): UiFrameworkCategory | undef
 
 type LinterChoice = "biome" | "eslint" | "none";
 
-const STATE_RECIPE_HINTS: Partial<Record<string, string>> = {
-  zustand: "Recommended",
-};
-
 function getStateRecipeLabel(recipe: RecipeConfig): string {
   if (recipe.id === "zustand") {
     return "Zustand";
@@ -52,14 +48,48 @@ function mapLinterToRecipe(linter: LinterChoice): string | null {
   return null;
 }
 
+function isFormRecipeForFamily(
+  recipeId: string,
+  uiFamily: UiFrameworkCategory | undefined,
+): boolean {
+  if (uiFamily === "ui-vue") {
+    return recipeId !== "hookform-zod";
+  }
+
+  if (uiFamily === "ui-react") {
+    return recipeId !== "vee-validate-zod";
+  }
+
+  return true;
+}
+
+function isStateRecipeForFamily(
+  recipeId: string,
+  uiFamily: UiFrameworkCategory | undefined,
+): boolean {
+  if (uiFamily === "ui-vue") {
+    return recipeId !== "zustand";
+  }
+
+  if (uiFamily === "ui-react") {
+    return recipeId !== "pinia";
+  }
+
+  return true;
+}
+
 async function promptClientRecipes(templateId: string): Promise<string[] | null> {
   const recipeIds: string[] = [];
-  const stateRecipes = getRecipesByCategory("state");
-  const formRecipes = getRecipesByCategory("form");
   const fetcherRecipes = getRecipesByCategory("fetcher");
   // Exclusive UI kits for this template's framework (+ shared `ui`-only kits).
   // Storybook (multi-category, non-exclusive) is prompted separately.
   const uiFamily = getUiFrameworkCategory(templateId);
+  const stateRecipes = getRecipesByCategory("state").filter((recipe) =>
+    isStateRecipeForFamily(recipe.id, uiFamily),
+  );
+  const formRecipes = getRecipesByCategory("form").filter((recipe) =>
+    isFormRecipeForFamily(recipe.id, uiFamily),
+  );
   const uiRecipes = uiFamily
     ? getExclusiveUiRecipes(uiFamily)
     : getRecipesByCategory("ui").filter((recipe) => recipe.exclusive);
@@ -70,7 +100,6 @@ async function promptClientRecipes(templateId: string): Promise<string[] | null>
       ...stateRecipes.map((recipe) => ({
         value: recipe.id,
         label: getStateRecipeLabel(recipe),
-        hint: STATE_RECIPE_HINTS[recipe.id],
       })),
       { value: "none", label: "No state management" },
     ],
@@ -88,7 +117,10 @@ async function promptClientRecipes(templateId: string): Promise<string[] | null>
       ...formRecipes.map((recipe) => ({
         value: recipe.id,
         label: recipe.name,
-        hint: recipe.id === "hookform-zod" ? "Recommended" : undefined,
+        hint:
+          recipe.id === "hookform-zod" || recipe.id === "vee-validate-zod"
+            ? "Recommended"
+            : undefined,
       })),
       { value: "none", label: "No form library" },
     ],
@@ -290,7 +322,9 @@ export async function runInteractivePrompts(
 
   const templateLabels: Record<string, string> = {
     "vite-react": "Vite + React + TypeScript",
+    "vite-vue": "Vite + Vue + TypeScript",
     next: "Next.js App Router + TypeScript",
+    nuxt: "Nuxt + TypeScript",
     nest: "NestJS + TypeScript (DDD / hexagonal)",
     hono: "Hono + TypeScript (DDD / hexagonal)",
   };
@@ -300,7 +334,6 @@ export async function runInteractivePrompts(
     options: getAllTemplateIds().map((id) => ({
       value: id,
       label: templateLabels[id] ?? id,
-      hint: id === "vite-react" ? "Recommended" : undefined,
     })),
     initialValue: "vite-react",
   });

@@ -142,6 +142,26 @@ function copyRecipeFiles(recipeId: string, templateId: string, targetDir: string
   copyDirectoryContents(overlayPath, targetDir);
 }
 
+/**
+ * Nuxt 4 `srcDir` is `app/`. Recipe kernels ship under `src/` for Vite/Next;
+ * fold that tree into `app/` so generated Nuxt apps never keep a parallel `src/`.
+ */
+function mergeNuxtRecipeSrcIntoApp(templateId: string, targetDir: string): void {
+  if (getTemplateOverlayId(templateId) !== "nuxt") {
+    return;
+  }
+
+  const srcDir = path.join(targetDir, "src");
+  if (!fs.existsSync(srcDir)) {
+    return;
+  }
+
+  const appDir = path.join(targetDir, "app");
+  fse.ensureDirSync(appDir);
+  fse.copySync(srcDir, appDir, { overwrite: true, errorOnExist: false });
+  fse.removeSync(srcDir);
+}
+
 function insertAgentEntry(filePath: string, entry: string): void {
   if (!fs.existsSync(filePath)) {
     return;
@@ -288,6 +308,7 @@ export async function scaffoldProject(
 
   for (const recipeId of config.recipeIds) {
     copyRecipeFiles(recipeId, config.templateId, targetDir);
+    mergeNuxtRecipeSrcIntoApp(config.templateId, targetDir);
     applyRecipeAgentEntry(recipeId, targetDir);
     applyRecipeFileTransforms(recipeId, config.templateId, targetDir);
   }

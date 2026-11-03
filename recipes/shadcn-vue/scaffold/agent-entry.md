@@ -1,0 +1,1 @@
+- **UI kit:** [.agents/skills/shadcn-vue/SKILL.md](.agents/skills/shadcn-vue/SKILL.md) — Tailwind tokens, `src/components/ui/`

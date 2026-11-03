@@ -24,3 +24,11 @@ minimumReleaseAgeExclude:
   - "@vitejs/plugin-react@6.2.1"
   - i18next-browser-languagedetector@8.3.0
   - i18next@26.7.1
+  - "@nuxt/kit@4.6.4"
+  - "@nuxt/nitro-server@4.6.4"
+  - "@nuxt/schema@4.6.4"
+  - "@nuxt/vite-builder@4.6.4"
+  - "@nuxt/vite-server@4.6.4"
+  - nitropack@2.13.6
+  - nuxt@4.6.4
+  - unrouting@0.3.2

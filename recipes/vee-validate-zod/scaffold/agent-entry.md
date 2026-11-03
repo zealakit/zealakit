@@ -1,0 +1,1 @@
+- **Forms:** [.agents/skills/vee-validate-zod/SKILL.md](.agents/skills/vee-validate-zod/SKILL.md) — schema factories + feature form composables

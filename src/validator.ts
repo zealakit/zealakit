@@ -8,8 +8,15 @@ import {
   getRecipe,
   getRecipeCategories,
   getTemplate,
+  getTemplateOverlayId,
 } from "./registry/index.js";
-import type { CliOptions, RecipeConfig, Scope, ValidationResult } from "./types.js";
+import type {
+  CliOptions,
+  RecipeConfig,
+  Scope,
+  UiFrameworkCategory,
+  ValidationResult,
+} from "./types.js";
 
 const NPM_NAME_PATTERN = /^(?:@(?:[a-z0-9-*~][a-z0-9-*._~]*)\/)?[a-z0-9-~][a-z0-9-._~]*$/;
 
@@ -249,7 +256,83 @@ export function validateScopeCompatibility(
 
     if (!isRecipeSupportedForScope(recipe, template.scope)) {
       errors.push(
-        `✖ Recipe '${recipeId}' không tương thích với template có Scope '${template.scope}'.`,
+        `✖ Recipe '${recipeId}' is incompatible with template scope '${template.scope}'.`,
+      );
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+function getUiFrameworkCategory(templateId: string): UiFrameworkCategory | undefined {
+  const overlay = getTemplateOverlayId(templateId);
+
+  if (overlay === "vite-react" || overlay === "next") {
+    return "ui-react";
+  }
+
+  if (overlay === "vite-vue" || overlay === "nuxt") {
+    return "ui-vue";
+  }
+
+  if (overlay === "vite-svelte" || overlay === "sveltekit") {
+    return "ui-svelte";
+  }
+
+  return undefined;
+}
+
+/** Reject React-only / Vue-only recipes on the wrong SPA family. */
+export function validateUiFrameworkCompatibility(
+  templateId: string,
+  recipeIds: string[],
+): ValidationResult {
+  const errors: string[] = [];
+  const family = getUiFrameworkCategory(templateId);
+
+  if (!family) {
+    return { valid: true, errors: [] };
+  }
+
+  for (const recipeId of recipeIds) {
+    const recipe = getRecipe(recipeId);
+    if (!recipe) {
+      continue;
+    }
+
+    const cats = getRecipeCategories(recipe);
+    const frameworkTags = cats.filter((category): category is UiFrameworkCategory =>
+      (UI_FRAMEWORK_CATEGORIES as readonly string[]).includes(category),
+    );
+
+    if (frameworkTags.length === 0) {
+      // Framework-specific recipes without a ui-* tag.
+      if (family === "ui-vue" && recipeId === "hookform-zod") {
+        errors.push(
+          `✖ Recipe 'hookform-zod' targets React. Use 'vee-validate-zod' with template '${templateId}'.`,
+        );
+      }
+      if (family === "ui-react" && recipeId === "vee-validate-zod") {
+        errors.push(
+          `✖ Recipe 'vee-validate-zod' targets Vue. Use 'hookform-zod' with template '${templateId}'.`,
+        );
+      }
+      if (family === "ui-vue" && recipeId === "zustand") {
+        errors.push(
+          `✖ Recipe 'zustand' targets React. Use 'pinia' (or 'nanostores') with template '${templateId}'.`,
+        );
+      }
+      if (family === "ui-react" && recipeId === "pinia") {
+        errors.push(
+          `✖ Recipe 'pinia' targets Vue. Use 'zustand' (or 'nanostores') with template '${templateId}'.`,
+        );
+      }
+      continue;
+    }
+
+    if (!frameworkTags.includes(family)) {
+      errors.push(
+        `✖ Recipe '${recipeId}' (${frameworkTags.join(", ")}) is incompatible with template '${templateId}' (${family}).`,
       );
     }
   }
@@ -272,6 +355,7 @@ export async function validateScaffoldInput(
     validateRecipeIds(recipeIds),
     validateRecipeConflicts(recipeIds),
     validateScopeCompatibility(templateId, recipeIds),
+    validateUiFrameworkCompatibility(templateId, recipeIds),
   ];
 
   for (const check of checks) {

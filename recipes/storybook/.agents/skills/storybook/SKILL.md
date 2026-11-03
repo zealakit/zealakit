@@ -3,7 +3,7 @@ name: storybook
 description: >-
   Storybook setup for documenting and testing UI components in isolation.
   Use when adding stories, configuring .storybook/, or running the Storybook
-  workspace (Vite React or Next.js).
+  workspace (Vite React, Vite Vue, or Next.js).
 ---
 
 # Storybook
@@ -13,7 +13,7 @@ This skill is present because the **Storybook recipe** is installed.
 ## Setup
 
 - Config: `.storybook/main.ts`, `.storybook/preview.ts`
-- Example story: `src/stories/button.stories.tsx`
+- Example story: `src/stories/button.stories.tsx` (or `*.stories.vue` on Vue)
 - Scripts: `pnpm storybook` (dev on `:6006`), `pnpm build-storybook`
 
 ### Framework
@@ -21,6 +21,7 @@ This skill is present because the **Storybook recipe** is installed.
 | Template | Package |
 | --- | --- |
 | Vite + React | `@storybook/react-vite` |
+| Vite + Vue | `@storybook/vue3-vite` |
 | Next.js | `@storybook/nextjs` |
 
 Do not mix frameworks across templates.

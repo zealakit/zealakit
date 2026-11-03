@@ -48,6 +48,8 @@ fileTransforms: {
 - Prefer surgical regex/`append`; throw if pattern does not match.
 - Do not silently no-op failed transforms.
 - Server templates `nest` / `hono` use matching overlay ids. Recipes with `overlays/` that support `server` (e.g. biome, eslint, ORMs) must include `overlays/nest/` and `overlays/hono/`.
+- Client SPA overlays follow template id (`vite-react`, `vite-vue`). Hybrid overlays: `next`, `nuxt`. React-only UI kits (`antd`, `mui`, `shadcn-ui`) keep empty `overlays/vite-vue/` / `overlays/nuxt/` stubs; validator rejects selecting them on Vue templates.
+- **Nuxt:** scaffolder merges recipe `src/` into `app/` after each recipe copy (Nuxt `srcDir` is `app/`). Prefer Nuxt overlays under `app/`; never leave a top-level `src/` in generated Nuxt apps. Nuxt `fileTransforms` should target `app/…` paths.
 
 ## Verify
 

@@ -47,10 +47,12 @@ project/
 
 ```
 src/
-├── proxy.ts                      # next-intl middleware (locale prefix)
+├── proxy.ts                      # next-intl proxy; matcher must exclude `/api`
 ├── app/
 │   ├── layout.tsx                # Root shell: fonts, globals.css, <html>/<body>
 │   ├── globals.css
+│   ├── api/                      # Route Handlers (no locale prefix)
+│   │   └── health/route.ts       # GET /api/health
 │   └── [locale]/
 │       ├── layout.tsx            # Validate locale + NextIntlClientProvider
 │       ├── _shared/              # Widgets reused across multiple routes / groups
@@ -368,13 +370,14 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 8. **SEO / first paint?** → export via `server.tsx`
 9. **Deferred / interactive?** → export via `client.tsx`
 10. **Loading state?** → `skeleton.tsx` + `Suspense`
-11. **Remote endpoint function?** → `lib/apis/`
-12. **Path or endpoint string?** → `lib/constants/` (`ROUTES`, `APIS`, `STORAGE`)
-13. **View model for one route group?** → `<group>/_handlers/` (calls `lib/apis`)
-14. **Pure helper?** → `lib/utils/`
-15. **Cross-route hook?** → `hooks/`
-16. **Theme or env bootstrap?** → `configs/`
-17. **Locale code or copy?** → `src/i18n/`
+11. **First-party Route Handler (this app’s HTTP API)?** → `app/api/<name>/route.ts` (never under `[locale]/`; keep `api` excluded in `proxy.ts` matcher)
+12. **Remote endpoint function (calling another service)?** → `lib/apis/`
+13. **Path or endpoint string?** → `lib/constants/` (`ROUTES`, `APIS`, `STORAGE`)
+14. **View model for one route group?** → `<group>/_handlers/` (calls `lib/apis`)
+15. **Pure helper?** → `lib/utils/`
+16. **Cross-route hook?** → `hooks/`
+17. **Theme or env bootstrap?** → `configs/`
+18. **Locale code or copy?** → `src/i18n/`
 
 ---
 
@@ -399,6 +402,7 @@ Prefer **functional** style and **`type` aliases**, not `interface`. Use `import
 
 | Don’t | Do instead |
 | --- | --- |
+| Put Route Handlers under `app/[locale]/…` | Use `app/api/…` and keep `api` in the `proxy.ts` matcher exclusion |
 | Import `./server` from `./client` (or vice versa) | Call sites import one entry; both wrap `template.tsx` |
 | Put `"use client"` on `template.tsx` by default | Keep template presentational; client entry owns interactivity |
 | Dump all widgets in `_shared/` | `_shared/` only for true multi-route / multi-group reuse |

@@ -8,4 +8,4 @@ alwaysApply: false
 
 When adding or changing stories / `.storybook/` config, follow `.agents/skills/storybook/SKILL.md`.
 
-Use the framework package that matches the template (`@storybook/react-vite` or `@storybook/nextjs`). Prefer CSF3 + `autodocs` tags.
+Use the framework package that matches the template (`@storybook/react-vite`, `@storybook/vue3-vite`, or `@storybook/nextjs`). Prefer CSF3 + `autodocs` tags.

@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 Most starters are either empty or overloaded. Zealakit lets you compose:
 
-1. **Template** — Vite + React, Next.js, NestJS, or Hono
+1. **Template** — Vite + React, Vite + Vue, Next.js, NestJS, or Hono
 2. **Recipes** — optional layers (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Each recipe brings files, packages, scripts, and agent guidance when relevant. The result is a normal standalone project — use `npm`, `pnpm`, `yarn`, or `bun`.
@@ -86,7 +86,9 @@ npx zealakit@latest [project-name] [options]
 | ID           | Kind       | Stack                           | Dev command         |
 | ------------ | ---------- | ------------------------------- | ------------------- |
 | `vite-react` | Client     | Vite + React + TypeScript       | `npm run dev`       |
+| `vite-vue`   | Client     | Vite + Vue + TypeScript         | `npm run dev`       |
 | `next`       | Full-stack | Next.js App Router + TypeScript | `npm run dev`       |
+| `nuxt`       | Full-stack | Nuxt + TypeScript               | `npm run dev`       |
 | `nest`       | Server     | NestJS + TypeScript             | `npm run start:dev` |
 | `hono`       | Server     | Hono + TypeScript               | `npm run dev`       |
 
@@ -101,24 +103,28 @@ Choose **at most one** recipe per exclusive category (linter, state, UI kit, HTT
 Exceptions:
 
 - **`storybook`** — can be combined with a UI kit
-- **`client-shared-pieces`** — added automatically on Vite and Next
+- **`client-shared-pieces`** — added automatically on Vite, Next, and Nuxt
 
-| Recipe         | Category       | Templates  | Adds                          |
-| -------------- | -------------- | ---------- | ----------------------------- |
-| `biome`        | Linter         | All        | Lint + format scripts         |
-| `eslint`       | Linter         | All        | ESLint flat config            |
-| `zustand`      | State          | Vite, Next | Zustand store example         |
-| `nanostores`   | State          | Vite, Next | Nanostores example            |
-| `hookform-zod` | Forms          | Vite, Next | React Hook Form + Zod         |
-| `kyjs`         | HTTP           | Vite, Next | Ky client                     |
-| `axios`        | HTTP           | Vite, Next | Axios client                  |
-| `antd`         | UI             | Vite, Next | Ant Design setup              |
-| `mui`          | UI             | Vite, Next | MUI setup                     |
-| `shadcn-ui`    | UI             | Vite, Next | Tailwind + shadcn/ui          |
-| `storybook`    | Docs / testing | Vite, Next | Storybook config + scripts    |
-| `type-orm`     | ORM            | Nest, Hono | TypeORM wiring + agent skill  |
-| `mikro-orm`    | ORM            | Nest, Hono | MikroORM wiring + agent skill |
-| `drizzle-orm`  | ORM            | Nest, Hono | Drizzle + drizzle-kit scripts |
+| Recipe             | Category       | Templates             | Adds                          |
+| ------------------ | -------------- | --------------------- | ----------------------------- |
+| `biome`            | Linter         | All                   | Lint + format scripts         |
+| `eslint`           | Linter         | All                   | ESLint flat config            |
+| `zustand`          | State          | Vite React, Next      | Zustand store example         |
+| `pinia`            | State          | Vite Vue, Nuxt        | Pinia store example           |
+| `nanostores`       | State          | Vite, Next, Nuxt      | Nanostores example            |
+| `hookform-zod`     | Forms          | Vite React, Next      | React Hook Form + Zod         |
+| `vee-validate-zod` | Forms          | Vite Vue, Nuxt        | VeeValidate + Zod             |
+| `kyjs`             | HTTP           | Vite, Next, Nuxt      | Ky client                     |
+| `axios`            | HTTP           | Vite, Next, Nuxt      | Axios client                  |
+| `antd`             | UI             | Vite React, Next      | Ant Design setup              |
+| `mui`              | UI             | Vite React, Next      | MUI setup                     |
+| `shadcn-ui`        | UI             | Vite React, Next      | Tailwind + shadcn/ui          |
+| `shadcn-vue`       | UI             | Vite Vue, Nuxt        | Tailwind + shadcn-vue         |
+| `nuxt-ui`          | UI             | Vite Vue, Nuxt        | Tailwind + Nuxt UI            |
+| `storybook`        | Docs / testing | Vite, Next, Nuxt      | Storybook config + scripts    |
+| `type-orm`         | ORM            | Nest, Hono       | TypeORM wiring + agent skill  |
+| `mikro-orm`        | ORM            | Nest, Hono       | MikroORM wiring + agent skill |
+| `drizzle-orm`      | ORM            | Nest, Hono       | Drizzle + drizzle-kit scripts |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 
@@ -127,6 +133,12 @@ ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`
 ```bash
 # SPA: Biome, Zustand, forms, Ky
 npx zealakit@latest web -t vite-react -w biome,zustand,hookform-zod,kyjs -y
+
+# Vue SPA: Biome, Pinia, VeeValidate, Ky, shadcn-vue
+npx zealakit@latest web-vue -t vite-vue -w biome,pinia,vee-validate-zod,kyjs,shadcn-vue -y
+
+# Nuxt: Biome, Pinia, VeeValidate, Ky, Nuxt UI
+npx zealakit@latest web-nuxt -t nuxt -w biome,pinia,vee-validate-zod,kyjs,nuxt-ui -y
 
 # Next.js: shadcn/ui + Storybook
 npx zealakit@latest next-web -t next -w biome,shadcn-ui,storybook -y

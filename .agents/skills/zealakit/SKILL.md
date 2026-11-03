@@ -57,7 +57,7 @@ Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 - Registered in `src/registry/templates.ts` (`id`, `name`, `scope`, `path`, optional `overlay`).
 - Folder: `templates/<path>/` (usually `path === id`).
 - `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/*/overlays/<overlay>/`.
-- Current templates: `vite-react` (`client`), `next` (`hybrid`), `nest` / `hono` (`server`).
+- Current templates: `vite-react` / `vite-vue` (`client`), `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
 - Template-owned agent docs live under that template (`.agents/`, `AGENTS.md`) and ship into generated apps — **do not confuse with this kit’s root skills**.
 - Everywhere agent skills/rules live in **`.agents/`**. **`.cursor`** is always a **symlink → `.agents`** (Cursor IDE compatibility).
 
@@ -80,6 +80,8 @@ Copy order in `copyRecipeFiles`:
 1. Recipe root (excluding meta dirs)
 2. `shared/`
 3. `overlays/<overlayId>/` (must exist if `overlays/` is present)
+
+For **`nuxt`**, after each recipe copy the scaffolder merges any recipe `src/` tree into `app/` and deletes `src/` (Nuxt `srcDir` is `app/`).
 
 Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `category` (one or many).
 

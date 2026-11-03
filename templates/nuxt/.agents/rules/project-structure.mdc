@@ -1,0 +1,15 @@
+---
+description: Nuxt app/ layout, kebab-case files, layouts vs pages
+alwaysApply: true
+---
+
+# Project structure
+
+Follow `.agents/skills/project-structure/SKILL.md`.
+
+Hard rules:
+
+- kebab-case **files and folders** (except Nuxt-reserved names); PascalCase **component exports**
+- Screens in `app/pages/`; chrome in `app/layouts/` via `definePageMeta`
+- Optional feature shell: `app/components/feature-a/shell.vue` — skip when UI diverges (`feature-b`)
+- All Vue + recipe kernel under `app/` (`~/` / `@/`); no top-level `src/`

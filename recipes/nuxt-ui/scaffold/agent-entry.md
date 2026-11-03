@@ -1,0 +1,1 @@
+- **UI kit:** [.agents/skills/nuxt-ui/SKILL.md](.agents/skills/nuxt-ui/SKILL.md) — Nuxt UI (`U*` components, `<UApp>`)

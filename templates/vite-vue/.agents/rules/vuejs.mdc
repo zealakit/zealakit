@@ -1,0 +1,10 @@
+---
+description: Vue 3 UI generation and refactoring
+alwaysApply: true
+---
+
+# Vue UI
+
+When generating or refactoring UI, follow `.agents/skills/vuejs/SKILL.md`.
+
+Place files using `.agents/skills/project-structure/SKILL.md` (kebab-case files, PascalCase component exports). Do not use this skill to pick a UI kit, HTTP client, or store library.

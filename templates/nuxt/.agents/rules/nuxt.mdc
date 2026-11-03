@@ -1,0 +1,10 @@
+---
+description: Nuxt 4 conventions and auto-imports
+alwaysApply: true
+---
+
+# Nuxt
+
+When changing Nuxt app or server code, follow `.agents/skills/nuxt/SKILL.md`.
+
+Prefer Nuxt 4 docs (`nuxt.com/docs/4.x`). Use auto-imports; put API handlers under `server/api/`.
