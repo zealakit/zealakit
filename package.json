@@ -1,6 +1,6 @@
 {
   "name": "zealakit",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Recipe-based scaffolding CLI for TypeScript project templates",
   "type": "module",
   "main": "./dist/index.js",
