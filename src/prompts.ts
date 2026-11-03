@@ -1,303 +1,79 @@
 import { cancel, confirm, intro, isCancel, outro, select, text } from "@clack/prompts";
 import pc from "picocolors";
 import {
+  getStepInitialValue,
+  getStepOptions,
+  type PromptStep,
+  STEPS_BY_SCOPE,
+} from "./prompt-steps.js";
+import {
+  DEFAULT_TEMPLATE_ID,
   getAllTemplateIds,
-  getExclusiveUiRecipes,
-  getRecipesByCategory,
   getTemplate,
-  getTemplateOverlayId,
   withDefaultRecipes,
 } from "./registry/index.js";
-import type { RecipeConfig, ScaffoldConfig, Scope, UiFrameworkCategory } from "./types.js";
-import { isValidNpmPackageName } from "./validator.js";
+import type { ScaffoldConfig, TemplateConfig } from "./types.js";
+import { isValidNpmPackageName } from "./validation/index.js";
 
-/** Map template overlay family → UI framework tag (extend when Vue/Svelte templates land). */
-function getUiFrameworkCategory(templateId: string): UiFrameworkCategory | undefined {
-  const overlay = getTemplateOverlayId(templateId);
+const NONE = "none";
 
-  if (overlay === "vite-react" || overlay === "next") {
-    return "ui-react";
+/** Resolves to `null` (after printing "Cancelled.") when the user aborts. */
+async function ask<T>(prompt: Promise<T>): Promise<Exclude<T, symbol> | null> {
+  const value = await prompt;
+  if (isCancel(value)) {
+    cancel("Cancelled.");
+    return null;
   }
-
-  if (overlay === "vite-vue" || overlay === "nuxt") {
-    return "ui-vue";
-  }
-
-  if (overlay === "vite-svelte" || overlay === "sveltekit") {
-    return "ui-svelte";
-  }
-
-  return undefined;
+  return value as Exclude<T, symbol>;
 }
 
-type LinterChoice = "biome" | "eslint" | "none";
-
-function getStateRecipeLabel(recipe: RecipeConfig): string {
-  if (recipe.id === "zustand") {
-    return "Zustand";
+/** Returns the chosen recipe id, `undefined` for none / skipped, or `null` on cancel. */
+async function runStep(
+  step: PromptStep,
+  template: TemplateConfig,
+): Promise<string | undefined | null> {
+  const options = getStepOptions(step, template);
+  const [first] = options;
+  if (!first) {
+    return undefined;
   }
 
-  return recipe.name;
+  if (step.kind === "confirm") {
+    const accepted = await ask(confirm({ message: step.message, initialValue: false }));
+    return accepted === null ? null : accepted ? first.id : undefined;
+  }
+
+  const initialValue = getStepInitialValue(step, options) ?? NONE;
+  const choice = await ask(
+    select<string>({
+      message: step.message,
+      options: [
+        ...options.map((recipe) => ({ value: recipe.id, label: recipe.name, hint: recipe.hint })),
+        { value: NONE, label: step.noneLabel },
+      ],
+      initialValue,
+    }),
+  );
+  return choice === null ? null : choice === NONE ? undefined : choice;
 }
 
-function mapLinterToRecipe(linter: LinterChoice): string | null {
-  if (linter === "biome" || linter === "eslint") {
-    return linter;
-  }
-
-  return null;
-}
-
-function isFormRecipeForFamily(
-  recipeId: string,
-  uiFamily: UiFrameworkCategory | undefined,
-): boolean {
-  if (uiFamily === "ui-vue") {
-    return recipeId !== "hookform-zod";
-  }
-
-  if (uiFamily === "ui-react") {
-    return recipeId !== "vee-validate-zod";
-  }
-
-  return true;
-}
-
-function isStateRecipeForFamily(
-  recipeId: string,
-  uiFamily: UiFrameworkCategory | undefined,
-): boolean {
-  if (uiFamily === "ui-vue") {
-    return recipeId !== "zustand";
-  }
-
-  if (uiFamily === "ui-react") {
-    return recipeId !== "pinia";
-  }
-
-  return true;
-}
-
-async function promptClientRecipes(templateId: string): Promise<string[] | null> {
+async function promptRecipes(template: TemplateConfig): Promise<string[] | null> {
   const recipeIds: string[] = [];
-  const fetcherRecipes = getRecipesByCategory("fetcher");
-  // Exclusive UI kits for this template's framework (+ shared `ui`-only kits).
-  // Storybook (multi-category, non-exclusive) is prompted separately.
-  const uiFamily = getUiFrameworkCategory(templateId);
-  const stateRecipes = getRecipesByCategory("state").filter((recipe) =>
-    isStateRecipeForFamily(recipe.id, uiFamily),
-  );
-  const formRecipes = getRecipesByCategory("form").filter((recipe) =>
-    isFormRecipeForFamily(recipe.id, uiFamily),
-  );
-  const uiRecipes = uiFamily
-    ? getExclusiveUiRecipes(uiFamily)
-    : getRecipesByCategory("ui").filter((recipe) => recipe.exclusive);
-
-  const stateChoice = await select<string>({
-    message: "Select state management:",
-    options: [
-      ...stateRecipes.map((recipe) => ({
-        value: recipe.id,
-        label: getStateRecipeLabel(recipe),
-      })),
-      { value: "none", label: "No state management" },
-    ],
-    initialValue: "none",
-  });
-
-  if (isCancel(stateChoice)) {
-    cancel("Cancelled.");
-    return null;
+  for (const step of STEPS_BY_SCOPE[template.scope]) {
+    const recipeId = await runStep(step, template);
+    if (recipeId === null) {
+      return null;
+    }
+    if (recipeId) {
+      recipeIds.push(recipeId);
+    }
   }
-
-  const formChoice = await select<string>({
-    message: "Select form + validation:",
-    options: [
-      ...formRecipes.map((recipe) => ({
-        value: recipe.id,
-        label: recipe.name,
-        hint:
-          recipe.id === "hookform-zod" || recipe.id === "vee-validate-zod"
-            ? "Recommended"
-            : undefined,
-      })),
-      { value: "none", label: "No form library" },
-    ],
-    initialValue: "none",
-  });
-
-  if (isCancel(formChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  const fetcherChoice = await select<string>({
-    message: "Select HTTP fetcher:",
-    options: [
-      ...fetcherRecipes.map((recipe) => ({
-        value: recipe.id,
-        label: recipe.name,
-        hint: recipe.id === "kyjs" ? "Lightweight fetch wrapper" : undefined,
-      })),
-      { value: "none", label: "No HTTP client" },
-    ],
-    initialValue: "none",
-  });
-
-  if (isCancel(fetcherChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  const uiChoice = await select<string>({
-    message: "Select UI kit:",
-    options: [
-      ...uiRecipes.map((recipe) => ({
-        value: recipe.id,
-        label: recipe.name,
-      })),
-      { value: "none", label: "No UI kit" },
-    ],
-    initialValue: "none",
-  });
-
-  if (isCancel(uiChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  const linterChoice = await select<LinterChoice>({
-    message: "Select linter / formatter:",
-    options: [
-      {
-        value: "biome",
-        label: "Biome — Fast, all-in-one",
-        hint: "Recommended",
-      },
-      { value: "eslint", label: "ESLint — Flat Config" },
-      { value: "none", label: "No linter" },
-    ],
-    initialValue: "biome",
-  });
-
-  if (isCancel(linterChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  if (stateChoice !== "none") {
-    recipeIds.push(stateChoice);
-  }
-
-  if (formChoice !== "none") {
-    recipeIds.push(formChoice);
-  }
-
-  if (fetcherChoice !== "none") {
-    recipeIds.push(fetcherChoice);
-  }
-
-  if (uiChoice !== "none") {
-    recipeIds.push(uiChoice);
-  }
-
-  const linterRecipe = mapLinterToRecipe(linterChoice);
-  if (linterRecipe) {
-    recipeIds.push(linterRecipe);
-  }
-
-  const addStorybook = await confirm({
-    message: "Add Storybook (component docs / UI testing)?",
-    initialValue: false,
-  });
-
-  if (isCancel(addStorybook)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  if (addStorybook) {
-    recipeIds.push("storybook");
-  }
-
   return recipeIds;
 }
 
-async function promptServerRecipes(): Promise<string[] | null> {
-  const recipeIds: string[] = [];
-  const ormRecipes = getRecipesByCategory("orm");
-
-  const ormChoice = await select<string>({
-    message: "Select ORM:",
-    options: [
-      ...ormRecipes.map((recipe) => ({
-        value: recipe.id,
-        label: recipe.name,
-        hint: recipe.id === "drizzle-orm" ? "Lightweight SQL" : undefined,
-      })),
-      { value: "none", label: "No ORM (in-memory adapters)" },
-    ],
-    initialValue: "none",
-  });
-
-  if (isCancel(ormChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  const linterChoice = await select<LinterChoice>({
-    message: "Select linter / formatter:",
-    options: [
-      {
-        value: "biome",
-        label: "Biome — Fast, all-in-one",
-        hint: "Recommended",
-      },
-      { value: "eslint", label: "ESLint — Flat Config" },
-      { value: "none", label: "No linter" },
-    ],
-    initialValue: "biome",
-  });
-
-  if (isCancel(linterChoice)) {
-    cancel("Cancelled.");
-    return null;
-  }
-
-  if (ormChoice !== "none") {
-    recipeIds.push(ormChoice);
-  }
-
-  const linterRecipe = mapLinterToRecipe(linterChoice);
-  if (linterRecipe) {
-    recipeIds.push(linterRecipe);
-  }
-
-  return recipeIds;
-}
-
-async function promptRecipesForScope(scope: Scope, templateId: string): Promise<string[] | null> {
-  if (scope === "client" || scope === "hybrid") {
-    return promptClientRecipes(templateId);
-  }
-
-  if (scope === "server") {
-    return promptServerRecipes();
-  }
-
-  return [];
-}
-
-export async function runInteractivePrompts(
-  initialProjectName?: string,
-): Promise<ScaffoldConfig | null> {
-  intro(`${pc.bgCyan(pc.black(" zealakit "))} Recipe-based scaffolding`);
-
-  let projectName = initialProjectName;
-
-  if (!projectName) {
-    const nameInput = await text({
+async function promptProjectName(): Promise<string | null> {
+  return ask(
+    text({
       message: "What is your project name?",
       placeholder: "my-app",
       validate: (value) => {
@@ -305,81 +81,66 @@ export async function runInteractivePrompts(
         if (!name) {
           return "Project name cannot be empty.";
         }
-
         if (!isValidNpmPackageName(name)) {
           return "Invalid name. Use lowercase letters, no spaces (npm naming rules).";
         }
       },
-    });
+    }),
+  );
+}
 
-    if (isCancel(nameInput)) {
-      cancel("Cancelled.");
-      return null;
-    }
+async function promptTemplate(): Promise<string | null> {
+  return ask(
+    select<string>({
+      message: "Select a base template:",
+      options: getAllTemplateIds().map((id) => ({
+        value: id,
+        label: getTemplate(id)?.label ?? id,
+      })),
+      initialValue: DEFAULT_TEMPLATE_ID,
+    }),
+  );
+}
 
-    projectName = nameInput;
-  }
+export async function runInteractivePrompts(
+  initial: { projectName?: string; templateId?: string } = {},
+): Promise<ScaffoldConfig | null> {
+  intro(`${pc.bgCyan(pc.black(" zealakit "))} Recipe-based scaffolding`);
 
-  const templateLabels: Record<string, string> = {
-    "vite-react": "Vite + React + TypeScript",
-    "vite-vue": "Vite + Vue + TypeScript",
-    next: "Next.js App Router + TypeScript",
-    nuxt: "Nuxt + TypeScript",
-    nest: "NestJS + TypeScript (DDD / hexagonal)",
-    hono: "Hono + TypeScript (DDD / hexagonal)",
-  };
-
-  const templateId = await select({
-    message: "Select a base template:",
-    options: getAllTemplateIds().map((id) => ({
-      value: id,
-      label: templateLabels[id] ?? id,
-    })),
-    initialValue: "vite-react",
-  });
-
-  if (isCancel(templateId)) {
-    cancel("Cancelled.");
+  const projectName = initial.projectName ?? (await promptProjectName());
+  if (projectName === null) {
     return null;
   }
 
-  const template = getTemplate(templateId);
+  const templateId = initial.templateId ?? (await promptTemplate());
+  const template = templateId ? getTemplate(templateId) : undefined;
   if (!template) {
     cancel("Cancelled.");
     return null;
   }
 
-  const recipeIds = await promptRecipesForScope(template.scope, templateId);
-  if (recipeIds === null) {
+  const picked = await promptRecipes(template);
+  if (picked === null) {
     return null;
   }
 
-  const resolvedRecipeIds = withDefaultRecipes(template.scope, recipeIds);
-
+  const recipeIds = withDefaultRecipes(template.scope, picked);
   const summary = [
     `  ${pc.dim("Name:")}      ${projectName}`,
-    `  ${pc.dim("Template:")} ${templateId}`,
+    `  ${pc.dim("Template:")} ${template.id}`,
     `  ${pc.dim("Scope:")}    ${template.scope}`,
-    `  ${pc.dim("Recipes:")}  ${resolvedRecipeIds.length > 0 ? resolvedRecipeIds.join(", ") : pc.dim("(none)")}`,
+    `  ${pc.dim("Recipes:")}  ${recipeIds.length > 0 ? recipeIds.join(", ") : pc.dim("(none)")}`,
   ].join("\n");
-
   console.log(`\n${pc.bold("Summary:")}\n${summary}\n`);
 
-  const shouldProceed = await confirm({
-    message: "Start scaffolding?",
-    initialValue: true,
-  });
-
-  if (isCancel(shouldProceed) || !shouldProceed) {
-    cancel("Cancelled.");
+  const shouldProceed = await ask(confirm({ message: "Start scaffolding?", initialValue: true }));
+  if (!shouldProceed) {
+    if (shouldProceed === false) {
+      cancel("Cancelled.");
+    }
     return null;
   }
 
   outro(pc.green("Creating project..."));
-
-  return {
-    projectName,
-    templateId,
-    recipeIds: resolvedRecipeIds,
-  };
+  return { projectName, templateId: template.id, recipeIds };
 }

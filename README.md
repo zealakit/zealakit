@@ -105,23 +105,23 @@ Exceptions:
 - **`storybook`** — can be combined with a UI kit
 - **`client-shared-pieces`** — added automatically on Vite, Next, and Nuxt
 
-| Recipe             | Category       | Templates             | Adds                          |
-| ------------------ | -------------- | --------------------- | ----------------------------- |
-| `biome`            | Linter         | All                   | Lint + format scripts         |
-| `eslint`           | Linter         | All                   | ESLint flat config            |
-| `zustand`          | State          | Vite React, Next      | Zustand store example         |
-| `pinia`            | State          | Vite Vue, Nuxt        | Pinia store example           |
-| `nanostores`       | State          | Vite, Next, Nuxt      | Nanostores example            |
-| `hookform-zod`     | Forms          | Vite React, Next      | React Hook Form + Zod         |
-| `vee-validate-zod` | Forms          | Vite Vue, Nuxt        | VeeValidate + Zod             |
-| `kyjs`             | HTTP           | Vite, Next, Nuxt      | Ky client                     |
-| `axios`            | HTTP           | Vite, Next, Nuxt      | Axios client                  |
-| `antd`             | UI             | Vite React, Next      | Ant Design setup              |
-| `mui`              | UI             | Vite React, Next      | MUI setup                     |
-| `shadcn-ui`        | UI             | Vite React, Next      | Tailwind + shadcn/ui          |
-| `shadcn-vue`       | UI             | Vite Vue, Nuxt        | Tailwind + shadcn-vue         |
-| `nuxt-ui`          | UI             | Vite Vue, Nuxt        | Tailwind + Nuxt UI            |
-| `storybook`        | Docs / testing | Vite, Next, Nuxt      | Storybook config + scripts    |
+| Recipe             | Category       | Templates        | Adds                          |
+| ------------------ | -------------- | ---------------- | ----------------------------- |
+| `biome`            | Linter         | All              | Lint + format scripts         |
+| `eslint`           | Linter         | All              | ESLint flat config            |
+| `zustand`          | State          | Vite React, Next | Zustand store example         |
+| `pinia`            | State          | Vite Vue, Nuxt   | Pinia store example           |
+| `nanostores`       | State          | Vite, Next, Nuxt | Nanostores example            |
+| `hookform-zod`     | Forms          | Vite React, Next | React Hook Form + Zod         |
+| `vee-validate-zod` | Forms          | Vite Vue, Nuxt   | VeeValidate + Zod             |
+| `kyjs`             | HTTP           | Vite, Next, Nuxt | Ky client                     |
+| `axios`            | HTTP           | Vite, Next, Nuxt | Axios client                  |
+| `antd`             | UI             | Vite React, Next | Ant Design setup              |
+| `mui`              | UI             | Vite React, Next | MUI setup                     |
+| `shadcn-ui`        | UI             | Vite React, Next | Tailwind + shadcn/ui          |
+| `shadcn-vue`       | UI             | Vite Vue, Nuxt   | Tailwind + shadcn-vue         |
+| `nuxt-ui`          | UI             | Vite Vue, Nuxt   | Tailwind + Nuxt UI            |
+| `storybook`        | Docs / testing | Vite, Next, Nuxt | Storybook config + scripts    |
 | `type-orm`         | ORM            | Nest, Hono       | TypeORM wiring + agent skill  |
 | `mikro-orm`        | ORM            | Nest, Hono       | MikroORM wiring + agent skill |
 | `drizzle-orm`      | ORM            | Nest, Hono       | Drizzle + drizzle-kit scripts |
@@ -190,6 +190,16 @@ Yes. Treat it like any other project.
 
 **Monorepos?**  
 Not yet. Each run creates one standalone project.
+
+---
+
+## Metadata for tooling
+
+```bash
+npx zealakit@latest info --json   # alias: zealakit --info --json
+```
+
+Prints a single JSON document on stdout (nothing else): CLI name/version, templates (with their prompt flow and default recipes), categories, recipes (compatible templates, conflicts, packages), and compatibility rules. Keys are stable ids; `schemaVersion` changes only on breaking changes. Without `--json`, prints a human-readable summary.
 
 ---
 

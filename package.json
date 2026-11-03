@@ -1,6 +1,6 @@
 {
   "name": "zealakit",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Recipe-based scaffolding CLI for TypeScript project templates",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,8 +26,14 @@
     "check": "biome check .",
     "check:write": "biome check --write .",
     "format": "biome format --write .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p monitor/tsconfig.json",
+    "test": "tsx scripts/test.ts",
+    "test:unit": "tsx scripts/test.ts --unit",
+    "test:scaffold": "tsx scripts/test.ts --scaffold",
     "test:pack": "tsx scripts/test-e2e-pack.ts",
     "monitor": "tsx monitor/server.ts",
+    "prepack": "tsx scripts/pack-dotfiles.ts add",
+    "postpack": "tsx scripts/pack-dotfiles.ts remove",
     "prepublishOnly": "pnpm build",
     "test:sandbox": "rm -rf .sandbox/*/ && mkdir -p .sandbox && cd .sandbox && tsx ../src/index.ts"
   },

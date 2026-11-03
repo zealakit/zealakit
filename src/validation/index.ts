@@ -1,0 +1,50 @@
+import pc from "picocolors";
+import type { CliOptions, ScaffoldConfig, ValidationResult } from "../types.js";
+import { validateProjectName } from "./project-name.js";
+import {
+  validateRecipeCompatibility,
+  validateRecipeConflicts,
+  validateRecipeIds,
+  validateTemplate,
+} from "./recipes.js";
+import { validateTargetDirectory } from "./target-dir.js";
+
+export { isValidNpmPackageName, validateProjectName } from "./project-name.js";
+export {
+  validateRecipeCompatibility,
+  validateRecipeConflicts,
+  validateRecipeIds,
+  validateTemplate,
+} from "./recipes.js";
+export { directoryHasFiles, validateTargetDirectory } from "./target-dir.js";
+
+/** All checks that do not touch the target directory (no prompts, no I/O on cwd). */
+export function validateScaffoldConfig(config: ScaffoldConfig): ValidationResult {
+  const errors = [
+    validateProjectName(config.projectName),
+    validateTemplate(config.templateId),
+    validateRecipeIds(config.recipeIds),
+    validateRecipeConflicts(config.recipeIds),
+    validateRecipeCompatibility(config.templateId, config.recipeIds),
+  ].flatMap((check) => check.errors);
+
+  return { valid: errors.length === 0, errors };
+}
+
+export async function validateScaffoldInput(
+  config: ScaffoldConfig,
+  cwd: string,
+  options: Pick<CliOptions, "yes">,
+): Promise<ValidationResult> {
+  const configCheck = validateScaffoldConfig(config);
+  if (!configCheck.valid) {
+    return configCheck;
+  }
+  return validateTargetDirectory(config.projectName, cwd, options);
+}
+
+export function printValidationErrors(errors: string[]): void {
+  for (const error of errors) {
+    console.error(pc.red(error));
+  }
+}

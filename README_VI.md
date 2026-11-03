@@ -181,6 +181,16 @@ Chưa. Mỗi lần chạy tạo một project độc lập.
 
 ---
 
+## Metadata cho tooling
+
+```bash
+npx zealakit@latest info --json   # alias: zealakit --info --json
+```
+
+In ra stdout đúng một tài liệu JSON (không kèm gì khác): tên/version CLI, template (kèm flow prompt và recipe mặc định), category, recipe (template tương thích, xung đột, package) và các quy tắc tương thích. Key là id cố định; `schemaVersion` chỉ đổi khi có thay đổi phá vỡ tương thích. Không có `--json` thì in bản tóm tắt dễ đọc.
+
+---
+
 ## Giấy phép
 
 [MIT](LICENSE)

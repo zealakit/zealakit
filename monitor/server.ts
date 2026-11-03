@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { RECIPE_CATEGORIES, SCOPES } from "../src/constants.js";
-import { getRecipeCategories, recipes } from "../src/registry/recipes.js";
+import { getRecipeCategories, recipes } from "../src/registry/recipes/index.js";
 import { templates } from "../src/registry/templates.js";
 import type { RecipeConfig } from "../src/types.js";
 
@@ -16,7 +16,11 @@ const ROOT = path.resolve(__dirname, "..");
 const HOST = "127.0.0.1";
 const PREFERRED_PORT = 4000;
 const SKIP_DIRS = new Set(["node_modules", "dist", ".git"]);
-const RECIPES_REGISTRY = "src/registry/recipes.ts";
+const RECIPES_REGISTRY_DIR = "src/registry/recipes";
+
+function recipeRegistryFile(recipeId: string): string {
+  return `${RECIPES_REGISTRY_DIR}/${recipeId}.ts`;
+}
 
 type DepType = "dep" | "dev";
 
@@ -279,8 +283,8 @@ async function buildRecipeGroups(): Promise<PackageGroup[]> {
     const packages = await collectRecipeEntries(recipe);
     groups.push({
       label: `recipe/${recipe.id}`,
-      filePath: RECIPES_REGISTRY,
-      relativePath: RECIPES_REGISTRY,
+      filePath: recipeRegistryFile(recipe.id),
+      relativePath: recipeRegistryFile(recipe.id),
       recipeId: recipe.id,
       tag: categories[0],
       tags: categories,
@@ -364,7 +368,7 @@ function isRegexLiteralStart(source: string, slashIndex: number): boolean {
     return true;
   }
   const prev = source[i] ?? "";
-  // Covers `pattern: /.../` and similar in recipes.ts (after `:`, `(`, `,`, …).
+  // Covers `pattern: /.../` and similar in recipe modules (after `:`, `(`, `,`, …).
   return "([{=!&|?:;,~^%*-+<>".includes(prev);
 }
 
@@ -476,22 +480,14 @@ function findMatchingBrace(source: string, openIndex: number): number {
   throw new Error("Unbalanced braces while locating recipe block");
 }
 
+/** Each recipe module exports `defineRecipe({ ... })`; the object literal is the editable block. */
 function findRecipeBlockRange(source: string, recipeId: string): { start: number; end: number } {
-  const keyAlternatives = [`${recipeId}:`, `"${recipeId}":`, `'${recipeId}':`];
-  let keyIndex = -1;
-  for (const key of keyAlternatives) {
-    const pattern = `\n  ${key}`;
-    const idx = source.indexOf(pattern);
-    if (idx !== -1) {
-      keyIndex = idx + pattern.indexOf(key);
-      break;
-    }
-  }
-  if (keyIndex === -1) {
-    throw new Error(`Recipe "${recipeId}" not found in ${RECIPES_REGISTRY}`);
+  const callIndex = source.indexOf("defineRecipe({");
+  if (callIndex === -1) {
+    throw new Error(`defineRecipe({ … }) not found in ${recipeRegistryFile(recipeId)}`);
   }
 
-  const openIndex = source.indexOf("{", keyIndex);
+  const openIndex = source.indexOf("{", callIndex);
   if (openIndex === -1) {
     throw new Error(`Recipe "${recipeId}" has no object body`);
   }
@@ -603,7 +599,11 @@ async function updateRecipeRegistry(body: UpdateBody): Promise<void> {
     throw new Error("recipeId is required for recipe updates");
   }
 
-  const absolute = path.join(ROOT, RECIPES_REGISTRY);
+  if (!/^[a-z0-9-]+$/.test(body.recipeId) || !recipes[body.recipeId]) {
+    throw new Error(`Unknown recipe "${body.recipeId}"`);
+  }
+
+  const absolute = path.join(ROOT, recipeRegistryFile(body.recipeId));
   const source = await readFile(absolute, "utf8");
   const { start, end } = findRecipeBlockRange(source, body.recipeId);
   const recipeBlock = source.slice(start, end + 1);
@@ -641,7 +641,7 @@ async function updatePackageJson(body: UpdateBody): Promise<{ lockfileSynced?: b
     throw new Error('depType must be "dep" or "dev"');
   }
 
-  if (body.recipeId || toPosix(body.filePath) === RECIPES_REGISTRY) {
+  if (body.recipeId) {
     await updateRecipeRegistry(body);
     return {};
   }

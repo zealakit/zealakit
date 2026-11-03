@@ -41,7 +41,13 @@ jobs:
       - name: Check code quality
         run: pnpm check
 
-      - name: Run E2E pack tests
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run pack smoke tests
         run: pnpm test:pack
 
       - name: Build CLI

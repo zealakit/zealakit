@@ -1,17 +1,18 @@
 export {
   getAllRecipeIds,
-  getExclusiveUiRecipes,
   getRecipe,
   getRecipeCategories,
   getRecipesByCategory,
   recipeHasCategory,
+  recipeSupportsScope,
   recipes,
   withDefaultRecipes,
-} from "./recipes.js";
+} from "./recipes/index.js";
 export {
+  DEFAULT_TEMPLATE_ID,
   getAllTemplateIds,
   getTemplate,
+  getTemplateDevCommand,
   getTemplateOverlayId,
-  getTemplateScope,
   templates,
 } from "./templates.js";
