@@ -7,16 +7,23 @@ import {
 import { resolveRecipeOverlay } from "./scaffold/paths.js";
 import type { RecipeCategory, RecipeConfig, TemplateConfig } from "./types.js";
 
+export type IncompatibilityCode = "scope" | "framework" | "overlay";
+
+export type Incompatibility = { code: IncompatibilityCode; message: string };
+
 /**
  * Why `recipe` cannot be applied to `template`, or `undefined` when it can.
- * Single source for prompts (filtering) and validation (errors).
+ * Single source for prompts (filtering), validation (errors), and `info`.
  */
-export function getRecipeIncompatibility(
+export function checkRecipeCompatibility(
   recipe: RecipeConfig,
   template: TemplateConfig,
-): string | undefined {
+): Incompatibility | undefined {
   if (!recipeSupportsScope(recipe, template.scope)) {
-    return `Recipe '${recipe.id}' does not support template scope '${template.scope}'.`;
+    return {
+      code: "scope",
+      message: `Recipe '${recipe.id}' does not support template scope '${template.scope}'.`,
+    };
   }
 
   if (
@@ -24,15 +31,45 @@ export function getRecipeIncompatibility(
     !(template.framework && recipe.frameworks.includes(template.framework))
   ) {
     const uses = template.framework ? `uses ${template.framework}` : "has no UI framework";
-    return `Recipe '${recipe.id}' targets ${recipe.frameworks.join(" / ")}; template '${template.id}' ${uses}.`;
+    return {
+      code: "framework",
+      message: `Recipe '${recipe.id}' targets ${recipe.frameworks.join(" / ")}; template '${template.id}' ${uses}.`,
+    };
   }
 
   const overlay = resolveRecipeOverlay(recipe.id, template.id);
   if (overlay.kind === "missing") {
-    return `Recipe '${recipe.id}' has no overlay for template '${template.id}' (expected recipes/${recipe.id}/overlays/${overlay.overlayId}/). Available: ${overlay.available.join(", ") || "(none)"}.`;
+    return {
+      code: "overlay",
+      message: `Recipe '${recipe.id}' has no overlay for template '${template.id}' (expected recipes/${recipe.id}/overlays/${overlay.overlayId}/). Available: ${overlay.available.join(", ") || "(none)"}.`,
+    };
   }
 
   return undefined;
+}
+
+export function getRecipeIncompatibility(
+  recipe: RecipeConfig,
+  template: TemplateConfig,
+): string | undefined {
+  return checkRecipeCompatibility(recipe, template)?.message;
+}
+
+/** Other exclusive recipes sharing a category with `recipe` (cannot be selected together). */
+export function getConflictingRecipes(recipe: RecipeConfig): string[] {
+  if (!recipe.exclusive) {
+    return [];
+  }
+
+  const conflicts = new Set<string>();
+  for (const category of getRecipeCategories(recipe)) {
+    for (const other of getRecipesByCategory(category)) {
+      if (other.exclusive && other.id !== recipe.id) {
+        conflicts.add(other.id);
+      }
+    }
+  }
+  return [...conflicts];
 }
 
 export function isRecipeCompatible(recipe: RecipeConfig, template: TemplateConfig): boolean {

@@ -1,80 +1,19 @@
 import { cancel, confirm, intro, isCancel, outro, select, text } from "@clack/prompts";
 import pc from "picocolors";
-import { getCompatibleRecipes, isRecipeCompatible } from "./compat.js";
+import {
+  getStepInitialValue,
+  getStepOptions,
+  type PromptStep,
+  STEPS_BY_SCOPE,
+} from "./prompt-steps.js";
 import {
   DEFAULT_TEMPLATE_ID,
   getAllTemplateIds,
-  getRecipe,
   getTemplate,
   withDefaultRecipes,
 } from "./registry/index.js";
-import type { RecipeCategory, ScaffoldConfig, Scope, TemplateConfig } from "./types.js";
+import type { ScaffoldConfig, TemplateConfig } from "./types.js";
 import { isValidNpmPackageName } from "./validation/index.js";
-
-type SelectStep = {
-  kind: "select";
-  category: RecipeCategory;
-  message: string;
-  noneLabel: string;
-  initialValue?: string;
-};
-
-type ConfirmStep = { kind: "confirm"; recipeId: string; message: string };
-
-type PromptStep = SelectStep | ConfirmStep;
-
-const LINTER_STEP: SelectStep = {
-  kind: "select",
-  category: "linter",
-  message: "Select linter / formatter:",
-  noneLabel: "No linter",
-  initialValue: "biome",
-};
-
-const CLIENT_STEPS: PromptStep[] = [
-  {
-    kind: "select",
-    category: "state",
-    message: "Select state management:",
-    noneLabel: "No state management",
-  },
-  {
-    kind: "select",
-    category: "form",
-    message: "Select form + validation:",
-    noneLabel: "No form library",
-  },
-  {
-    kind: "select",
-    category: "fetcher",
-    message: "Select HTTP fetcher:",
-    noneLabel: "No HTTP client",
-  },
-  { kind: "select", category: "ui", message: "Select UI kit:", noneLabel: "No UI kit" },
-  LINTER_STEP,
-  {
-    kind: "confirm",
-    recipeId: "storybook",
-    message: "Add Storybook (component docs / UI testing)?",
-  },
-];
-
-const SERVER_STEPS: PromptStep[] = [
-  {
-    kind: "select",
-    category: "orm",
-    message: "Select ORM:",
-    noneLabel: "No ORM (in-memory adapters)",
-  },
-  LINTER_STEP,
-];
-
-const STEPS_BY_SCOPE: Record<Scope, PromptStep[]> = {
-  client: CLIENT_STEPS,
-  hybrid: CLIENT_STEPS,
-  server: SERVER_STEPS,
-  infrastructure: [],
-};
 
 const NONE = "none";
 
@@ -93,21 +32,18 @@ async function runStep(
   step: PromptStep,
   template: TemplateConfig,
 ): Promise<string | undefined | null> {
-  if (step.kind === "confirm") {
-    const recipe = getRecipe(step.recipeId);
-    if (!recipe || !isRecipeCompatible(recipe, template)) {
-      return undefined;
-    }
-    const accepted = await ask(confirm({ message: step.message, initialValue: false }));
-    return accepted === null ? null : accepted ? recipe.id : undefined;
-  }
-
-  const options = getCompatibleRecipes(template, step.category).filter((r) => r.exclusive);
-  if (options.length === 0) {
+  const options = getStepOptions(step, template);
+  const [first] = options;
+  if (!first) {
     return undefined;
   }
 
-  const initialValue = options.some((r) => r.id === step.initialValue) ? step.initialValue : NONE;
+  if (step.kind === "confirm") {
+    const accepted = await ask(confirm({ message: step.message, initialValue: false }));
+    return accepted === null ? null : accepted ? first.id : undefined;
+  }
+
+  const initialValue = getStepInitialValue(step, options) ?? NONE;
   const choice = await ask(
     select<string>({
       message: step.message,

@@ -153,6 +153,21 @@ const SMOKE_CASES: SmokeCase[] = [
     },
   },
   {
+    name: "info --json prints only JSON",
+    args: ["info", "--json"],
+    check: (result) => {
+      try {
+        const info = JSON.parse(result.output) as { templates: unknown[]; recipes: unknown[] };
+        return [
+          ...expectExit(result, true),
+          ...(info.templates.length > 0 && info.recipes.length > 0 ? [] : ["empty metadata"]),
+        ];
+      } catch (error) {
+        return [`stdout/stderr is not pure JSON: ${(error as Error).message}`];
+      }
+    },
+  },
+  {
     name: "vite-react + biome,zustand,hookform-zod,kyjs",
     args: ["smoke-client", "-t", "vite-react", "-w", "biome,zustand,hookform-zod,kyjs", "-y"],
     check: (result, appDir) => {

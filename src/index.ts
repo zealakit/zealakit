@@ -1,28 +1,24 @@
-import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
+import { printKitInfo } from "./info.js";
+import { readKitManifest } from "./manifest.js";
 import { runInteractivePrompts } from "./prompts.js";
 import {
   DEFAULT_TEMPLATE_ID,
   getAllRecipeIds,
   getAllTemplateIds,
   getTemplate,
+  getTemplateDevCommand,
   withDefaultRecipes,
 } from "./registry/index.js";
 import { scaffoldProject } from "./scaffold/index.js";
-import { PACKAGE_ROOT } from "./scaffold/paths.js";
 import type { CliOptions, ScaffoldConfig } from "./types.js";
 import {
   printValidationErrors,
   validateScaffoldInput,
   validateTemplate,
 } from "./validation/index.js";
-
-function readCliVersion(): string {
-  const manifest = path.join(PACKAGE_ROOT, "package.json");
-  return (JSON.parse(fs.readFileSync(manifest, "utf-8")) as { version: string }).version;
-}
 
 function fail(message: string): never {
   console.error(pc.red(message));
@@ -69,7 +65,8 @@ async function resolveScaffoldConfig(
 
 function printSuccess(targetDir: string, config: ScaffoldConfig): void {
   const relativePath = path.relative(process.cwd(), targetDir) || config.projectName;
-  const devCommand = getTemplate(config.templateId)?.devCommand ?? "npm run dev";
+  const template = getTemplate(config.templateId);
+  const devCommand = template ? getTemplateDevCommand(template) : "npm run dev";
 
   console.log();
   console.log(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
@@ -86,7 +83,8 @@ const program = new Command();
 program
   .name("zealakit")
   .description("Recipe-based scaffolding CLI for TypeScript project templates")
-  .version(readCliVersion())
+  .version(readKitManifest().version)
+  .enablePositionalOptions()
   .argument("[project-name]", "Project name (npm naming rules)")
   .option(
     "-t, --template <template>",
@@ -97,7 +95,17 @@ program
     `Recipes to apply, comma-separated (e.g. biome). Available: ${getAllRecipeIds().join(", ")}`,
   )
   .option("-y, --yes", "Non-interactive mode (skip overwrite confirmation)")
+  .option("--info", "Print kit metadata (alias of `zealakit info`)")
+  .option("--json", "With --info: print only machine-readable JSON")
   .action(async (projectName: string | undefined, options: CliOptions) => {
+    if (options.info) {
+      printKitInfo({ json: options.json === true });
+      return;
+    }
+    if (options.json) {
+      fail("✖ Flag --json requires --info (or use `zealakit info --json`).");
+    }
+
     try {
       const resolved = await resolveScaffoldConfig(projectName, options);
       if (!resolved) {
@@ -123,6 +131,14 @@ program
     } catch (error) {
       fail(`✖ Error: ${error instanceof Error ? error.message : String(error)}`);
     }
+  });
+
+program
+  .command("info")
+  .description("Print kit metadata: templates, categories, recipes, compatibility rules")
+  .option("--json", "Print only machine-readable JSON (stdout contains nothing else)")
+  .action((options: { json?: boolean }) => {
+    printKitInfo({ json: options.json === true });
   });
 
 program.parse(process.argv);

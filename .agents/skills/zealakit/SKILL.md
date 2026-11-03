@@ -42,7 +42,9 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 | File / dir                   | Role                                                                               |
 | ---------------------------- | ---------------------------------------------------------------------------------- |
 | `index.ts`                   | Commander CLI entry (flag resolution, success output)                              |
-| `prompts.ts`                 | Interactive flow — declarative `STEPS_BY_SCOPE`, options filtered by `compat.ts`   |
+| `prompt-steps.ts`            | Declarative `STEPS_BY_SCOPE` + per-template options (shared by prompts and `info`) |
+| `prompts.ts`                 | Interactive flow (clack) driven by `prompt-steps.ts`                               |
+| `info.ts`                    | `zealakit info --json` — metadata derived from registry/compat; stdout = JSON only |
 | `compat.ts`                  | **Single answer** to "can recipe X go on template Y?" (scope, framework, overlay)  |
 | `constants.ts`               | **`SCOPES`**, **`FRAMEWORKS`**, **`RECIPE_CATEGORIES`** — single source of truth   |
 | `types.ts`                   | Types derived from constants (`Scope`, `Framework`, `RecipeCategory`, configs)     |

@@ -181,6 +181,16 @@ npm install && npm run dev
 
 ---
 
+## 工具用元数据
+
+```bash
+npx zealakit@latest info --json   # 别名：zealakit --info --json
+```
+
+在 stdout 上只输出一个 JSON 文档（不含其他内容）：CLI 名称/版本、模板（含交互流程和默认 recipe）、分类、recipe（兼容模板、冲突、依赖包）以及兼容性规则。键均为固定 id；仅在不兼容变更时才会修改 `schemaVersion`。不加 `--json` 时输出便于阅读的摘要。
+
+---
+
 ## 许可证
 
 [MIT](LICENSE)

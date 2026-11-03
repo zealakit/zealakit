@@ -67,6 +67,10 @@ export function getAllTemplateIds(): string[] {
   return Object.keys(templates);
 }
 
+export function getTemplateDevCommand(template: TemplateConfig): string {
+  return template.devCommand ?? "npm run dev";
+}
+
 /** Overlay folder name for recipe overlays under recipes/<recipe>/overlays. */
 export function getTemplateOverlayId(templateId: string): string {
   const template = getTemplate(templateId);

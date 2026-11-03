@@ -193,6 +193,16 @@ Not yet. Each run creates one standalone project.
 
 ---
 
+## Metadata for tooling
+
+```bash
+npx zealakit@latest info --json   # alias: zealakit --info --json
+```
+
+Prints a single JSON document on stdout (nothing else): CLI name/version, templates (with their prompt flow and default recipes), categories, recipes (compatible templates, conflicts, packages), and compatibility rules. Keys are stable ids; `schemaVersion` changes only on breaking changes. Without `--json`, prints a human-readable summary.
+
+---
+
 ## License
 
 [MIT](LICENSE)

@@ -83,6 +83,8 @@ export type CliOptions = {
   template?: string;
   with?: string;
   yes?: boolean;
+  info?: boolean;
+  json?: boolean;
 };
 
 export type ValidationResult = {
