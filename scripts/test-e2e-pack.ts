@@ -56,15 +56,24 @@ async function runOrThrow(command: string, args: string[], cwd: string): Promise
   return result.output;
 }
 
+/** Packs with pnpm, not npm: npm silently drops symlinks, pnpm (= `pnpm publish`) keeps them. */
 async function packCli(): Promise<string> {
   console.log(dim("→ Building + packing CLI..."));
-  await runOrThrow("npm", ["run", "build"], PROJECT_ROOT);
-  const output = await runOrThrow("npm", ["pack", "--silent"], PROJECT_ROOT);
-  const tarballName = output.trim().split("\n").pop()?.trim();
-  if (!tarballName) {
-    throw new Error("Could not determine tarball name from npm pack output.");
+  await runOrThrow("pnpm", ["run", "build"], PROJECT_ROOT);
+  const output = await runOrThrow(
+    "pnpm",
+    ["pack", "--pack-destination", PROJECT_ROOT],
+    PROJECT_ROOT,
+  );
+  const tarballPath = output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.endsWith(".tgz"))
+    .pop();
+  if (!tarballPath) {
+    throw new Error("Could not determine tarball path from pnpm pack output.");
   }
-  return path.join(PROJECT_ROOT, tarballName);
+  return path.resolve(PROJECT_ROOT, tarballPath);
 }
 
 const NEVER_PACKED_SEGMENTS = new Set([
@@ -122,6 +131,13 @@ function verifyTarballContents(tarballPath: string): string[] {
   }
   for (const file of packed) {
     if (/^(src|scripts|tests|monitor)\//.test(file)) errors.push(`tarball must not ship ${file}`);
+  }
+  // The npm registry rejects tarballs containing symlinks (HTTP 415).
+  const symlinks = execFileSync("tar", ["-tvzf", tarballPath], { encoding: "utf-8" })
+    .split("\n")
+    .filter((line) => line.startsWith("l"));
+  for (const line of symlinks) {
+    errors.push(`tarball must not contain symlinks: ${line.split(/\s+/).slice(-3).join(" ")}`);
   }
   return errors;
 }

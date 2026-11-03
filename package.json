@@ -13,6 +13,8 @@
     "recipes",
     "!recipes/tsconfig.json",
     "!recipes/shims.d.ts",
+    "!templates/*/.cursor",
+    "!recipes/*/.cursor",
     "!templates/**/dist",
     "!templates/**/.next",
     "!templates/**/node_modules",
