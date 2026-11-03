@@ -60,6 +60,33 @@ function step(label: string, command: string, args: string[]): void {
   }
 }
 
+/**
+ * Every version ever published, including unpublished ones: npm never allows
+ * reusing them, but `npm view` reports unpublished versions as 404.
+ */
+async function fetchUsedVersions(name: string): Promise<Set<string>> {
+  const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`);
+  if (response.status === 404) {
+    return new Set();
+  }
+  if (!response.ok) {
+    abort(`Could not read ${name} from the npm registry (HTTP ${response.status}).`);
+  }
+
+  const doc = (await response.json()) as {
+    versions?: Record<string, unknown>;
+    time?: Record<string, unknown> & { unpublished?: { versions?: string[] } };
+  };
+  const timestamps = Object.keys(doc.time ?? {}).filter(
+    (key) => !["created", "modified", "unpublished"].includes(key),
+  );
+  return new Set([
+    ...Object.keys(doc.versions ?? {}),
+    ...timestamps,
+    ...(doc.time?.unpublished?.versions ?? []),
+  ]);
+}
+
 /** `1.0.0-beta.1` → `beta`; stable versions → `latest`. */
 function defaultDistTag(version: string): string {
   const prerelease = version.split("-")[1];
@@ -82,9 +109,10 @@ async function main(): Promise<void> {
     }
   }
 
-  const published = capture("npm", ["view", `${name}@${version}`, "version"]);
-  if (published.ok && published.stdout === version) {
-    abort(`${name}@${version} is already on npm. Bump "version" in package.json first.`);
+  if ((await fetchUsedVersions(name)).has(version)) {
+    abort(
+      `${name}@${version} was already published (possibly unpublished since); npm never reuses versions. Bump "version" in package.json first.`,
+    );
   }
 
   if (!options.dryRun) {
