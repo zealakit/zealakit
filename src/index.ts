@@ -3,6 +3,7 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { printKitInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
+import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 import {
   DEFAULT_TEMPLATE_ID,
@@ -12,7 +13,8 @@ import {
   getTemplateDevCommand,
   withDefaultRecipes,
 } from "./registry/index.js";
-import { scaffoldProject } from "./scaffold/index.js";
+import { formatRecipeResolveError, resolveRecipeDependencies } from "./resolve-recipes.js";
+import { buildScaffoldPlan, planIsReady, scaffoldProject } from "./scaffold/index.js";
 import type { CliOptions, ScaffoldConfig } from "./types.js";
 import {
   printValidationErrors,
@@ -52,7 +54,7 @@ async function resolveScaffoldConfig(
   }
 
   const recipesFlag = options.with?.trim();
-  if (projectName && (recipesFlag || options.yes)) {
+  if (projectName && (recipesFlag || options.yes || options.dryRun)) {
     return {
       projectName,
       templateId: options.template ?? DEFAULT_TEMPLATE_ID,
@@ -95,6 +97,7 @@ program
     `Recipes to apply, comma-separated (e.g. biome). Available: ${getAllRecipeIds().join(", ")}`,
   )
   .option("-y, --yes", "Non-interactive mode (skip overwrite confirmation)")
+  .option("--dry-run", "Resolve and validate without writing files")
   .option("--info", "Print kit metadata (alias of `zealakit info`)")
   .option("--json", "With --info: print only machine-readable JSON")
   .action(async (projectName: string | undefined, options: CliOptions) => {
@@ -113,12 +116,27 @@ program
       }
 
       const template = getTemplate(resolved.templateId);
+      const requestedRecipeIds = resolved.recipeIds;
+      const withDefaults = template
+        ? withDefaultRecipes(template.scope, resolved.recipeIds)
+        : resolved.recipeIds;
+      const dependencyResolution = resolveRecipeDependencies(withDefaults);
+      if (!dependencyResolution.ok) {
+        fail(formatRecipeResolveError(dependencyResolution.error));
+      }
       const config: ScaffoldConfig = {
         ...resolved,
-        recipeIds: template
-          ? withDefaultRecipes(template.scope, resolved.recipeIds)
-          : resolved.recipeIds,
+        recipeIds: dependencyResolution.recipeIds,
       };
+
+      if (options.dryRun) {
+        if (!config.projectName) {
+          fail("✖ Flag --dry-run requires a project name.");
+        }
+        const plan = buildScaffoldPlan(config, process.cwd(), { requestedRecipeIds });
+        console.log(formatScaffoldPreview(plan));
+        process.exit(planIsReady(plan) ? 0 : 1);
+      }
 
       const validation = await validateScaffoldInput(config, process.cwd(), { yes: options.yes });
       if (!validation.valid) {

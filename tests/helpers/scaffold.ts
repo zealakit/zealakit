@@ -9,6 +9,7 @@ import {
   getTemplateOverlayId,
   withDefaultRecipes,
 } from "../../src/registry/index.js";
+import { resolveRecipeDependencies } from "../../src/resolve-recipes.js";
 import { getRecipeAgentEntry } from "../../src/scaffold/agent-docs.js";
 import { scaffoldProject } from "../../src/scaffold/index.js";
 import { validateScaffoldConfig } from "../../src/validation/index.js";
@@ -48,11 +49,14 @@ function toApp(dir: string, templateId: string, recipeIds: string[]): Scaffolded
   };
 }
 
-/** Same resolution as the CLI: default recipes first, then the picked ones. */
+/** Same resolution as the CLI: defaults → dependsOn expansion. */
 export function resolveRecipeIds(templateId: string, picked: string[]): string[] {
   const template = getTemplate(templateId);
   assert.ok(template, `unknown template ${templateId}`);
-  return withDefaultRecipes(template.scope, picked);
+  const withDefaults = withDefaultRecipes(template.scope, picked);
+  const resolved = resolveRecipeDependencies(withDefaults);
+  assert.equal(resolved.ok, true, "recipe dependency resolution should succeed in tests");
+  return resolved.ok ? resolved.recipeIds : withDefaults;
 }
 
 /** Validates like the CLI (`-y`) and scaffolds in-process into a temp dir. */

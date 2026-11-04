@@ -45,6 +45,8 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 | `prompt-steps.ts`            | Declarative `STEPS_BY_SCOPE` + per-template options (shared by prompts and `info`) |
 | `prompts.ts`                 | Interactive flow (clack) driven by `prompt-steps.ts`                               |
 | `info.ts`                    | `zealakit info --json` — metadata derived from registry/compat; stdout = JSON only |
+| `resolve-recipes.ts`         | Expand `dependsOn`, detect cycles/missing ids, preserve selection order            |
+| `preview.ts`                 | Human-readable `--dry-run` preview                                                 |
 | `compat.ts`                  | **Single answer** to "can recipe X go on template Y?" (scope, framework, overlay)  |
 | `constants.ts`               | **`SCOPES`**, **`FRAMEWORKS`**, **`RECIPE_CATEGORIES`** — single source of truth   |
 | `types.ts`                   | Types derived from constants (`Scope`, `Framework`, `RecipeCategory`, configs)     |
@@ -52,7 +54,7 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 | `registry/recipes/<id>.ts`   | One module per recipe: `export default defineRecipe({ … })` (monitor edits these)  |
 | `registry/recipes/define.ts` | `defineRecipe` + transform helpers (Next/Vite providers, Nuxt modules, ORM wiring) |
 | `registry/recipes/index.ts`  | Ordered recipe list (= prompt order) + lookups                                     |
-| `scaffold/`                  | `index.ts` pipeline, `copy`, `transforms`, `agent-docs`, `package-json`, `paths`   |
+| `scaffold/`                  | `plan` (preflight) → stage → `validate-output` → commit; plus `copy`, transforms   |
 | `validation/`                | `project-name`, `target-dir`, `recipes` (ids, conflicts, compatibility), `index`   |
 
 Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).

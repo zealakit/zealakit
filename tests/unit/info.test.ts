@@ -130,6 +130,7 @@ describe("buildKitInfo", () => {
         "exclusive-per-category",
         "non-exclusive-coexist",
         "default-recipes",
+        "recipe-dependencies",
       ],
     );
   });

@@ -22,6 +22,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
    - `category` from `RECIPE_CATEGORIES` (single value or array for multi-tag recipes)
    - `frameworks` when the recipe only works with some UI frameworks (`["react"]`, `["vue"]`); omit for agnostic recipes (linters, fetchers, ORMs, Storybook)
    - `supportedScopes`, `exclusive` / `default` as appropriate; optional `hint` for prompts
+   - optional `dependsOn: string[]` for other recipes that must be applied first (transitive; cycles fail preflight)
    - `packages` / `devDependencies` / overlay package maps
    - `fileTransforms` keyed by template id or overlay id — prefer helpers in `define.ts` (`viteReactAppProvider`, `nextUiProviders`, `nuxtModule`, `nuxtConfigKeys`, `serverOrmWiring`, `appendExport`)
    - optional `finalize(targetDir)` for post-copy fixes that are not text transforms

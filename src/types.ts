@@ -59,6 +59,11 @@ export type RecipeConfig = {
   exclusive?: boolean;
   /** Always applied for matching template scopes (not shown in prompts) */
   default?: boolean;
+  /**
+   * Other recipe ids that must be applied with this one (transitive).
+   * Missing / circular dependencies fail before any files are written.
+   */
+  dependsOn?: string[];
   packages: Record<string, string>;
   /** Extra packages merged for a specific overlay family (e.g. `next`, `vite-react`) */
   overlayPackages?: Record<string, Record<string, string>>;
@@ -83,6 +88,7 @@ export type CliOptions = {
   template?: string;
   with?: string;
   yes?: boolean;
+  dryRun?: boolean;
   info?: boolean;
   json?: boolean;
 };

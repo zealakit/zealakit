@@ -78,6 +78,8 @@ export type RecipeInfo = {
   categories: RecipeCategory[];
   exclusive: boolean;
   default: boolean;
+  /** Direct recipe dependencies (transitive closure resolved at scaffold time) */
+  dependsOn: string[];
   supportedScopes: Scope[] | "all";
   /** `null` = framework-agnostic */
   frameworks: Framework[] | null;
@@ -109,7 +111,7 @@ export type KitInfo = {
     description: string | null;
     homepage: string | null;
     engines: Record<string, string>;
-    usage: { scaffold: string; info: string };
+    usage: { scaffold: string; dryRun: string; info: string };
   };
   defaults: { templateId: string; noneValue: string };
   scopes: Scope[];
@@ -205,6 +207,7 @@ function recipeInfo(recipe: RecipeConfig): RecipeInfo {
     categories,
     exclusive: recipe.exclusive ?? false,
     default: recipe.default ?? false,
+    dependsOn: recipe.dependsOn ?? [],
     supportedScopes: recipe.supportedScopes,
     frameworks: recipe.frameworks ?? null,
     templates: compatible,
@@ -260,6 +263,12 @@ function rules(): RuleInfo[] {
         "Injected automatically (prepended) for every template whose scope they support; never prompted.",
       recipes: ids(all.filter((recipe) => recipe.default)),
     },
+    {
+      id: "recipe-dependencies",
+      description:
+        "Recipes may declare dependsOn; transitive deps are auto-injected before write, cycles and missing ids fail preflight.",
+      recipes: ids(all.filter((recipe) => (recipe.dependsOn?.length ?? 0) > 0)),
+    },
   ];
 }
 
@@ -277,6 +286,7 @@ export function buildKitInfo(): KitInfo {
       engines: manifest.engines ?? {},
       usage: {
         scaffold: "zealakit <project-name> -t <template> -w <recipe,recipe> -y",
+        dryRun: "zealakit <project-name> -t <template> -w <recipe,recipe> --dry-run",
         info: "zealakit info --json",
       },
     },

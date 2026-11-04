@@ -54,6 +54,12 @@ npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook -y
 npx zealakit@latest api -t nest -w biome,drizzle-orm -y
 ```
 
+### Preview without writing
+
+```bash
+npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook --dry-run
+```
+
 - Without `-w`, the CLI is interactive.
 - `-y` needs a project name and skips confirmation prompts.
 
@@ -70,6 +76,7 @@ npx zealakit@latest [project-name] [options]
 | `-t, --template <id>`  | Base template (default: `vite-react`)             |
 | `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`) |
 | `-y, --yes`            | Non-interactive mode (requires a project name)    |
+| `--dry-run`            | Preview the plan without writing files            |
 | `-h, --help`           | Show help                                         |
 | `-V, --version`        | Show version                                      |
 
@@ -78,6 +85,8 @@ npx zealakit@latest [project-name] [options]
 - Project names follow npm naming (lowercase, no spaces).
 - Existing non-empty folders ask before overwrite; with `-y` they are rejected.
 - Invalid or conflicting recipes are rejected **before** any files are written.
+- Generation stages into a temp directory, validates the result, then commits — a failed run does not leave a half-written new project.
+- `--dry-run` uses the same resolution and validation as a real run (including default recipes and `dependsOn`), prints a preview, and exits `0` when ready or `1` when blocked.
 
 ---
 

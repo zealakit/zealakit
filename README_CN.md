@@ -54,6 +54,12 @@ npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook -y
 npx zealakit@latest api -t nest -w biome,drizzle-orm -y
 ```
 
+### 预览（不写入）
+
+```bash
+npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook --dry-run
+```
+
 - 不带 `-w` 时进入交互流程。
 - `-y` 必须提供项目名，并跳过确认。
 
@@ -70,6 +76,7 @@ npx zealakit@latest [项目名] [选项]
 | `-t, --template <id>`  | 基础模板（默认：`vite-react`）             |
 | `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`） |
 | `-y, --yes`            | 非交互模式（必须提供项目名）               |
+| `--dry-run`            | 预览生成计划，不写入文件                   |
 | `-h, --help`           | 显示帮助                                   |
 | `-V, --version`        | 显示版本                                   |
 
@@ -78,6 +85,8 @@ npx zealakit@latest [项目名] [选项]
 - 项目名需符合 npm 规范（小写、无空格）。
 - 目标目录非空时会先确认；使用 `-y` 时直接拒绝覆盖。
 - 无效或冲突的 Recipe 会在**写入任何文件之前**被拒绝。
+- 生成会先写入临时目录并校验，通过后再提交——失败时不会留下半成品的新项目。
+- `--dry-run` 使用与真实生成相同的解析与校验（含默认 Recipe 与 `dependsOn`），打印预览；就绪时退出码 `0`，被阻止时为 `1`。
 
 ---
 

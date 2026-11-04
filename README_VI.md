@@ -54,6 +54,12 @@ npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook -y
 npx zealakit@latest api -t nest -w biome,drizzle-orm -y
 ```
 
+### Xem trước (không ghi file)
+
+```bash
+npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook --dry-run
+```
+
 - Không có `-w` → CLI hỏi tương tác.
 - `-y` bắt buộc có tên project và bỏ qua bước xác nhận.
 
@@ -70,6 +76,7 @@ npx zealakit@latest [tên-project] [options]
 | `-t, --template <id>`  | Template gốc (mặc định: `vite-react`)                          |
 | `-w, --with <recipes>` | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`) |
 | `-y, --yes`            | Chế độ không hỏi (bắt buộc có tên project)                     |
+| `--dry-run`            | Xem trước kế hoạch, không ghi file                             |
 | `-h, --help`           | Xem trợ giúp                                                   |
 | `-V, --version`        | Xem phiên bản                                                  |
 
@@ -78,6 +85,8 @@ npx zealakit@latest [tên-project] [options]
 - Tên project theo quy ước npm (chữ thường, không khoảng trắng).
 - Thư mục đã có nội dung sẽ hỏi trước khi ghi đè; với `-y` sẽ bị từ chối.
 - Recipe sai hoặc xung đột bị từ chối **trước khi** ghi file.
+- Generate ghi vào thư mục tạm, validate, rồi mới commit — lỗi giữa chừng không để lại project mới bị dở dang.
+- `--dry-run` dùng cùng logic resolve/validate như generate thật (kể cả recipe mặc định và `dependsOn`), in preview, thoát `0` nếu sẵn sàng hoặc `1` nếu bị chặn.
 
 ---
 

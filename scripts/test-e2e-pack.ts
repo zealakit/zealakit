@@ -184,6 +184,16 @@ const SMOKE_CASES: SmokeCase[] = [
     },
   },
   {
+    name: "--dry-run previews without writing",
+    args: ["smoke-dry-run", "-t", "vite-react", "-w", "biome", "--dry-run"],
+    check: (result, appDir) => [
+      ...expectExit(result, true),
+      ...expectNoApp(appDir),
+      ...(/Generation Preview/.test(result.output) ? [] : ["missing preview header"]),
+      ...(/No files were written/.test(result.output) ? [] : ["missing no-write notice"]),
+    ],
+  },
+  {
     name: "vite-react + biome,zustand,hookform-zod,kyjs",
     args: ["smoke-client", "-t", "vite-react", "-w", "biome,zustand,hookform-zod,kyjs", "-y"],
     check: (result, appDir) => {
