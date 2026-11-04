@@ -1,4 +1,5 @@
 import path from "node:path";
+import { HYBRID_ORM_WARNING, hybridOrmSelections } from "../orm-warnings.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import { formatRecipeResolveError, resolveRecipeDependencies } from "../resolve-recipes.js";
 import type { ScaffoldConfig, ValidationResult } from "../types.js";
@@ -124,6 +125,13 @@ export function buildScaffoldPlan(
   const owners = new Map<string, OwnedFile>();
   let fileConflictCount = 0;
   const template = getTemplate(effective.templateId);
+
+  if (template) {
+    const ormIds = hybridOrmSelections(template, effective.recipeIds);
+    if (ormIds.length > 0) {
+      warnings.push(`${HYBRID_ORM_WARNING} (selected: ${ormIds.join(", ")})`);
+    }
+  }
 
   if (template) {
     for (const [relative, source] of listTemplateFiles(template.id)) {

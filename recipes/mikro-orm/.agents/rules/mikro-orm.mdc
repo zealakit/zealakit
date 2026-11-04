@@ -1,6 +1,6 @@
 ---
 description: MikroORM persistence placement and adapter rules
-globs: "**/infrastructure/persistence/**/*.{ts,tsx},**/mikro-orm/**/*.{ts,tsx}"
+globs: "**/infrastructure/persistence/**/*.{ts,tsx},**/lib/persistence/**/*.{ts,tsx},**/server/persistence/**/*.{ts,tsx},**/mikro-orm/**/*.{ts,tsx}"
 alwaysApply: false
 ---
 

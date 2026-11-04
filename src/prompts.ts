@@ -46,6 +46,10 @@ async function runStep(
     return undefined;
   }
 
+  if (step.notice) {
+    console.log(pc.yellow(`  ${step.notice}`));
+  }
+
   if (step.kind === "confirm") {
     const accepted = await ask(confirm({ message: step.message, initialValue: false }));
     return accepted === null ? null : accepted ? first.id : undefined;

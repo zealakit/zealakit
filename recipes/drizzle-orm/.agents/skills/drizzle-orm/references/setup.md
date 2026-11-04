@@ -25,6 +25,8 @@ Scaffold leaves Nest `DrizzlePersistenceModule` / Hono `createDrizzleClient` **c
 | Kit config | `drizzle.config.ts` (repo root) |
 | Migrations out dir | `infrastructure/persistence/drizzle/migrations` (via kit `out`) |
 | Repository adapter | `infrastructure/persistence/<feature>/*.repository.adapter.ts` |
+| Next (hybrid) | `src/lib/persistence/drizzle/` |
+| Nuxt (hybrid) | `server/persistence/drizzle/` |
 
 ## Nest wiring
 

@@ -11,7 +11,7 @@ description: >-
 
 This skill is present because the **type-orm** recipe is installed.
 
-Persistence wiring lives under `src/infrastructure/persistence/typeorm/`. Domain ports and application handlers stay ORM-free. **No database driver is pre-selected** — install one when you know the target DB.
+Persistence wiring lives under `src/infrastructure/persistence/typeorm/` on Nest/Hono, `src/lib/persistence/typeorm/` on Next, or `server/persistence/typeorm/` on Nuxt. Domain ports and application handlers stay ORM-free. **No database driver is pre-selected** — install one when you know the target DB.
 
 Aligns with `.agents/skills/structure-ddd/SKILL.md` for layer placement.
 

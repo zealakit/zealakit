@@ -1,6 +1,6 @@
 ---
 description: Drizzle ORM persistence placement and adapter rules
-globs: "**/infrastructure/persistence/**/*.{ts,tsx},**/drizzle/**/*.{ts,tsx},drizzle.config.ts"
+globs: "**/infrastructure/persistence/**/*.{ts,tsx},**/lib/persistence/**/*.{ts,tsx},**/server/persistence/**/*.{ts,tsx},**/drizzle/**/*.{ts,tsx},drizzle.config.ts"
 alwaysApply: false
 ---
 

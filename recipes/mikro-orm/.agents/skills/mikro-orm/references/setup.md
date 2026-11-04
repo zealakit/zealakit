@@ -25,6 +25,8 @@ Scaffold leaves Nest `MikroOrmPersistenceModule` / Hono `createMikroOrm` **comme
 | Connection options | `infrastructure/persistence/mikro-orm/mikro-orm.options.ts` |
 | Feature row models | `infrastructure/persistence/<feature>/entities/*.orm-entity.ts` |
 | Repository adapter | `infrastructure/persistence/<feature>/*.repository.adapter.ts` |
+| Next (hybrid) | `src/lib/persistence/mikro-orm/` |
+| Nuxt (hybrid) | `server/persistence/mikro-orm/` |
 
 ## Nest wiring
 

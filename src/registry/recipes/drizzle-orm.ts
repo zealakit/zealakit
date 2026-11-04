@@ -18,7 +18,7 @@ export default defineRecipe({
   name: "Drizzle ORM",
   hint: "Lightweight SQL",
   category: "orm",
-  supportedScopes: ["server"],
+  supportedScopes: ["server", "hybrid"],
   exclusive: true,
   packages: {
     "drizzle-orm": "^0.45.4",

@@ -4,6 +4,7 @@ import pc from "picocolors";
 import { ExitCode, fail, failDiagnostic, printError, printInfo } from "./diagnostics.js";
 import { printKitInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
+import { HYBRID_ORM_WARNING, hybridOrmSelections } from "./orm-warnings.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 import {
@@ -76,6 +77,14 @@ function printSuccess(targetDir: string, config: ScaffoldConfig): void {
 
   printInfo("");
   printInfo(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
+  if (template) {
+    const ormIds = hybridOrmSelections(template, config.recipeIds);
+    if (ormIds.length > 0) {
+      printInfo("");
+      printInfo(pc.yellow(`⚠ ${HYBRID_ORM_WARNING}`));
+      printInfo(pc.dim(`  Selected ORM: ${ormIds.join(", ")}`));
+    }
+  }
   printInfo("");
   printInfo(pc.bold("Next steps:"));
   printInfo(`  ${pc.cyan("cd")} ${relativePath}`);

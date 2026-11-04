@@ -11,7 +11,7 @@ description: >-
 
 This skill is present because the **mikro-orm** recipe is installed.
 
-Persistence wiring lives under `src/infrastructure/persistence/mikro-orm/`. Domain ports and application handlers stay ORM-free. **No database driver is pre-selected.**
+Persistence wiring lives under `src/infrastructure/persistence/mikro-orm/` on Nest/Hono, `src/lib/persistence/mikro-orm/` on Next, or `server/persistence/mikro-orm/` on Nuxt. Domain ports and application handlers stay ORM-free. **No database driver is pre-selected.**
 
 Aligns with `.agents/skills/structure-ddd/SKILL.md` for layer placement.
 

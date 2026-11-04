@@ -28,7 +28,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
    - optional `finalize(targetDir)` for post-copy fixes that are not text transforms
 3. Optional `scaffold/agent-entry.md` — markdown list lines linked into generated `AGENTS.md` / `CLAUDE.md`.
 4. Optional `.agents/skills|rules` — copied into the generated project (consumer guidance), not kit maintainer docs. Keep recipe `.cursor` → `.agents` symlink (no duplicate content under `.cursor`).
-5. Prompts pick the recipe up automatically for its category (no prompt code changes). A new **category** needs a step in `STEPS_BY_SCOPE` in `src/prompts.ts`.
+5. Prompts pick the recipe up automatically for its category (no prompt code changes). A new **category** needs a step in `STEPS_BY_SCOPE` in `src/prompt-steps.ts`.
 6. Add expectations to the relevant `tests/scaffold/<template>.test.ts` files; the matrix already checks deps, scripts, agent entries, and leaks.
 7. If introducing a new category, scope, or framework value, update `src/constants.ts` first.
 
@@ -38,7 +38,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
 - If `recipes/<id>/overlays/` exists, the matching overlay directory is **required**; `compat.ts` rejects the combination up front otherwise.
 - Framework-specific providers (e.g. Next `AppRouterCacheProvider`) belong in `overlays/next`, not `shared/`.
 - Nest-only config (e.g. Biome decorator parser flags, ORM Nest modules) belongs in `overlays/nest`.
-- Exclusive `orm` recipes (`type-orm`, `mikro-orm`, `drizzle-orm`) support `server` scope only; add `overlays/<be-template>/` for each BE template (`nest`, `hono`, …).
+- Exclusive `orm` recipes (`type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`) support `server` and `hybrid`. Prefer a dedicated backend framework for production APIs; hybrid (Next/Nuxt) is best-effort for small apps (prompt + dry-run warn). Add `overlays/<overlayId>/` for every supported template (`nest`, `hono`, `next`, `nuxt`, …).
 
 ## fileTransforms
 

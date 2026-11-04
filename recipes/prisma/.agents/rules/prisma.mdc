@@ -1,0 +1,18 @@
+---
+description: Prisma persistence placement and adapter rules
+globs: "**/infrastructure/persistence/**/*.{ts,tsx},**/lib/persistence/**/*.{ts,tsx},**/server/persistence/**/*.{ts,tsx},**/prisma/**/*.{ts,tsx,prisma},prisma/schema.prisma,prisma.config.ts"
+alwaysApply: false
+---
+
+# Prisma
+
+Follow `.agents/skills/prisma/SKILL.md` (and its `references/`) when wiring Prisma.
+
+Hard rules:
+
+- `prisma/schema.prisma` (provider only), `prisma.config.ts` (URL), and the client factory stay outside `domain/`
+- Never import `@prisma/client` from `domain/`
+- Repository **ports** stay in domain; inject `PRISMA` only inside adapters
+- Prefer `*.repository.adapter.ts` names (ORM-agnostic)
+- Register `PrismaPersistenceModule` after `DATABASE_URL` + `prisma generate` + a driver adapter
+- Schema changes via Prisma Migrate (`db:migrate`); avoid query-per-row loops

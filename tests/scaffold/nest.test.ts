@@ -72,11 +72,38 @@ templateSuite("nest", {
       ],
       noDeps: ["better-sqlite3"],
     },
+    {
+      name: "prisma",
+      recipes: ["prisma"],
+      exists: [
+        "src/infrastructure/persistence/prisma/prisma.module.ts",
+        "src/infrastructure/persistence/prisma/prisma.client.ts",
+        "prisma/schema.prisma",
+        "prisma.config.ts",
+      ],
+      deps: ["@prisma/client"],
+      devDeps: ["prisma"],
+      contains: {
+        "src/bootstrap/app.module.ts": ["// import { PrismaPersistenceModule }"],
+        "AGENTS.md": [".agents/skills/prisma/SKILL.md"],
+        "package.json": ['"db:generate": "prisma generate"'],
+        "prisma/schema.prisma": ['provider = "postgresql"'],
+        "prisma.config.ts": ["DATABASE_URL"],
+      },
+      check(app) {
+        assert.doesNotMatch(app.read("prisma/schema.prisma"), /^\s*url\s*=/m);
+      },
+    },
   ],
   reject: [
     {
       name: "type-orm + drizzle-orm",
       recipes: ["type-orm", "drizzle-orm"],
+      output: [/conflict/i, /orm/i],
+    },
+    {
+      name: "prisma + drizzle-orm",
+      recipes: ["prisma", "drizzle-orm"],
       output: [/conflict/i, /orm/i],
     },
     { name: "zustand (client)", recipes: ["zustand"], output: [/scope 'server'/] },

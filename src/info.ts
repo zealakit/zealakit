@@ -32,8 +32,9 @@ export type PromptStepInfo =
       /** Preselected recipe id; `null` = "none" */
       initialValue: string | null;
       options: string[];
+      notice?: string;
     }
-  | { kind: "confirm"; recipeId: string; message: string; options: string[] };
+  | { kind: "confirm"; recipeId: string; message: string; options: string[]; notice?: string };
 
 export type TemplateInfo = {
   id: string;
@@ -156,6 +157,7 @@ function templateInfo(template: TemplateConfig): TemplateInfo {
               noneLabel: step.noneLabel,
               initialValue: getStepInitialValue(step, options) ?? null,
               options: ids(options),
+              ...(step.notice ? { notice: step.notice } : {}),
             },
           ]
         : [
@@ -164,6 +166,7 @@ function templateInfo(template: TemplateConfig): TemplateInfo {
               recipeId: step.recipeId,
               message: step.message,
               options: ids(options),
+              ...(step.notice ? { notice: step.notice } : {}),
             },
           ];
     }),
@@ -235,6 +238,12 @@ function rules(): RuleInfo[] {
       id: "scope-match",
       description:
         "A recipe applies only to templates whose scope is listed in supportedScopes (strict: hybrid does not accept server-only recipes).",
+    },
+    {
+      id: "hybrid-orm-caveat",
+      description:
+        "ORM recipes also support hybrid (Next, Nuxt, etc.) as best-effort for small apps; interactive prompts and dry-run warn that a dedicated backend framework is preferred for production APIs.",
+      recipes: ids(all.filter((recipe) => getRecipeCategories(recipe).includes("orm"))),
     },
     {
       id: "framework-match",

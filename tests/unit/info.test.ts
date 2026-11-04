@@ -125,6 +125,7 @@ describe("buildKitInfo", () => {
       info.rules.map((r) => r.id),
       [
         "scope-match",
+        "hybrid-orm-caveat",
         "framework-match",
         "overlay-required",
         "exclusive-per-category",
@@ -133,5 +134,12 @@ describe("buildKitInfo", () => {
         "recipe-dependencies",
       ],
     );
+
+    const ormStep = next?.promptSteps.find(
+      (step) => step.kind === "select" && step.category === "orm",
+    );
+    assert.ok(ormStep && ormStep.kind === "select");
+    assert.ok(ormStep.notice);
+    assert.ok(ormStep.options.includes("prisma"));
   });
 });

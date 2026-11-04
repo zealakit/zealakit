@@ -9,10 +9,17 @@ export type SelectStep = {
   message: string;
   noneLabel: string;
   initialValue?: string;
+  /** Extra dim note printed above the prompt (e.g. hybrid ORM caveat) */
+  notice?: string;
 };
 
 /** Yes/no for a single non-exclusive recipe. */
-export type ConfirmStep = { kind: "confirm"; recipeId: string; message: string };
+export type ConfirmStep = {
+  kind: "confirm";
+  recipeId: string;
+  message: string;
+  notice?: string;
+};
 
 export type PromptStep = SelectStep | ConfirmStep;
 
@@ -24,7 +31,23 @@ const LINTER_STEP: SelectStep = {
   initialValue: "biome",
 };
 
-const CLIENT_STEPS: PromptStep[] = [
+const ORM_STEP_SERVER: SelectStep = {
+  kind: "select",
+  category: "orm",
+  message: "Select ORM:",
+  noneLabel: "No ORM (in-memory adapters)",
+};
+
+const ORM_STEP_HYBRID: SelectStep = {
+  kind: "select",
+  category: "orm",
+  message: "Select ORM (optional, small apps only):",
+  noneLabel: "No ORM",
+  notice:
+    "Warning: hybrid templates (Next, Nuxt, etc.) are not a pure backend. ORM support is limited — use only for small projects; prefer a dedicated backend framework for production APIs.",
+};
+
+const CLIENT_CORE_STEPS: PromptStep[] = [
   {
     kind: "select",
     category: "state",
@@ -43,7 +66,12 @@ const CLIENT_STEPS: PromptStep[] = [
     message: "Select HTTP fetcher:",
     noneLabel: "No HTTP client",
   },
-  { kind: "select", category: "ui", message: "Select UI kit:", noneLabel: "No UI kit" },
+  {
+    kind: "select",
+    category: "ui",
+    message: "Select UI kit:",
+    noneLabel: "No UI kit",
+  },
   LINTER_STEP,
   {
     kind: "confirm",
@@ -52,20 +80,21 @@ const CLIENT_STEPS: PromptStep[] = [
   },
 ];
 
-const SERVER_STEPS: PromptStep[] = [
-  {
-    kind: "select",
-    category: "orm",
-    message: "Select ORM:",
-    noneLabel: "No ORM (in-memory adapters)",
-  },
-  LINTER_STEP,
+const CLIENT_STEPS: PromptStep[] = CLIENT_CORE_STEPS;
+
+/** Hybrid = client stack + optional ORM (with caveat). ORM sits before linter. */
+const HYBRID_STEPS: PromptStep[] = [
+  ...CLIENT_CORE_STEPS.slice(0, 4),
+  ORM_STEP_HYBRID,
+  ...CLIENT_CORE_STEPS.slice(4),
 ];
+
+const SERVER_STEPS: PromptStep[] = [ORM_STEP_SERVER, LINTER_STEP];
 
 /** Interactive flow per template scope (also exported by `zealakit info`). */
 export const STEPS_BY_SCOPE: Record<Scope, PromptStep[]> = {
   client: CLIENT_STEPS,
-  hybrid: CLIENT_STEPS,
+  hybrid: HYBRID_STEPS,
   server: SERVER_STEPS,
   infrastructure: [],
 };

@@ -1,0 +1,1 @@
+- **ORM:** [.agents/skills/prisma/SKILL.md](.agents/skills/prisma/SKILL.md) — Prisma setup, adapters, queries/N+1, migrations, transactions

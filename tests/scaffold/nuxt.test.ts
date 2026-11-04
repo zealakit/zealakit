@@ -66,10 +66,26 @@ templateSuite("nuxt", {
         "app/assets/css/main.css": ['@import "@nuxt/ui"'],
       },
     },
+    {
+      name: "drizzle-orm (hybrid ORM)",
+      recipes: ["drizzle-orm"],
+      exists: [
+        "server/persistence/drizzle/drizzle.bootstrap.ts",
+        "server/persistence/drizzle/drizzle.client.ts",
+        "drizzle.config.ts",
+      ],
+      absent: ["server/persistence/drizzle/drizzle.module.ts", "app/infrastructure", "src"],
+      contains: {
+        "AGENTS.md": [".agents/skills/drizzle-orm/SKILL.md"],
+        "drizzle.config.ts": [
+          "./server/persistence/drizzle/schema.ts",
+          "./server/persistence/drizzle/migrations",
+        ],
+      },
+    },
   ],
   reject: [
     { name: "antd (react)", recipes: ["antd"] },
     { name: "zustand (react)", recipes: ["zustand"] },
-    { name: "drizzle-orm (server-only)", recipes: ["drizzle-orm"] },
   ],
 });

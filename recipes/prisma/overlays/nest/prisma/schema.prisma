@@ -1,0 +1,14 @@
+// Choose provider: postgresql | mysql | sqlite | sqlserver | mongodb | cockroachdb
+// Connection URL lives in prisma.config.ts (Prisma 7+). See .agents/skills/prisma/SKILL.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Change this to match your database before first migrate.
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+// Add models here. Keep Prisma models in persistence — map to domain in adapters.

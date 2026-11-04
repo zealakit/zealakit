@@ -113,24 +113,27 @@ npx zealakit@latest [项目名] [选项]
 - **`storybook`** — 可与 UI 套件同时使用
 - **`client-shared-pieces`** — 在 Vite / Next 上自动添加
 
-| Recipe         | 分类        | 适用模板   | 内容                       |
-| -------------- | ----------- | ---------- | -------------------------- |
-| `biome`        | Linter      | 全部       | Lint + Format 脚本         |
-| `eslint`       | Linter      | 全部       | ESLint flat config         |
-| `zustand`      | State       | Vite、Next | Zustand 示例               |
-| `nanostores`   | State       | Vite、Next | Nanostores 示例            |
-| `hookform-zod` | Forms       | Vite、Next | React Hook Form + Zod      |
-| `kyjs`         | HTTP        | Vite、Next | Ky 客户端                  |
-| `axios`        | HTTP        | Vite、Next | Axios 客户端               |
-| `antd`         | UI          | Vite、Next | Ant Design                 |
-| `mui`          | UI          | Vite、Next | MUI                        |
-| `shadcn-ui`    | UI          | Vite、Next | Tailwind + shadcn/ui       |
-| `storybook`    | 文档 / 测试 | Vite、Next | Storybook 配置与脚本       |
-| `type-orm`     | ORM         | Nest、Hono | TypeORM + Agent skill      |
-| `mikro-orm`    | ORM         | Nest、Hono | MikroORM + Agent skill     |
-| `drizzle-orm`  | ORM         | Nest、Hono | Drizzle + drizzle-kit 脚本 |
+| Recipe         | 分类        | 适用模板               | 内容                       |
+| -------------- | ----------- | ---------------------- | -------------------------- |
+| `biome`        | Linter      | 全部                   | Lint + Format 脚本         |
+| `eslint`       | Linter      | 全部                   | ESLint flat config         |
+| `zustand`      | State       | Vite、Next             | Zustand 示例               |
+| `nanostores`   | State       | Vite、Next             | Nanostores 示例            |
+| `hookform-zod` | Forms       | Vite、Next             | React Hook Form + Zod      |
+| `kyjs`         | HTTP        | Vite、Next             | Ky 客户端                  |
+| `axios`        | HTTP        | Vite、Next             | Axios 客户端               |
+| `antd`         | UI          | Vite、Next             | Ant Design                 |
+| `mui`          | UI          | Vite、Next             | MUI                        |
+| `shadcn-ui`    | UI          | Vite、Next             | Tailwind + shadcn/ui       |
+| `storybook`    | 文档 / 测试 | Vite、Next             | Storybook 配置与脚本       |
+| `type-orm`     | ORM         | Nest、Hono、Next、Nuxt | TypeORM + Agent skill      |
+| `mikro-orm`    | ORM         | Nest、Hono、Next、Nuxt | MikroORM + Agent skill     |
+| `drizzle-orm`  | ORM         | Nest、Hono、Next、Nuxt | Drizzle + drizzle-kit 脚本 |
+| `prisma`       | ORM         | Nest、Hono、Next、Nuxt | Prisma schema + migrate    |
 
 ORM Recipe 不绑定具体数据库驱动。脚手架完成后自行安装驱动（`pg`、`mysql2` 等），并参考 `.agents/skills/<orm>/` 中的说明。
+
+**Hybrid 注意：** Next, Nuxt,.etc 上的 ORM 仅适合**小型**项目，不如纯后端框架完善。生产 API 请优先使用后端框架。交互模式与 `--dry-run` 会给出警告。
 
 ### 示例
 

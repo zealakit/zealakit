@@ -53,6 +53,20 @@ describe("buildScaffoldPlan", () => {
     assert.ok(plan.config.recipeIds.includes("client-shared-pieces"));
     assert.equal(planIsReady(plan), true, plan.blockers.join("\n"));
   });
+
+  it("warns when ORM is selected on a hybrid template", () => {
+    const plan = buildScaffoldPlan(
+      {
+        projectName: "hybrid-orm",
+        templateId: "next",
+        recipeIds: withDefaultRecipes("hybrid", ["prisma"]),
+      },
+      workRoot,
+    );
+    assert.equal(planIsReady(plan), true, plan.blockers.join("\n"));
+    assert.ok(plan.warnings.some((w) => /Hybrid apps|small projects/i.test(w)));
+    assert.ok(plan.warnings.some((w) => /prisma/.test(w)));
+  });
 });
 
 describe("zealakit --dry-run", () => {

@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { templateSuite } from "../helpers/cases.js";
 
 templateSuite("next", {
@@ -70,9 +71,26 @@ templateSuite("next", {
         "src/app/layout.tsx": ["MuiThemeProvider"],
       },
     },
+    {
+      name: "prisma (hybrid ORM)",
+      recipes: ["prisma"],
+      exists: [
+        "src/lib/persistence/prisma/prisma.bootstrap.ts",
+        "src/lib/persistence/prisma/prisma.client.ts",
+        "prisma/schema.prisma",
+        "prisma.config.ts",
+      ],
+      absent: ["src/lib/persistence/prisma/prisma.module.ts", "src/infrastructure"],
+      deps: ["@prisma/client"],
+      devDeps: ["prisma"],
+      contains: {
+        "AGENTS.md": [".agents/skills/prisma/SKILL.md"],
+        "prisma.config.ts": ["DATABASE_URL"],
+      },
+      check(app) {
+        assert.doesNotMatch(app.read("prisma/schema.prisma"), /^\s*url\s*=/m);
+      },
+    },
   ],
-  reject: [
-    { name: "nuxt-ui (vue)", recipes: ["nuxt-ui"], output: [/targets vue/] },
-    { name: "type-orm (server-only)", recipes: ["type-orm"], output: [/scope 'hybrid'/] },
-  ],
+  reject: [{ name: "nuxt-ui (vue)", recipes: ["nuxt-ui"], output: [/targets vue/] }],
 });

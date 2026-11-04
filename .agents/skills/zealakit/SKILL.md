@@ -95,7 +95,7 @@ Templates with `srcDir` other than `src` (**`nuxt`** → `app/`): after each rec
 Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `frameworks`, `category` (one or many), `hint`, `finalize`.
 
 - `frameworks` (e.g. `["react"]`) restricts a recipe to templates with that `framework`; omit for framework-agnostic recipes. Never hardcode recipe ids in prompts/validation.
-- `supportedScopes` is matched strictly (`hybrid` does **not** accept `server`-only recipes).
+- `supportedScopes` is matched strictly (`hybrid` does **not** accept `server`-only recipes). ORM recipes list both `server` and `hybrid`; hybrid prompts / dry-run / scaffold print a small-project caveat (prefer a dedicated backend framework for production APIs).
 - `fileTransforms` keys may be template id **or** overlay id. Failed pattern match throws.
 - `finalize(targetDir)` runs after all recipes are copied (e.g. Biome drops nested `root: false`).
 - npm never packs `.gitignore`: `prepack` ships templates' `_gitignore`, the scaffolder renames it back.

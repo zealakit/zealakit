@@ -12,6 +12,7 @@ import mui from "./mui.js";
 import nanostores from "./nanostores.js";
 import nuxtUi from "./nuxt-ui.js";
 import pinia from "./pinia.js";
+import prisma from "./prisma.js";
 import shadcnUi from "./shadcn-ui.js";
 import shadcnVue from "./shadcn-vue.js";
 import storybook from "./storybook.js";
@@ -40,6 +41,7 @@ const RECIPE_LIST: RecipeConfig[] = [
   typeOrm,
   mikroOrm,
   drizzleOrm,
+  prisma,
 ];
 
 export const recipes: Record<string, RecipeConfig> = Object.fromEntries(

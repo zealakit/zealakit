@@ -17,7 +17,7 @@ export default defineRecipe({
   id: "mikro-orm",
   name: "MikroORM",
   category: "orm",
-  supportedScopes: ["server"],
+  supportedScopes: ["server", "hybrid"],
   exclusive: true,
   packages: {
     "@mikro-orm/core": "^7.2.6",
@@ -33,5 +33,6 @@ export default defineRecipe({
   fileTransforms: {
     nest: wiring.nest,
     hono: [...wiring.hono, ENABLE_TS_DECORATORS],
+    next: [ENABLE_TS_DECORATORS],
   },
 });

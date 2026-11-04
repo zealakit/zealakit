@@ -27,6 +27,8 @@ Scaffold leaves Nest `TypeormPersistenceModule` / Hono `createTypeOrmDataSource`
 | Repository adapter | `infrastructure/persistence/<feature>/*.repository.adapter.ts` |
 | Nest feature binding | `bootstrap/modules/<feature>.module.ts` |
 | Hono feature binding | `bootstrap/modules/<feature>.ts` |
+| Next (hybrid) | `src/lib/persistence/typeorm/` |
+| Nuxt (hybrid) | `server/persistence/typeorm/` |
 
 ## Nest wiring
 

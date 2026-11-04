@@ -59,8 +59,10 @@ describe("recipe conflicts", () => {
 
 describe("compatibility", () => {
   it("checks scope strictly (hybrid does not accept server-only recipes)", () => {
-    assert.match(incompatibility("type-orm", "next") ?? "", /scope 'hybrid'/);
+    // ORMs now support hybrid; a server-only recipe would still fail here.
+    assert.equal(incompatibility("type-orm", "next"), undefined);
     assert.equal(incompatibility("type-orm", "nest"), undefined);
+    assert.match(incompatibility("type-orm", "vite-react") ?? "", /scope 'client'/);
   });
 
   it("checks the template UI framework", () => {

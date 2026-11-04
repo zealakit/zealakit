@@ -62,6 +62,27 @@ templateSuite("hono", {
         "src/bootstrap/container.ts": ["// import { createTypeOrmDataSource }"],
       },
     },
+    {
+      name: "prisma",
+      recipes: ["prisma"],
+      exists: [
+        "src/infrastructure/persistence/prisma/prisma.bootstrap.ts",
+        "src/infrastructure/persistence/prisma/prisma.client.ts",
+        "prisma/schema.prisma",
+        "prisma.config.ts",
+      ],
+      absent: ["src/infrastructure/persistence/prisma/prisma.module.ts"],
+      deps: ["@prisma/client"],
+      devDeps: ["prisma"],
+      contains: {
+        "src/bootstrap/container.ts": ["// import { createPrismaClient }"],
+        "AGENTS.md": [".agents/skills/prisma/SKILL.md"],
+        "prisma.config.ts": ["DATABASE_URL"],
+      },
+      check(app) {
+        assert.doesNotMatch(app.read("prisma/schema.prisma"), /^\s*url\s*=/m);
+      },
+    },
   ],
   reject: [{ name: "kyjs (client)", recipes: ["kyjs"] }],
 });

@@ -11,7 +11,7 @@ description: >-
 
 This skill is present because the **drizzle-orm** recipe is installed.
 
-Persistence wiring lives under `src/infrastructure/persistence/drizzle/`. Domain ports and application handlers stay ORM-free. **No dialect or driver is pre-selected.**
+Persistence wiring lives under `src/infrastructure/persistence/drizzle/` on Nest/Hono, `src/lib/persistence/drizzle/` on Next, or `server/persistence/drizzle/` on Nuxt. Domain ports and application handlers stay ORM-free. **No dialect or driver is pre-selected.**
 
 Aligns with `.agents/skills/structure-ddd/SKILL.md` for layer placement.
 

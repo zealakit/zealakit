@@ -113,24 +113,27 @@ Ngoại lệ:
 - **`storybook`** — có thể dùng kèm UI kit
 - **`client-shared-pieces`** — tự thêm trên Vite và Next
 
-| Recipe         | Nhóm           | Template   | Nội dung                     |
-| -------------- | -------------- | ---------- | ---------------------------- |
-| `biome`        | Linter         | Tất cả     | Script lint + format         |
-| `eslint`       | Linter         | Tất cả     | ESLint flat config           |
-| `zustand`      | State          | Vite, Next | Ví dụ store Zustand          |
-| `nanostores`   | State          | Vite, Next | Ví dụ Nanostores             |
-| `hookform-zod` | Forms          | Vite, Next | React Hook Form + Zod        |
-| `kyjs`         | HTTP           | Vite, Next | Client Ky                    |
-| `axios`        | HTTP           | Vite, Next | Client Axios                 |
-| `antd`         | UI             | Vite, Next | Ant Design                   |
-| `mui`          | UI             | Vite, Next | MUI                          |
-| `shadcn-ui`    | UI             | Vite, Next | Tailwind + shadcn/ui         |
-| `storybook`    | Docs / testing | Vite, Next | Config + script Storybook    |
-| `type-orm`     | ORM            | Nest, Hono | TypeORM + skill agent        |
-| `mikro-orm`    | ORM            | Nest, Hono | MikroORM + skill agent       |
-| `drizzle-orm`  | ORM            | Nest, Hono | Drizzle + script drizzle-kit |
+| Recipe         | Nhóm           | Template               | Nội dung                     |
+| -------------- | -------------- | ---------------------- | ---------------------------- |
+| `biome`        | Linter         | Tất cả                 | Script lint + format         |
+| `eslint`       | Linter         | Tất cả                 | ESLint flat config           |
+| `zustand`      | State          | Vite, Next             | Ví dụ store Zustand          |
+| `nanostores`   | State          | Vite, Next             | Ví dụ Nanostores             |
+| `hookform-zod` | Forms          | Vite, Next             | React Hook Form + Zod        |
+| `kyjs`         | HTTP           | Vite, Next             | Client Ky                    |
+| `axios`        | HTTP           | Vite, Next             | Client Axios                 |
+| `antd`         | UI             | Vite, Next             | Ant Design                   |
+| `mui`          | UI             | Vite, Next             | MUI                          |
+| `shadcn-ui`    | UI             | Vite, Next             | Tailwind + shadcn/ui         |
+| `storybook`    | Docs / testing | Vite, Next             | Config + script Storybook    |
+| `type-orm`     | ORM            | Nest, Hono, Next, Nuxt | TypeORM + skill agent        |
+| `mikro-orm`    | ORM            | Nest, Hono, Next, Nuxt | MikroORM + skill agent       |
+| `drizzle-orm`  | ORM            | Nest, Hono, Next, Nuxt | Drizzle + script drizzle-kit |
+| `prisma`       | ORM            | Nest, Hono, Next, Nuxt | Prisma schema + migrate      |
 
 Recipe ORM không gắn cứng driver. Sau khi scaffold, cài driver DB (`pg`, `mysql2`, …) và làm theo skill trong `.agents/skills/<orm>/`.
+
+**Lưu ý hybrid:** ORM trên Next, Nuxt,.etc chỉ phù hợp project **nhỏ** — không mạnh bằng backend framework thuần. Nên dùng backend framework cho API production. CLI cảnh báo ở chế độ tương tác và `--dry-run`.
 
 ### Ví dụ
 

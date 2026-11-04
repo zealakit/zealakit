@@ -17,7 +17,7 @@ export default defineRecipe({
   id: "type-orm",
   name: "TypeORM",
   category: "orm",
-  supportedScopes: ["server"],
+  supportedScopes: ["server", "hybrid"],
   exclusive: true,
   packages: {
     typeorm: "^1.1.2",
@@ -32,5 +32,6 @@ export default defineRecipe({
   fileTransforms: {
     nest: wiring.nest,
     hono: [...wiring.hono, ENABLE_TS_DECORATORS],
+    next: [ENABLE_TS_DECORATORS],
   },
 });
