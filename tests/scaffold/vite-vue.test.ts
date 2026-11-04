@@ -75,7 +75,7 @@ templateSuite("vite-vue", {
     {
       name: "nuxt-ui + shadcn-vue",
       recipes: ["nuxt-ui", "shadcn-vue"],
-      output: [/conflict/i, /ui group/],
+      output: [/conflict/i, /exclusive 'ui'/],
     },
   ],
 });

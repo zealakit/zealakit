@@ -1,4 +1,4 @@
-import pc from "picocolors";
+import { printError } from "../diagnostics.js";
 import type { CliOptions, ScaffoldConfig, ValidationResult } from "../types.js";
 import { validateProjectName } from "./project-name.js";
 import {
@@ -44,7 +44,10 @@ export async function validateScaffoldInput(
 }
 
 export function printValidationErrors(errors: string[]): void {
-  for (const error of errors) {
-    console.error(pc.red(error));
+  for (const [index, error] of errors.entries()) {
+    if (index > 0) {
+      console.error();
+    }
+    printError(error);
   }
 }

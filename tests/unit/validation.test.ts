@@ -38,9 +38,11 @@ describe("recipe conflicts", () => {
 
   it("rejects two exclusive recipes in the same category", () => {
     const { errors } = validateRecipeConflicts(["biome", "eslint"]);
-    assert.deepEqual(errors, [
-      "✖ Conflict: Cannot select both 'biome' and 'eslint' in the linter group. Please choose only one.",
-    ]);
+    assert.equal(errors.length, 1);
+    assert.match(errors[0] ?? "", /Recipe conflict detected/);
+    assert.match(errors[0] ?? "", /exclusive 'linter'/);
+    assert.match(errors[0] ?? "", /biome/);
+    assert.match(errors[0] ?? "", /eslint/);
   });
 
   it("ignores duplicated ids", () => {
@@ -48,7 +50,10 @@ describe("recipe conflicts", () => {
   });
 
   it("reports unknown recipes", () => {
-    assert.deepEqual(validateRecipeIds(["nope"]).errors, ["Invalid recipe(s): 'nope'."]);
+    const { errors } = validateRecipeIds(["nope"]);
+    assert.equal(errors.length, 1);
+    assert.match(errors[0] ?? "", /Unknown recipe/);
+    assert.match(errors[0] ?? "", /nope/);
   });
 });
 

@@ -1,5 +1,12 @@
 import { getRecipeIncompatibility, suggestAlternatives } from "../compat.js";
 import {
+  formatDiagnostic,
+  incompatDiagnostic,
+  recipeConflictDiagnostic,
+  unknownRecipesDiagnostic,
+  unknownTemplateDiagnostic,
+} from "../diagnostics.js";
+import {
   getAllTemplateIds,
   getRecipe,
   getRecipeCategories,
@@ -15,9 +22,7 @@ export function validateTemplate(templateId: string): ValidationResult {
   if (getTemplate(templateId)) {
     return result([]);
   }
-  return result([
-    `Template "${templateId}" does not exist. Available templates: ${getAllTemplateIds().join(", ")}.`,
-  ]);
+  return result([formatDiagnostic(unknownTemplateDiagnostic(templateId, getAllTemplateIds()))]);
 }
 
 export function validateRecipeIds(recipeIds: string[]): ValidationResult {
@@ -25,7 +30,7 @@ export function validateRecipeIds(recipeIds: string[]): ValidationResult {
   if (unknown.length === 0) {
     return result([]);
   }
-  return result([`Invalid recipe(s): ${unknown.map((id) => `'${id}'`).join(", ")}.`]);
+  return result([formatDiagnostic(unknownRecipesDiagnostic(unknown))]);
 }
 
 /** At most one exclusive recipe per category (non-exclusive ones like Storybook may coexist). */
@@ -45,10 +50,7 @@ export function validateRecipeConflicts(recipeIds: string[]): ValidationResult {
   const errors: string[] = [];
   for (const [category, ids] of exclusiveByCategory) {
     if (ids.length > 1) {
-      const names = ids.map((id) => `'${id}'`).join(" and ");
-      errors.push(
-        `✖ Conflict: Cannot select both ${names} in the ${category} group. Please choose only one.`,
-      );
+      errors.push(formatDiagnostic(recipeConflictDiagnostic(category, ids)));
     }
   }
   return result(errors);
@@ -72,8 +74,7 @@ export function validateRecipeCompatibility(
       continue;
     }
     const alternatives = suggestAlternatives(recipeId, template);
-    const hint = alternatives.length > 0 ? ` Try: ${alternatives.join(", ")}.` : "";
-    errors.push(`✖ ${reason}${hint}`);
+    errors.push(formatDiagnostic(incompatDiagnostic(recipeId, reason, alternatives)));
   }
   return result(errors);
 }

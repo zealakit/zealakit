@@ -47,6 +47,8 @@ Published package contents: `dist` + `templates` + `recipes` (see root `package.
 | `info.ts`                    | `zealakit info --json` — metadata derived from registry/compat; stdout = JSON only |
 | `resolve-recipes.ts`         | Expand `dependsOn`, detect cycles/missing ids, preserve selection order            |
 | `preview.ts`                 | Human-readable `--dry-run` preview                                                 |
+| `diagnostics.ts`             | Structured CLI errors + exit codes (`0/1/2/3`); shared by validation and prompts   |
+| `prompt-labels.ts`           | Pure template/recipe option labels + selection summary                             |
 | `compat.ts`                  | **Single answer** to "can recipe X go on template Y?" (scope, framework, overlay)  |
 | `constants.ts`               | **`SCOPES`**, **`FRAMEWORKS`**, **`RECIPE_CATEGORIES`** — single source of truth   |
 | `types.ts`                   | Types derived from constants (`Scope`, `Framework`, `RecipeCategory`, configs)     |

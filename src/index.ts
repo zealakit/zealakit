@@ -1,6 +1,7 @@
 import path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
+import { ExitCode, fail, failDiagnostic, printError, printInfo } from "./diagnostics.js";
 import { printKitInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
 import { formatScaffoldPreview } from "./preview.js";
@@ -22,11 +23,6 @@ import {
   validateTemplate,
 } from "./validation/index.js";
 
-function fail(message: string): never {
-  console.error(pc.red(message));
-  process.exit(1);
-}
-
 function parseRecipeList(raw: string): string[] {
   return raw
     .split(",")
@@ -43,13 +39,21 @@ async function resolveScaffoldConfig(
   options: CliOptions,
 ): Promise<ScaffoldConfig | null> {
   if (options.yes && !projectName) {
-    fail("✖ Flag -y requires a project name.");
+    failDiagnostic(
+      {
+        title: "Invalid usage",
+        reason: "Flag -y requires a project name.",
+        resolution: "Run: zealakit <project-name> -y …",
+      },
+      ExitCode.USAGE,
+    );
   }
 
   if (options.template) {
     const templateCheck = validateTemplate(options.template);
     if (!templateCheck.valid) {
-      fail(`✖ ${templateCheck.errors.join("\n")}`);
+      printValidationErrors(templateCheck.errors);
+      process.exit(ExitCode.VALIDATION);
     }
   }
 
@@ -70,14 +74,14 @@ function printSuccess(targetDir: string, config: ScaffoldConfig): void {
   const template = getTemplate(config.templateId);
   const devCommand = template ? getTemplateDevCommand(template) : "npm run dev";
 
-  console.log();
-  console.log(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
-  console.log();
-  console.log(pc.bold("Next steps:"));
-  console.log(`  ${pc.cyan("cd")} ${relativePath}`);
-  console.log(`  ${pc.cyan("npm install")}`);
-  console.log(`  ${pc.cyan(devCommand)}`);
-  console.log();
+  printInfo("");
+  printInfo(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
+  printInfo("");
+  printInfo(pc.bold("Next steps:"));
+  printInfo(`  ${pc.cyan("cd")} ${relativePath}`);
+  printInfo(`  ${pc.cyan("npm install")}`);
+  printInfo(`  ${pc.cyan(devCommand)}`);
+  printInfo("");
 }
 
 const program = new Command();
@@ -106,13 +110,20 @@ program
       return;
     }
     if (options.json) {
-      fail("✖ Flag --json requires --info (or use `zealakit info --json`).");
+      failDiagnostic(
+        {
+          title: "Invalid usage",
+          reason: "Flag --json requires --info.",
+          resolution: "Use `zealakit info --json` or `zealakit --info --json`.",
+        },
+        ExitCode.USAGE,
+      );
     }
 
     try {
       const resolved = await resolveScaffoldConfig(projectName, options);
       if (!resolved) {
-        process.exit(0);
+        process.exit(ExitCode.OK);
       }
 
       const template = getTemplate(resolved.templateId);
@@ -122,7 +133,7 @@ program
         : resolved.recipeIds;
       const dependencyResolution = resolveRecipeDependencies(withDefaults);
       if (!dependencyResolution.ok) {
-        fail(formatRecipeResolveError(dependencyResolution.error));
+        fail(formatRecipeResolveError(dependencyResolution.error), ExitCode.VALIDATION);
       }
       const config: ScaffoldConfig = {
         ...resolved,
@@ -131,25 +142,38 @@ program
 
       if (options.dryRun) {
         if (!config.projectName) {
-          fail("✖ Flag --dry-run requires a project name.");
+          failDiagnostic(
+            {
+              title: "Invalid usage",
+              reason: "Flag --dry-run requires a project name.",
+              resolution: "Run: zealakit <project-name> --dry-run …",
+            },
+            ExitCode.USAGE,
+          );
         }
         const plan = buildScaffoldPlan(config, process.cwd(), { requestedRecipeIds });
-        console.log(formatScaffoldPreview(plan));
-        process.exit(planIsReady(plan) ? 0 : 1);
+        printInfo(formatScaffoldPreview(plan));
+        process.exit(planIsReady(plan) ? ExitCode.OK : ExitCode.VALIDATION);
       }
 
       const validation = await validateScaffoldInput(config, process.cwd(), { yes: options.yes });
       if (!validation.valid) {
         printValidationErrors(validation.errors);
-        process.exit(1);
+        process.exit(ExitCode.VALIDATION);
       }
 
       const targetDir = await scaffoldProject(config);
       printSuccess(targetDir, config);
     } catch (error) {
-      fail(`✖ Error: ${error instanceof Error ? error.message : String(error)}`);
+      const message = error instanceof Error ? error.message : String(error);
+      printError(message.includes("\n") ? message : formatSimpleInternal(message));
+      process.exit(ExitCode.INTERNAL);
     }
   });
+
+function formatSimpleInternal(message: string): string {
+  return message.startsWith("✖") ? message : `✖ Error: ${message}`;
+}
 
 program
   .command("info")

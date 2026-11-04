@@ -1,6 +1,13 @@
 import { cancel, confirm, intro, isCancel, outro, select, text } from "@clack/prompts";
 import pc from "picocolors";
 import {
+  defaultRecipeIdsForScope,
+  formatSelectionSummary,
+  recipeOptionHint,
+  templateOptionHint,
+  templateOptionLabel,
+} from "./prompt-labels.js";
+import {
   getStepInitialValue,
   getStepOptions,
   type PromptStep,
@@ -12,6 +19,7 @@ import {
   getTemplate,
   withDefaultRecipes,
 } from "./registry/index.js";
+import { resolveRecipeDependencies } from "./resolve-recipes.js";
 import type { ScaffoldConfig, TemplateConfig } from "./types.js";
 import { isValidNpmPackageName } from "./validation/index.js";
 
@@ -48,7 +56,14 @@ async function runStep(
     select<string>({
       message: step.message,
       options: [
-        ...options.map((recipe) => ({ value: recipe.id, label: recipe.name, hint: recipe.hint })),
+        ...options.map((recipe) => {
+          const hint = recipeOptionHint(recipe);
+          return {
+            value: recipe.id,
+            label: recipe.name,
+            ...(hint ? { hint } : {}),
+          };
+        }),
         { value: NONE, label: step.noneLabel },
       ],
       initialValue,
@@ -58,6 +73,15 @@ async function runStep(
 }
 
 async function promptRecipes(template: TemplateConfig): Promise<string[] | null> {
+  const defaults = defaultRecipeIdsForScope(template.scope);
+  if (defaults.length > 0) {
+    console.log(
+      pc.dim(
+        `  Auto-included for ${template.scope}: ${defaults.join(", ")} (not shown in prompts)`,
+      ),
+    );
+  }
+
   const recipeIds: string[] = [];
   for (const step of STEPS_BY_SCOPE[template.scope]) {
     const recipeId = await runStep(step, template);
@@ -93,10 +117,17 @@ async function promptTemplate(): Promise<string | null> {
   return ask(
     select<string>({
       message: "Select a base template:",
-      options: getAllTemplateIds().map((id) => ({
-        value: id,
-        label: getTemplate(id)?.label ?? id,
-      })),
+      options: getAllTemplateIds().map((id) => {
+        const template = getTemplate(id);
+        if (!template) {
+          return { value: id, label: id };
+        }
+        return {
+          value: id,
+          label: templateOptionLabel(template),
+          hint: templateOptionHint(template),
+        };
+      }),
       initialValue: DEFAULT_TEMPLATE_ID,
     }),
   );
@@ -124,14 +155,24 @@ export async function runInteractivePrompts(
     return null;
   }
 
-  const recipeIds = withDefaultRecipes(template.scope, picked);
-  const summary = [
-    `  ${pc.dim("Name:")}      ${projectName}`,
-    `  ${pc.dim("Template:")} ${template.id}`,
-    `  ${pc.dim("Scope:")}    ${template.scope}`,
-    `  ${pc.dim("Recipes:")}  ${recipeIds.length > 0 ? recipeIds.join(", ") : pc.dim("(none)")}`,
-  ].join("\n");
-  console.log(`\n${pc.bold("Summary:")}\n${summary}\n`);
+  const withDefaults = withDefaultRecipes(template.scope, picked);
+  const resolved = resolveRecipeDependencies(withDefaults);
+  const recipeIds = resolved.ok ? resolved.recipeIds : withDefaults;
+  const selectedSet = new Set(picked);
+  const autoInjectedIds = recipeIds.filter((id) => !selectedSet.has(id));
+
+  const summary = formatSelectionSummary({
+    projectName,
+    template,
+    selectedIds: picked,
+    autoInjectedIds,
+  });
+  console.log(
+    `\n${pc.bold("Summary")}\n${summary
+      .split("\n")
+      .map((line) => `  ${line}`)
+      .join("\n")}\n`,
+  );
 
   const shouldProceed = await ask(confirm({ message: "Start scaffolding?", initialValue: true }));
   if (!shouldProceed) {

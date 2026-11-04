@@ -38,7 +38,7 @@ describe("buildScaffoldPlan", () => {
       workRoot,
     );
     assert.equal(planIsReady(plan), false);
-    assert.ok(plan.blockers.some((b) => /Conflict/.test(b)));
+    assert.ok(plan.blockers.some((b) => /conflict/i.test(b)));
   });
 
   it("marks default recipes as auto-injected when already applied via withDefaultRecipes", () => {
@@ -80,7 +80,7 @@ describe("zealakit --dry-run", () => {
     assert.equal(fs.existsSync(target), false);
   });
 
-  it("exits 1 when the plan has blockers", () => {
+  it("exits 3 when the plan has blockers", () => {
     const result = runDryRun([
       "dry-run-bad",
       "-t",
@@ -89,7 +89,7 @@ describe("zealakit --dry-run", () => {
       "biome,eslint",
       "--dry-run",
     ]);
-    assert.equal(result.status, 1, result.stderr);
+    assert.equal(result.status, 3, result.stderr);
     assert.match(result.stdout, /Cannot scaffold/);
   });
 });

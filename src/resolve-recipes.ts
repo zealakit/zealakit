@@ -1,3 +1,8 @@
+import {
+  circularDependencyDiagnostic,
+  formatDiagnostic,
+  missingDependencyDiagnostic,
+} from "./diagnostics.js";
 import { getAllRecipeIds, getRecipe } from "./registry/index.js";
 import type { RecipeConfig } from "./types.js";
 
@@ -85,7 +90,7 @@ export function resolveRecipeDependencies(
 
 export function formatRecipeResolveError(error: RecipeResolveError): string {
   if (error.code === "missing") {
-    return `✖ Missing recipe dependency '${error.recipeId}' (required by '${error.requiredBy}').`;
+    return formatDiagnostic(missingDependencyDiagnostic(error.recipeId, error.requiredBy));
   }
-  return `✖ Circular recipe dependency: ${error.cycle.join(" → ")}.`;
+  return formatDiagnostic(circularDependencyDiagnostic(error.cycle));
 }

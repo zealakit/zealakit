@@ -86,7 +86,8 @@ npx zealakit@latest [project-name] [options]
 - Existing non-empty folders ask before overwrite; with `-y` they are rejected.
 - Invalid or conflicting recipes are rejected **before** any files are written.
 - Generation stages into a temp directory, validates the result, then commits — a failed run does not leave a half-written new project.
-- `--dry-run` uses the same resolution and validation as a real run (including default recipes and `dependsOn`), prints a preview, and exits `0` when ready or `1` when blocked.
+- `--dry-run` uses the same resolution and validation as a real run (including default recipes and `dependsOn`), prints a preview, and exits `0` when ready or `3` when blocked.
+- Exit codes: `0` success or cancel, `2` invalid usage, `3` validation/compatibility failure, `1` unexpected error.
 
 ---
 

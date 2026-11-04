@@ -45,7 +45,7 @@ for (const args of [
 describe("zealakit --json without --info", () => {
   it("fails instead of scaffolding", () => {
     const result = runCli(["--json"]);
-    assert.equal(result.status, 1);
+    assert.equal(result.status, 2);
     assert.equal(result.stdout, "");
   });
 });

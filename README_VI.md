@@ -86,7 +86,8 @@ npx zealakit@latest [tên-project] [options]
 - Thư mục đã có nội dung sẽ hỏi trước khi ghi đè; với `-y` sẽ bị từ chối.
 - Recipe sai hoặc xung đột bị từ chối **trước khi** ghi file.
 - Generate ghi vào thư mục tạm, validate, rồi mới commit — lỗi giữa chừng không để lại project mới bị dở dang.
-- `--dry-run` dùng cùng logic resolve/validate như generate thật (kể cả recipe mặc định và `dependsOn`), in preview, thoát `0` nếu sẵn sàng hoặc `1` nếu bị chặn.
+- `--dry-run` dùng cùng logic resolve/validate như generate thật (kể cả recipe mặc định và `dependsOn`), in preview, thoát `0` nếu sẵn sàng hoặc `3` nếu bị chặn.
+- Mã thoát: `0` thành công hoặc hủy, `2` dùng sai flag, `3` lỗi validate/tương thích, `1` lỗi bất ngờ.
 
 ---
 
