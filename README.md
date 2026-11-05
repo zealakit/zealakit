@@ -104,6 +104,7 @@ npx zealakit@latest [project-name] [options]
 | `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
 | `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
 | `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`          |
+| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`          |
 | `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
 
 Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles.
@@ -237,6 +238,7 @@ packages/ecosystem-node/    # Node registry + npm package.json adapter
 packages/ecosystem-go/            # Optional Go toolchain detection
 templates/node/<id>/        # Node base templates
 templates/go/stdlib-api/          # Go stdlib HTTP API template
+templates/go/gin-api/             # Go Gin HTTP API template
 templates/go/stdlib-worker/       # Go stdlib background worker
 recipes/node/<id>/          # Node recipes
 recipes/go/                       # Reserved (no Go recipes yet)

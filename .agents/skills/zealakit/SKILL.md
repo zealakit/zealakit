@@ -32,7 +32,7 @@ template → recipes (shared + overlay) → merge package.json → fileTransform
 | `packages/ecosystem-node/` | Node (TS/JS) templates+recipes registry, npm manifest adapter                |
 | `packages/ecosystem-go/`   | Go templates registry + toolchain detection                                  |
 | `templates/node/<id>/`     | Base apps shipped with the kit                                               |
-| `templates/go/<id>/`       | Go base templates (e.g. `stdlib-api`, `stdlib-worker`)                       |
+| `templates/go/<id>/`       | Go base templates (`stdlib-api`, `gin-api`, `stdlib-worker`)                 |
 | `recipes/node/<id>/`       | Optional layers applied on top of a template                                 |
 | `recipes/go/`              | Reserved (no Go recipes yet)                                                 |
 | `scripts/`                 | Kit tooling (test runner, pack smoke, pack dotfiles)                         |

@@ -16,8 +16,8 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 | CLI                 | `apps/cli/`                                                   |
 | Core engine         | `packages/core/`                                              |
 | Node ecosystem      | `packages/ecosystem-node/`                                    |
-| Go ecosystem        | `packages/ecosystem-go/` (environment detection only for now) |
-| Templates           | `templates/node/` + `templates/go/{stdlib-api,stdlib-worker}` |
+| Go ecosystem        | `packages/ecosystem-go/`                                      |
+| Templates           | `templates/node/` + `templates/go/{stdlib-api,gin-api,stdlib-worker}` |
 | Recipes             | `recipes/node/` (Go recipes not yet)                          |
 | Tests               | `tests/` (`pnpm test`), pack smoke `scripts/test-e2e-pack.ts` |
 | Dep monitor         | `monitor/` (`pnpm monitor`)                                   |

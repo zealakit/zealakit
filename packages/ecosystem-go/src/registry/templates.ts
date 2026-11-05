@@ -13,6 +13,17 @@ export const templateList: TemplateConfig[] = [
     devCommand: "make run",
   },
   {
+    id: "gin-api",
+    name: "Go Gin API",
+    label: "Go HTTP API (Gin)",
+    scope: "server",
+    ecosystem: "go",
+    description:
+      "Production-conscious REST API starter built with Gin, slog, and graceful shutdown",
+    path: "go/gin-api",
+    devCommand: "make run",
+  },
+  {
     id: "stdlib-worker",
     name: "Go Standard Library Worker",
     label: "Go Worker (stdlib, background processing)",

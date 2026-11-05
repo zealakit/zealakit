@@ -1,0 +1,18 @@
+---
+description: Gin API conventions for this project
+alwaysApply: true
+---
+
+# Gin API
+
+Follow `.agents/skills/gin-api/SKILL.md` for routing, handlers, middleware, config, and shutdown.
+
+Hard rules:
+
+- Keep `*gin.Context` in `presentation/http` only
+- Use `gin.New()` + project middleware — not `gin.Default()`
+- Thin handlers; consistent `response` helpers for JSON errors
+- Configure timeouts; graceful shutdown via `net/http.Server`
+- Prefer `go test ./...` before claiming done
+- Inspect existing packages before adding duplicates
+- Do not add DB/auth/queue deps unless explicitly requested
