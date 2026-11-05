@@ -1,8 +1,6 @@
-import type { FRAMEWORKS, RECIPE_CATEGORIES, SCOPES } from "./constants.js";
+import type { RecipeCategory, Scope, UiFramework } from "./constants.js";
 
-export type Scope = (typeof SCOPES)[number];
-export type Framework = (typeof FRAMEWORKS)[number];
-export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
+export type { RecipeCategory, Scope, UiFramework };
 
 /** Scaffolding ecosystem that owns templates/recipes and a ManifestAdapter. */
 export type EcosystemId = "node" | "go";
@@ -13,8 +11,8 @@ export type TemplateConfig = {
   /** Label shown in the interactive template picker */
   label: string;
   scope: Scope;
-  /** UI framework; omit for server templates */
-  framework?: Framework;
+  /** UI library from `UI_FRAMEWORKS`; omit for server / infrastructure templates */
+  uiFramework?: UiFramework;
   description: string;
   path: string;
   /**
@@ -56,10 +54,10 @@ export type RecipeConfig = {
   /** Scopes this recipe supports */
   supportedScopes: Scope[] | "all";
   /**
-   * UI frameworks this recipe targets (e.g. Zustand → react).
-   * Omit for framework-agnostic recipes (linters, fetchers, ORMs, Storybook).
+   * UI libraries this recipe targets (e.g. Zustand → react).
+   * Omit for UI-agnostic recipes (linters, fetchers, ORMs, Storybook).
    */
-  frameworks?: Framework[];
+  uiFrameworks?: UiFramework[];
   /**
    * Only one exclusive recipe may be selected per shared category.
    * Non-exclusive recipes (e.g. Storybook) can sit beside exclusive UI kits.
@@ -89,7 +87,10 @@ export type RecipeConfig = {
   scripts: Record<string, string>;
   /** Regex replacements applied per overlay (or template id) after the recipe overlay is copied */
   fileTransforms?: Record<string, RecipeFileTransform[]>;
-  /** Runs once after every recipe has been copied, before package.json is merged */
+  /**
+   * Optional post-copy hook (e.g. Nest Biome decorator flags). Prefer
+   * `fileTransforms` when a regex/append is enough.
+   */
   finalize?: (targetDir: string) => void;
 };
 
@@ -97,6 +98,7 @@ export type ScaffoldConfig = {
   projectName: string;
   templateId: string;
   recipeIds: string[];
+  targetDir?: string;
 };
 
 export type CliOptions = {
@@ -107,6 +109,8 @@ export type CliOptions = {
   dryRun?: boolean;
   info?: boolean;
   json?: boolean;
+  /** Enter Project Discovery mode (interactive recommendations). */
+  discover?: boolean;
 };
 
 export type ValidationResult = {

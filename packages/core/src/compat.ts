@@ -7,7 +7,7 @@ import {
 import { resolveRecipeOverlay } from "./scaffold/paths.js";
 import type { RecipeCategory, RecipeConfig, TemplateConfig } from "./types.js";
 
-export type IncompatibilityCode = "scope" | "framework" | "overlay";
+export type IncompatibilityCode = "scope" | "ui-framework" | "overlay";
 
 export type Incompatibility = { code: IncompatibilityCode; message: string };
 
@@ -27,13 +27,13 @@ export function checkRecipeCompatibility(
   }
 
   if (
-    recipe.frameworks &&
-    !(template.framework && recipe.frameworks.includes(template.framework))
+    recipe.uiFrameworks &&
+    !(template.uiFramework && recipe.uiFrameworks.includes(template.uiFramework))
   ) {
-    const uses = template.framework ? `uses ${template.framework}` : "has no UI framework";
+    const uses = template.uiFramework ? `uses ${template.uiFramework}` : "has no UI framework";
     return {
-      code: "framework",
-      message: `Recipe '${recipe.id}' targets ${recipe.frameworks.join(" / ")}; template '${template.id}' ${uses}.`,
+      code: "ui-framework",
+      message: `Recipe '${recipe.id}' targets ${recipe.uiFrameworks.join(" / ")}; template '${template.id}' ${uses}.`,
     };
   }
 

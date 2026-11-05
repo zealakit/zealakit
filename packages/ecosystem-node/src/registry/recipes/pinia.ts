@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "Pinia",
   category: "state",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["vue"],
+  uiFrameworks: ["vue"],
   exclusive: true,
   packages: {
     pinia: "^4.1.0",

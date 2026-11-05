@@ -6,7 +6,7 @@ export default defineRecipe({
   hint: "Recommended",
   category: "form",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["react"],
+  uiFrameworks: ["react"],
   exclusive: true,
   packages: {
     "react-hook-form": "^7.91.0",

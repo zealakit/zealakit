@@ -1,8 +1,6 @@
 import {
   checkRecipeCompatibility,
   DEFAULT_TEMPLATE_ID,
-  FRAMEWORKS,
-  type Framework,
   getConflictingRecipes,
   getRecipeAgentEntry,
   getRecipeCategories,
@@ -18,6 +16,8 @@ import {
   type Scope,
   type TemplateConfig,
   templates,
+  UI_FRAMEWORKS,
+  type UiFramework,
   withDefaultRecipes,
 } from "@zealakit/core";
 import pc from "picocolors";
@@ -25,7 +25,7 @@ import { readKitManifest } from "./manifest.js";
 import { getStepInitialValue, getStepOptions, STEPS_BY_SCOPE } from "./prompt-steps.js";
 
 /** Bump when a key is renamed/removed; adding keys is backwards compatible. */
-export const INFO_SCHEMA_VERSION = 1;
+export const INFO_SCHEMA_VERSION = 3;
 
 export type PromptStepInfo =
   | {
@@ -46,7 +46,7 @@ export type TemplateInfo = {
   label: string;
   description: string;
   scope: Scope;
-  framework: Framework | null;
+  uiFramework: UiFramework | null;
   path: string;
   overlay: string;
   srcDir: string;
@@ -87,7 +87,7 @@ export type RecipeInfo = {
   dependsOn: string[];
   supportedScopes: Scope[] | "all";
   /** `null` = framework-agnostic */
-  frameworks: Framework[] | null;
+  uiFrameworks: UiFramework[] | null;
   /** Template ids the recipe can be applied to */
   templates: string[];
   incompatibleTemplates: { templateId: string; code: IncompatibilityCode; message: string }[];
@@ -116,11 +116,17 @@ export type KitInfo = {
     description: string | null;
     homepage: string | null;
     engines: Record<string, string>;
-    usage: { scaffold: string; dryRun: string; info: string };
+    usage: {
+      create: string;
+      discover: string;
+      scaffold: string;
+      dryRun: string;
+      info: string;
+    };
   };
   defaults: { templateId: string; noneValue: string };
   scopes: Scope[];
-  frameworks: Framework[];
+  uiFrameworks: UiFramework[];
   templates: TemplateInfo[];
   categories: CategoryInfo[];
   recipes: RecipeInfo[];
@@ -141,7 +147,7 @@ function templateInfo(template: TemplateConfig): TemplateInfo {
     label: template.label,
     description: template.description,
     scope: template.scope,
-    framework: template.framework ?? null,
+    uiFramework: template.uiFramework ?? null,
     path: template.path,
     overlay: getTemplateOverlayId(template.id),
     srcDir: template.srcDir ?? "src",
@@ -216,7 +222,7 @@ function recipeInfo(recipe: RecipeConfig): RecipeInfo {
     default: recipe.default ?? false,
     dependsOn: recipe.dependsOn ?? [],
     supportedScopes: recipe.supportedScopes,
-    frameworks: recipe.frameworks ?? null,
+    uiFrameworks: recipe.uiFrameworks ?? null,
     templates: compatible,
     incompatibleTemplates: incompatible,
     conflictsWith: getConflictingRecipes(recipe),
@@ -250,9 +256,9 @@ function rules(): RuleInfo[] {
       recipes: ids(all.filter((recipe) => getRecipeCategories(recipe).includes("orm"))),
     },
     {
-      id: "framework-match",
+      id: "ui-framework-match",
       description:
-        "A recipe with frameworks applies only to templates using one of them; frameworks null means framework-agnostic.",
+        "A recipe with uiFrameworks applies only to templates using one of them; uiFrameworks null means UI-framework-agnostic.",
     },
     {
       id: "overlay-required",
@@ -298,14 +304,16 @@ export function buildKitInfo(): KitInfo {
       homepage: manifest.homepage ?? null,
       engines: manifest.engines ?? {},
       usage: {
-        scaffold: "zealakit <project-name> -t <template> -w <recipe,recipe> -y",
-        dryRun: "zealakit <project-name> -t <template> -w <recipe,recipe> --dry-run",
+        create: "zealakit create",
+        discover: "zealakit create --discover",
+        scaffold: "zealakit create <project-name> -t <template> -w <recipe,recipe> -y",
+        dryRun: "zealakit create <project-name> -t <template> -w <recipe,recipe> --dry-run",
         info: "zealakit info --json",
       },
     },
     defaults: { templateId: DEFAULT_TEMPLATE_ID, noneValue: NONE_VALUE },
     scopes: [...SCOPES],
-    frameworks: [...FRAMEWORKS],
+    uiFrameworks: [...UI_FRAMEWORKS],
     templates: Object.values(templates).map(templateInfo),
     categories: RECIPE_CATEGORIES.map(categoryInfo),
     recipes: Object.values(recipes).map(recipeInfo),
@@ -316,7 +324,7 @@ export function buildKitInfo(): KitInfo {
 function formatKitInfo(info: KitInfo): string {
   const lines = [`${pc.bold(info.cli.name)} ${info.cli.version}`, "", pc.bold("Templates")];
   for (const template of info.templates) {
-    const tags = [template.scope, template.framework].filter(Boolean).join(", ");
+    const tags = [template.scope, template.uiFramework].filter(Boolean).join(", ");
     lines.push(`  ${pc.cyan(template.id.padEnd(12))} ${template.label} ${pc.dim(`(${tags})`)}`);
   }
   lines.push("", pc.bold("Recipes"));

@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "Ant Design",
   category: "ui",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["react"],
+  uiFrameworks: ["react"],
   exclusive: true,
   packages: {
     antd: "^6.6.8",

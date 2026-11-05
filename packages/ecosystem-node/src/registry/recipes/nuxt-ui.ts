@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "Nuxt UI",
   category: "ui",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["vue"],
+  uiFrameworks: ["vue"],
   exclusive: true,
   packages: {
     "@nuxt/ui": "^4.12.0",

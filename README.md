@@ -11,7 +11,7 @@ Pick a template, add only the recipes you need, and get a ready-to-install proje
 [English](https://github.com/zealakit/zealakit/blob/main/README.md) · [Tiếng Việt](https://github.com/zealakit/zealakit/blob/main/README_VI.md) · [中文](https://github.com/zealakit/zealakit/blob/main/README_CN.md)
 
 ```bash
-npx zealakit@latest my-app
+npx zealakit@latest create
 ```
 
 ---
@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 Most starters are either empty or overloaded. Zealakit lets you compose:
 
-1. **Template** — Vite + React, Vite + Vue, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, or Hono
+1. **Template** — Vite + React, Vite + Vue, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, Hono, or Go API/worker starters
 2. **Recipes** — optional layers (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Each recipe brings files, packages, scripts, and agent guidance when relevant. The result is a normal standalone project — use `npm`, `pnpm`, `yarn`, or `bun`.
@@ -36,10 +36,17 @@ Each recipe brings files, packages, scripts, and agent guidance when relevant. T
 ## Quick start
 
 ```bash
-npx zealakit@latest my-app
+# Interactive (manual template pick, or Project Discovery)
+npx zealakit@latest create
+
+# Discover a suitable setup from your requirements
+npx zealakit@latest create --discover
+
+# Create from a specific template
+npx zealakit@latest create --template next
 ```
 
-Answer the prompts (template → recipes → confirm), then:
+After generation:
 
 ```bash
 cd my-app
@@ -50,38 +57,85 @@ npm run dev
 ### Non-interactive
 
 ```bash
-npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
 ```
 
 ### Preview without writing
 
 ```bash
-npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 ```
 
-- Without `-w`, the CLI is interactive.
+- Without `-w` / `-y`, the CLI is interactive.
 - `-y` needs a project name and skips confirmation prompts.
+- Root `npx zealakit@latest my-app …` still works for backward compatibility.
+
+---
+
+## Project Discovery
+
+**Project Discovery** asks a few questions about what you are building, then recommends a template and only the recipes that fit. You review and can change anything before files are written.
+
+Use Discovery when you are unsure which starter matches your needs. Prefer `--template` when you already know the stack.
+
+```bash
+npx zealakit@latest create --discover
+```
+
+How it works:
+
+1. Answer short questions (project type, optional UI/runtime preferences, extras such as a database).
+2. See ranked **compatible** templates with short explanations (incompatible starters are hidden).
+3. Review suggested recipes — nothing unnecessary is pre-selected.
+4. Confirm the summary (or go back to adjust answers / template / recipes).
+5. Generation uses the same scaffolding pipeline as manual create.
+
+You always keep control: Discovery never installs a template or recipe you did not accept at the confirmation step.
+
+### Local Discovery feedback
+
+Completed Discovery sessions can write a **local-only** summary so you can spot recommendation gaps over time. Nothing is uploaded; there is no cloud analytics.
+
+**Recorded (IDs and flags only):** session status, recommended/selected template and recipe IDs, whether you changed the initial recommendations, generation success/failure, and duration when available.
+
+**Never recorded:** project source, file contents, environment variables, credentials, personal data, absolute project paths, or raw questionnaire answers.
+
+| Command | Purpose |
+| --- | --- |
+| `zealakit discovery stats` | Offline summary (counts, top templates/recipes, diagnostic signals) |
+| `zealakit discovery feedback status` | Whether collection is on and where data is stored |
+| `zealakit discovery feedback disable` | Stop collecting new sessions (existing stats stay readable) |
+| `zealakit discovery feedback enable` | Re-enable collection |
+| `zealakit discovery feedback clear` | Delete retained session records |
+
+Storage: `~/.config/zealakit/discovery-feedback.json` (or `%APPDATA%\zealakit\` on Windows; override with `ZEALAKIT_CONFIG_DIR`). At most 100 sessions are kept. You can also disable via `ZEALAKIT_DISCOVERY_FEEDBACK=0`. Feedback write failures never block project generation.
+
+Diagnostic signals from `discovery stats` are hints only — they do **not** auto-tune matching weights.
 
 ---
 
 ## CLI
 
 ```text
-npx zealakit@latest [project-name] [options]
+npx zealakit@latest create [project-name] [options]
 ```
 
-| Option                 | Description                                       |
-| ---------------------- | ------------------------------------------------- |
-| `-t, --template <id>`  | Base template (default: `vite-react`)             |
-| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`) |
-| `-y, --yes`            | Non-interactive mode (requires a project name)    |
-| `--dry-run`            | Preview the plan without writing files            |
-| `-h, --help`           | Show help                                         |
-| `-V, --version`        | Show version                                      |
+| Option                 | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `--discover`           | Project Discovery — recommend a template/recipes from your requirements     |
+| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                     |
+| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                            |
+| `-y, --yes`            | Non-interactive mode (requires a project name)                              |
+| `--dry-run`            | Preview the plan without writing files                                      |
+| `-h, --help`           | Show help                                                                   |
+| `-V, --version`        | Show version                                                                |
+
+Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
 **Rules**
 
+- `--discover` cannot be combined with `--template`, `-w`, `-y`, or `--dry-run` (Discovery is interactive).
 - Project names follow npm naming (lowercase, no spaces).
 - Existing non-empty folders ask before overwrite; with `-y` they are rejected.
 - Invalid or conflicting recipes are rejected **before** any files are written.

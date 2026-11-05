@@ -14,7 +14,9 @@ Before changing structure, recipes, templates, or packages:
 
 Hard rules:
 
-- Single source for scopes/categories: `packages/core/src/constants.ts`
+- Single source for scopes/categories/discovery enums: `packages/core/src/constants/` (facade `constants.ts`)
+- Discovery profiles: `packages/core/src/profiles/` (one profile per registered template/recipe)
+- Discovery: `packages/core/src/discovery/` (questionnaire + `matchDiscovery`); CLI `zealakit create --discover` in `apps/cli/src/discovery/`
 - Register Node templates/recipes in `packages/ecosystem-node/src/registry/`
 - Recipe `overlays/<id>/` must match `getTemplateOverlayId(template)`
 - Templates live under `templates/<ecosystem>/`; recipes under `recipes/<ecosystem>/`

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
-  FRAMEWORKS,
+  UI_FRAMEWORKS,
   getRecipeCategories,
   getRecipeDir,
   getTemplateDir,
@@ -35,8 +35,8 @@ describe("template registry", () => {
   for (const template of Object.values(templates)) {
     it(`template ${template.id} is well-formed`, () => {
       assert.ok((SCOPES as readonly string[]).includes(template.scope));
-      if (template.framework) {
-        assert.ok((FRAMEWORKS as readonly string[]).includes(template.framework));
+      if (template.uiFramework) {
+        assert.ok((UI_FRAMEWORKS as readonly string[]).includes(template.uiFramework));
       }
       const dir = getTemplateDir(template.id);
       const ecosystem = template.ecosystem ?? "node";
@@ -75,8 +75,8 @@ describe("recipe registry", () => {
       for (const category of getRecipeCategories(recipe)) {
         assert.ok((RECIPE_CATEGORIES as readonly string[]).includes(category), category);
       }
-      for (const framework of recipe.frameworks ?? []) {
-        assert.ok((FRAMEWORKS as readonly string[]).includes(framework), framework);
+      for (const framework of recipe.uiFrameworks ?? []) {
+        assert.ok((UI_FRAMEWORKS as readonly string[]).includes(framework), framework);
       }
 
       const keyed = {

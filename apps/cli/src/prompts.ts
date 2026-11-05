@@ -4,12 +4,12 @@ import {
   getAllTemplateIds,
   getTemplate,
   resolveRecipeDependencies,
-  type ScaffoldConfig,
   type TemplateConfig,
   withDefaultRecipes,
 } from "@zealakit/core";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
+import { type DiscoveryPromptResult, runDiscoveryPrompts } from "./discovery/flow.js";
 import {
   defaultRecipeIdsForScope,
   formatSelectionSummary,
@@ -138,26 +138,70 @@ async function promptTemplate(): Promise<string | null> {
   );
 }
 
+export type InteractivePromptOptions = {
+  projectName?: string;
+  templateId?: string;
+  /** Force Project Discovery mode (skips mode picker). */
+  discover?: boolean;
+};
+
+async function promptCreationMode(): Promise<"manual" | "discover" | null> {
+  return ask(
+    select<"manual" | "discover">({
+      message: "How would you like to create your project?",
+      options: [
+        {
+          value: "manual",
+          label: "Choose a template manually",
+          hint: "You pick the template and recipes",
+        },
+        {
+          value: "discover",
+          label: "Project Discovery",
+          hint: "Answer questions; Zealakit recommends a setup",
+        },
+      ],
+      initialValue: "manual",
+    }),
+  );
+}
+
 export async function runInteractivePrompts(
-  initial: { projectName?: string; templateId?: string } = {},
-): Promise<ScaffoldConfig | null> {
-  intro(`${pc.bgCyan(pc.black(" zealakit "))} Recipe-based scaffolding`);
+  initial: InteractivePromptOptions = {},
+): Promise<DiscoveryPromptResult> {
+  const forceDiscover = initial.discover === true;
+  const skipModePicker = forceDiscover || Boolean(initial.templateId);
+
+  if (!skipModePicker) {
+    intro(`${pc.bgCyan(pc.black(" zealakit "))} Recipe-based scaffolding`);
+    const mode = await promptCreationMode();
+    if (mode === null) {
+      return { config: null, feedback: null };
+    }
+    if (mode === "discover") {
+      return runDiscoveryPrompts({ projectName: initial.projectName, showIntro: false });
+    }
+  } else if (forceDiscover) {
+    return runDiscoveryPrompts({ projectName: initial.projectName });
+  } else {
+    intro(`${pc.bgCyan(pc.black(" zealakit "))} Recipe-based scaffolding`);
+  }
 
   const projectName = initial.projectName ?? (await promptProjectName());
   if (projectName === null) {
-    return null;
+    return { config: null, feedback: null };
   }
 
   const templateId = initial.templateId ?? (await promptTemplate());
   const template = templateId ? getTemplate(templateId) : undefined;
   if (!template) {
     cancel("Cancelled.");
-    return null;
+    return { config: null, feedback: null };
   }
 
   const picked = await promptRecipes(template);
   if (picked === null) {
-    return null;
+    return { config: null, feedback: null };
   }
 
   const withDefaults = withDefaultRecipes(template.scope, picked);
@@ -184,9 +228,12 @@ export async function runInteractivePrompts(
     if (shouldProceed === false) {
       cancel("Cancelled.");
     }
-    return null;
+    return { config: null, feedback: null };
   }
 
   outro(pc.green("Creating project..."));
-  return { projectName, templateId: template.id, recipeIds };
+  return {
+    config: { projectName, templateId: template.id, recipeIds },
+    feedback: null,
+  };
 }

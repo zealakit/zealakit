@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "MUI",
   category: "ui",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["react"],
+  uiFrameworks: ["react"],
   exclusive: true,
   packages: {
     "@mui/material": "^9.5.0",

@@ -130,7 +130,7 @@ describe("buildKitInfo", () => {
       [
         "scope-match",
         "hybrid-orm-caveat",
-        "framework-match",
+        "ui-framework-match",
         "overlay-required",
         "exclusive-per-category",
         "non-exclusive-coexist",

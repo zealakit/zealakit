@@ -6,11 +6,11 @@ import {
   withDefaultRecipes,
 } from "@zealakit/core";
 
-/** Compact hint under a template option (scope · framework · default). */
+/** Compact hint under a template option (scope · uiFramework · default). */
 export function templateOptionHint(template: TemplateConfig): string {
   const parts: string[] = [template.scope];
-  if (template.framework) {
-    parts.push(template.framework);
+  if (template.uiFramework) {
+    parts.push(template.uiFramework);
   }
   if (template.id === DEFAULT_TEMPLATE_ID) {
     parts.push("default");
@@ -51,7 +51,7 @@ export type SelectionSummaryInput = {
 
 /** Human-readable selection summary (no colors — caller may wrap). */
 export function formatSelectionSummary(input: SelectionSummaryInput): string {
-  const framework = input.template.framework ?? "none";
+  const framework = input.template.uiFramework ?? "none";
   return [
     `Name:      ${input.projectName}`,
     `Template:  ${input.template.id} (${input.template.scope}, ${framework})`,

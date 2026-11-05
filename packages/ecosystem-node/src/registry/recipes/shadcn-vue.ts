@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "shadcn-vue (style: new-york | icons: lucide)",
   category: "ui",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["vue"],
+  uiFrameworks: ["vue"],
   exclusive: true,
   packages: {
     "reka-ui": "^2.11.0",

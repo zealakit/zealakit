@@ -48,7 +48,9 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 
 | Area                        | Role                                                         |
 | --------------------------- | ------------------------------------------------------------ |
-| `constants.ts` / `types.ts` | Scopes, frameworks, categories, config types                 |
+| `constants/` / `types.ts` | Scopes, UI frameworks, categories, discovery enums, config types |
+| `profiles/`                 | Discovery Template/Recipe profiles + validation              |
+| `discovery/`                | Questionnaire + matching/scoring engine                      |
 | `compat.ts`                 | Can recipe X go on template Y?                               |
 | `resolve-recipes.ts`        | Expand `dependsOn`, cycles, order                            |
 | `registry/`                 | Mutable catalog (`registerTemplate` / `registerRecipe`)      |
@@ -80,7 +82,8 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 | ----------------------------------------------------- | --------------------------------------------------------- |
 | `index.ts`                                            | Commander entry; registers Node + Go ecosystems then runs |
 | `doctor.ts`                                           | `zealakit doctor` — Node + optional Go environment check  |
-| `prompts.ts` / `prompt-steps.ts` / `prompt-labels.ts` | Interactive flow                                          |
+| `create.ts` / `prompts.ts` / `prompt-steps.ts`        | `zealakit create` (+ root backward-compat scaffold)       |
+| `discovery/`                                          | Project Discovery UI (`create --discover`)                |
 | `info.ts` / `preview.ts` / `manifest.ts`              | Metadata, dry-run, kit package.json                       |
 
 Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
@@ -116,15 +119,15 @@ Copy order in `copyRecipe` (`packages/core/src/scaffold/copy.ts`):
 
 Templates with `srcDir` other than `src` (**`nuxt`** → `app/`): after each recipe copy the scaffolder folds any recipe `src/` tree into `srcDir` and deletes `src/`.
 
-Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `frameworks`, `category` (one or many), `hint`, `finalize`, optional `path` (defaults via `defineRecipe` to `node/<id>`).
+Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `uiFrameworks`, `category` (one or many), `hint`, `finalize`, optional `path` (defaults via `defineRecipe` to `node/<id>`).
 
-- `frameworks` (e.g. `["react"]`) restricts a recipe to templates with that `framework`; omit for framework-agnostic recipes. Never hardcode recipe ids in prompts/validation.
+- `uiFrameworks` (e.g. `["react"]`) restricts a recipe to templates with that `uiFramework`; omit for framework-agnostic recipes. Never hardcode recipe ids in prompts/validation.
 - `supportedScopes` is matched strictly (`hybrid` does **not** accept `server`-only recipes). ORM recipes list both `server` and `hybrid`; hybrid prompts / dry-run / scaffold print a small-project caveat (prefer a dedicated backend framework for production APIs).
 - `fileTransforms` keys may be template id **or** overlay id. Failed pattern match throws.
 - `finalize(targetDir)` runs after all recipes are copied (e.g. Biome drops nested `root: false`).
 - npm never packs `.gitignore`: `prepack` ships templates' `_gitignore`, the scaffolder renames it back.
 
-Categories / scopes: always use / extend `packages/core/src/constants.ts` — never duplicate string unions elsewhere.
+Categories / scopes / discovery enums: always use / extend `packages/core/src/constants/` — never duplicate string unions elsewhere.
 
 ## Coding conventions (kit)
 
@@ -143,7 +146,7 @@ Categories / scopes: always use / extend `packages/core/src/constants.ts` — ne
 | Add an overlay per supported family (`vite-react`, `next`, `nest`)          | Assume missing overlay is OK if `overlays/` exists         |
 | Keep kit root `.agents/` (+ `.cursor` → `.agents`) for zealakit maintainers | Put kit maintainer docs only under `templates/*`           |
 | Put skills/rules under `.agents/`                                           | Put real files only under `.cursor/` (must stay a symlink) |
-| Derive types from `constants.ts`                                            | Hardcode scope/category lists in monitor or prompts        |
+| Derive types from `constants/`                                              | Hardcode scope/category lists in monitor or prompts        |
 | Express compatibility via `scope` / `framework` / overlays (`compat.ts`)    | Special-case recipe or template ids in prompts/validation  |
 | Keep core free of ecosystem imports                                         | Import `@zealakit/ecosystem-*` from core                   |
 

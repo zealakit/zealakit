@@ -5,7 +5,7 @@ export default defineRecipe({
   name: "Zustand",
   category: "state",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["react"],
+  uiFrameworks: ["react"],
   exclusive: true,
   packages: {
     zustand: "^5.0.16",

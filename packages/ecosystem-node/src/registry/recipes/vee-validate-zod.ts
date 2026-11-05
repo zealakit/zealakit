@@ -6,7 +6,7 @@ export default defineRecipe({
   hint: "Recommended",
   category: "form",
   supportedScopes: ["client", "hybrid"],
-  frameworks: ["vue"],
+  uiFrameworks: ["vue"],
   exclusive: true,
   packages: {
     "vee-validate": "^4.15.1",
