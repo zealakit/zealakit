@@ -15,7 +15,7 @@ Before changing structure, recipes, templates, or packages:
 Hard rules:
 
 - Single source for scopes/categories: `packages/core/src/constants.ts`
-- Register TypeScript templates/recipes in `packages/ecosystem-typescript/src/registry/`
+- Register Node templates/recipes in `packages/ecosystem-node/src/registry/`
 - Recipe `overlays/<id>/` must match `getTemplateOverlayId(template)`
 - Templates live under `templates/<ecosystem>/`; recipes under `recipes/<ecosystem>/`
 - Agent skills/rules live in **`.agents/`**; **`.cursor` → `.agents`** symlink everywhere (kit root, templates, recipes, generated apps)

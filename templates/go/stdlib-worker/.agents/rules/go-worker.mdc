@@ -1,0 +1,17 @@
+---
+description: Go stdlib worker conventions
+alwaysApply: true
+---
+
+# Go Standard Library Worker
+
+Follow `.agents/skills/go-worker/SKILL.md` for runner, processor, config, and shutdown.
+
+Hard rules:
+
+- Stdlib only by default — no HTTP frameworks, queues, or cron libraries unless asked
+- Implement work in `Processor`; keep `Runner` free of business side effects
+- Use `context` cancellation + configurable shutdown timeout
+- Do not overlap processing ticks
+- Prefer `go test ./...` before claiming done
+- Inspect existing packages before adding duplicates

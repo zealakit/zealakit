@@ -6,7 +6,7 @@ import { getRecipe, getTemplate } from "../registry/index.js";
 import type { RecipeConfig, ScaffoldConfig } from "../types.js";
 import { applyAgentEntry, ensureCursorAgentsSymlink } from "./agent-docs.js";
 import { copyRecipe, copyTemplate, foldIntoSrcDir } from "./copy.js";
-import { getManifestAdapter } from "./manifest.js";
+import { getManifestAdapterForConfig } from "./manifest.js";
 import { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
 import { applyFileTransforms } from "./transforms.js";
 import { validateGeneratedOutput } from "./validate-output.js";
@@ -14,9 +14,11 @@ import { validateGeneratedOutput } from "./validate-output.js";
 export {
   emptyPackagePlan,
   getManifestAdapter,
+  getManifestAdapterForConfig,
   type ManifestAdapter,
   type ManifestFieldConflict,
   type PackagePlan,
+  resolveTemplateEcosystem,
   setManifestAdapter,
 } from "./manifest.js";
 export { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
@@ -54,7 +56,7 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
   }
 
   runFinalizers(recipes, targetDir);
-  getManifestAdapter().applyMerges(targetDir, plan.config);
+  getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
   ensureCursorAgentsSymlink(targetDir);
 }
 

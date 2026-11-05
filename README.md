@@ -103,8 +103,10 @@ npx zealakit@latest [project-name] [options]
 | `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
 | `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
 | `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
+| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`          |
+| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
 
-Every project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`).
+Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles.
 
 ---
 
@@ -229,12 +231,22 @@ Prints a single JSON document on stdout (nothing else): CLI name/version, templa
 This repo is a pnpm monorepo. The published npm package remains **`zealakit`** (root); workspace packages are private and bundled into `dist/`.
 
 ```text
-apps/cli/                         # CLI entry (prompts, flags, UX)
+apps/cli/                         # CLI entry (prompts, flags, UX, doctor)
 packages/core/                    # Ecosystem-independent scaffold engine
-packages/ecosystem-typescript/    # TS/JS registry + npm package.json adapter
-templates/typescript/<id>/        # Base templates (ids unchanged)
-recipes/typescript/<id>/          # Recipes (ids unchanged)
-templates/go/ · recipes/go/       # Reserved for a future Go ecosystem
+packages/ecosystem-node/    # Node registry + npm package.json adapter
+packages/ecosystem-go/            # Optional Go toolchain detection
+templates/node/<id>/        # Node base templates
+templates/go/stdlib-api/          # Go stdlib HTTP API template
+templates/go/stdlib-worker/       # Go stdlib background worker
+recipes/node/<id>/          # Node recipes
+recipes/go/                       # Reserved (no Go recipes yet)
+```
+
+Check the environment (Go is optional; TypeScript workflows work without it):
+
+```bash
+npx zealakit@latest doctor
+npx zealakit@latest doctor --json
 ```
 
 ---

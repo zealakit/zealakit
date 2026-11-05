@@ -16,10 +16,7 @@ import {
   templates,
 } from "@zealakit/core";
 
-const RECIPE_MODULES_DIR = path.join(
-  PACKAGE_ROOT,
-  "packages/ecosystem-typescript/src/registry/recipes",
-);
+const RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-node/src/registry/recipes");
 const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts"]);
 
 const familyKeys = new Set([
@@ -41,8 +38,21 @@ describe("template registry", () => {
       if (template.framework) {
         assert.ok((FRAMEWORKS as readonly string[]).includes(template.framework));
       }
-      assert.ok(fs.existsSync(path.join(getTemplateDir(template.id), "package.json")));
-      assertAgentsSymlink(getTemplateDir(template.id));
+      const dir = getTemplateDir(template.id);
+      const ecosystem = template.ecosystem ?? "node";
+      if (ecosystem === "go") {
+        assert.ok(fs.existsSync(path.join(dir, "go.mod")), `go.mod missing for ${template.id}`);
+      } else {
+        assert.ok(
+          fs.existsSync(path.join(dir, "package.json")),
+          `package.json missing for ${template.id}`,
+        );
+      }
+      assert.ok(
+        fs.existsSync(path.join(dir, ".env.example")),
+        `.env.example missing for ${template.id}`,
+      );
+      assertAgentsSymlink(dir);
     });
   }
 });

@@ -12,9 +12,9 @@ import {
   SCOPES,
   templates,
 } from "@zealakit/core";
-import { registerTypescriptEcosystem } from "@zealakit/ecosystem-typescript";
+import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 
-registerTypescriptEcosystem();
+registerNodeEcosystem();
 
 const execFileAsync = promisify(execFile);
 
@@ -23,7 +23,7 @@ const ROOT = path.resolve(__dirname, "..");
 const HOST = "127.0.0.1";
 const PREFERRED_PORT = 4000;
 const SKIP_DIRS = new Set(["node_modules", "dist", ".git"]);
-const RECIPES_REGISTRY_DIR = "packages/ecosystem-typescript/src/registry/recipes";
+const RECIPES_REGISTRY_DIR = "packages/ecosystem-node/src/registry/recipes";
 
 function recipeRegistryFile(recipeId: string): string {
   return `${RECIPES_REGISTRY_DIR}/${recipeId}.ts`;

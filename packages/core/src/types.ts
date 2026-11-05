@@ -4,6 +4,9 @@ export type Scope = (typeof SCOPES)[number];
 export type Framework = (typeof FRAMEWORKS)[number];
 export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
 
+/** Scaffolding ecosystem that owns templates/recipes and a ManifestAdapter. */
+export type EcosystemId = "node" | "go";
+
 export type TemplateConfig = {
   id: string;
   name: string;
@@ -27,6 +30,11 @@ export type TemplateConfig = {
   srcDir?: string;
   /** Command printed after scaffolding. Defaults to `npm run dev`. */
   devCommand?: string;
+  /**
+   * Owning ecosystem. Defaults to `node` when omitted (existing templates).
+   * Selects the ManifestAdapter used during scaffold.
+   */
+  ecosystem?: EcosystemId;
 };
 
 export type RecipeFileTransform = {
@@ -65,11 +73,11 @@ export type RecipeConfig = {
    */
   dependsOn?: string[];
   /**
-   * Directory under `recipes/` (e.g. `typescript/mui`). Defaults to `id` when omitted.
+   * Directory under `recipes/` (e.g. `node/mui`). Defaults to `id` when omitted.
    */
   path?: string;
   /**
-   * npm dependency contributions (TypeScript ecosystem).
+   * npm dependency contributions (Node ecosystem).
    * Kept on the shared recipe type for migration compatibility.
    */
   packages: Record<string, string>;

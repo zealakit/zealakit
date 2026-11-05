@@ -11,7 +11,7 @@ import {
   validateScaffoldConfig,
   withDefaultRecipes,
 } from "@zealakit/core";
-import { isValidNpmPackageName } from "@zealakit/ecosystem-typescript";
+import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 
 function incompatibility(recipeId: string, templateId: string): string | undefined {
   const recipe = getRecipe(recipeId);

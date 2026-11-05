@@ -6,7 +6,7 @@ import type { ScaffoldConfig, ValidationResult } from "../types.js";
 import { validateScaffoldConfig } from "../validation/index.js";
 import { directoryHasFiles } from "../validation/target-dir.js";
 import { listRecipeFiles, listTemplateFiles, type PlannedFileSource } from "./inventory.js";
-import { emptyPackagePlan, getManifestAdapter, type PackagePlan } from "./manifest.js";
+import { emptyPackagePlan, getManifestAdapterForConfig, type PackagePlan } from "./manifest.js";
 import { getRecipeTransforms } from "./transforms.js";
 
 export type FileAction = "create" | "replace" | "transform" | "append";
@@ -109,7 +109,7 @@ export function buildScaffoldPlan(
   }
   pushCheck(checks, "template-compatibility", validation.valid);
 
-  const packages = getManifestAdapter().planMerges(effective);
+  const packages = getManifestAdapterForConfig(effective).planMerges(effective);
   if (packages.conflicts.length > 0) {
     for (const conflict of packages.conflicts) {
       blockers.push(

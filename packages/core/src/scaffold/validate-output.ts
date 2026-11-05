@@ -3,6 +3,7 @@ import path from "node:path";
 import { getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.js";
 import type { ScaffoldConfig } from "../types.js";
 import { getRecipeAgentEntry } from "./agent-docs.js";
+import { resolveTemplateEcosystem } from "./manifest.js";
 
 export type OutputValidation = { ok: boolean; errors: string[] };
 
@@ -13,47 +14,15 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
 };
 
-/**
- * Structural checks on a generated (or staged) project. No network, no installs,
- * no running project scripts.
- */
-export function validateGeneratedOutput(
-  targetDir: string,
-  config: ScaffoldConfig,
-): OutputValidation {
-  const errors: string[] = [];
-  const template = getTemplate(config.templateId);
-  if (!template) {
-    return { ok: false, errors: [`Unknown template '${config.templateId}'.`] };
-  }
-
-  const packageJsonPath = path.join(targetDir, "package.json");
-  if (!fs.existsSync(packageJsonPath)) {
-    errors.push("package.json is missing.");
-    return { ok: false, errors };
-  }
-
-  let pkg: PackageJson;
-  try {
-    pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as PackageJson;
-  } catch (error) {
-    errors.push(
-      `package.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return { ok: false, errors };
-  }
-
-  if (pkg.name !== config.projectName) {
-    errors.push(`package.json name is '${pkg.name}', expected '${config.projectName}'.`);
-  }
-
+function validateCommonLayout(targetDir: string, templateId: string, errors: string[]): void {
+  const template = getTemplate(templateId);
   for (const leaked of ["overlays", "shared", "scaffold", "pnpm-workspace.yaml"]) {
     if (fs.existsSync(path.join(targetDir, leaked))) {
       errors.push(`Generated project must not contain '${leaked}'.`);
     }
   }
 
-  if (template.srcDir && template.srcDir !== "src" && fs.existsSync(path.join(targetDir, "src"))) {
+  if (template?.srcDir && template.srcDir !== "src" && fs.existsSync(path.join(targetDir, "src"))) {
     errors.push(
       `Template '${template.id}' must not keep a top-level src/ (expected fold into ${template.srcDir}/).`,
     );
@@ -69,6 +38,28 @@ export function validateGeneratedOutput(
     } catch {
       errors.push(".cursor must be a symlink to .agents when .agents exists.");
     }
+  }
+}
+
+function validateNpmOutput(targetDir: string, config: ScaffoldConfig, errors: string[]): void {
+  const packageJsonPath = path.join(targetDir, "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    errors.push("package.json is missing.");
+    return;
+  }
+
+  let pkg: PackageJson;
+  try {
+    pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as PackageJson;
+  } catch (error) {
+    errors.push(
+      `package.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return;
+  }
+
+  if (pkg.name !== config.projectName) {
+    errors.push(`package.json name is '${pkg.name}', expected '${config.projectName}'.`);
   }
 
   const overlayId = getTemplateOverlayId(config.templateId);
@@ -116,6 +107,59 @@ export function validateGeneratedOutput(
         }
       }
     }
+  }
+}
+
+function validateGoOutput(targetDir: string, config: ScaffoldConfig, errors: string[]): void {
+  const goModPath = path.join(targetDir, "go.mod");
+  if (!fs.existsSync(goModPath)) {
+    errors.push("go.mod is missing.");
+    return;
+  }
+
+  const goMod = fs.readFileSync(goModPath, "utf-8");
+  const moduleLine = goMod
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.startsWith("module "));
+  if (!moduleLine) {
+    errors.push("go.mod is missing a module declaration.");
+    return;
+  }
+
+  const modulePath = moduleLine.slice("module ".length).trim();
+  if (!modulePath.includes(config.projectName) && modulePath !== config.projectName) {
+    errors.push(
+      `go.mod module is '${modulePath}', expected it to include project name '${config.projectName}'.`,
+    );
+  }
+
+  if (fs.existsSync(path.join(targetDir, "package.json"))) {
+    errors.push("Go templates must not include package.json.");
+  }
+}
+
+/**
+ * Structural checks on a generated (or staged) project. No network, no installs,
+ * no running project scripts.
+ */
+export function validateGeneratedOutput(
+  targetDir: string,
+  config: ScaffoldConfig,
+): OutputValidation {
+  const errors: string[] = [];
+  const template = getTemplate(config.templateId);
+  if (!template) {
+    return { ok: false, errors: [`Unknown template '${config.templateId}'.`] };
+  }
+
+  validateCommonLayout(targetDir, config.templateId, errors);
+
+  const ecosystem = resolveTemplateEcosystem(config.templateId);
+  if (ecosystem === "go") {
+    validateGoOutput(targetDir, config, errors);
+  } else {
+    validateNpmOutput(targetDir, config, errors);
   }
 
   return { ok: errors.length === 0, errors };

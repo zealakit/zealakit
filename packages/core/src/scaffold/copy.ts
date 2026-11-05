@@ -11,7 +11,14 @@ import {
 } from "./paths.js";
 
 /** Local install/build junk that must never ship into a scaffolded app. */
-const TEMPLATE_SKIP_NAMES = new Set(["node_modules", "dist", "coverage", ".turbo", ".vite"]);
+const TEMPLATE_SKIP_NAMES = new Set([
+  "node_modules",
+  "dist",
+  "coverage",
+  ".turbo",
+  ".vite",
+  "vendor",
+]);
 
 function shouldCopyTemplatePath(src: string): boolean {
   const base = path.basename(src);

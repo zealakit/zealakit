@@ -60,10 +60,12 @@ export {
   buildScaffoldPlan,
   emptyPackagePlan,
   getManifestAdapter,
+  getManifestAdapterForConfig,
   type ManifestAdapter,
   type ManifestFieldConflict,
   type PackagePlan,
   planIsReady,
+  resolveTemplateEcosystem,
   type ScaffoldPlan,
   scaffoldProject,
   setManifestAdapter,
@@ -85,6 +87,7 @@ export {
 } from "./scaffold/transforms.js";
 export type {
   CliOptions,
+  EcosystemId,
   Framework,
   RecipeCategory,
   RecipeConfig,

@@ -47,6 +47,8 @@ function fullStackWith(anchor: RecipeConfig, template: TemplateConfig): string[]
 for (const templateId of Object.keys(templates)) {
   const template = getTemplate(templateId);
   if (!template) continue;
+  // Matrix is npm/recipe-oriented; Go templates have dedicated suites.
+  if ((template.ecosystem ?? "node") === "go") continue;
 
   describe(`matrix: ${templateId}`, () => {
     it(`${templateId}: base template (defaults only)`, async () => {

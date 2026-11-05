@@ -194,9 +194,12 @@ importers:
       '@zealakit/core':
         specifier: workspace:*
         version: link:packages/core
-      '@zealakit/ecosystem-typescript':
+      '@zealakit/ecosystem-go':
         specifier: workspace:*
-        version: link:packages/ecosystem-typescript
+        version: link:packages/ecosystem-go
+      '@zealakit/ecosystem-node':
+        specifier: workspace:*
+        version: link:packages/ecosystem-node
       tsup:
         specifier: ^9.0.0
         version: 9.0.0(@swc/core@1.16.2(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.32)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
@@ -215,9 +218,12 @@ importers:
       '@zealakit/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@zealakit/ecosystem-typescript':
+      '@zealakit/ecosystem-go':
         specifier: workspace:*
-        version: link:../../packages/ecosystem-typescript
+        version: link:../../packages/ecosystem-go
+      '@zealakit/ecosystem-node':
+        specifier: workspace:*
+        version: link:../../packages/ecosystem-node
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -254,7 +260,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  packages/ecosystem-typescript:
+  packages/ecosystem-go:
     dependencies:
       '@zealakit/core':
         specifier: workspace:*
@@ -267,7 +273,20 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  templates/typescript/astro-react-client:
+  packages/ecosystem-node:
+    dependencies:
+      '@zealakit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
+  templates/node/astro-react-client:
     dependencies:
       '@astrojs/node':
         specifier: ^11.1.9
@@ -295,7 +314,7 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
-  templates/typescript/astro-react-hybrid:
+  templates/node/astro-react-hybrid:
     dependencies:
       '@astrojs/node':
         specifier: ^11.1.9
@@ -323,7 +342,7 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
-  templates/typescript/hono:
+  templates/node/hono:
     dependencies:
       '@hono/node-server':
         specifier: ^2.1.5
@@ -354,7 +373,7 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@26.6.6)(@vitest/coverage-v8@5.0.5)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  templates/typescript/nest:
+  templates/node/nest:
     dependencies:
       '@nestjs/common':
         specifier: ^12.0.1
@@ -415,7 +434,7 @@ importers:
         specifier: ^4.1.2
         version: 4.1.12(@types/node@24.19.2)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  templates/typescript/next:
+  templates/node/next:
     dependencies:
       next:
         specifier: 16.4.3
@@ -446,7 +465,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  templates/typescript/nuxt:
+  templates/node/nuxt:
     dependencies:
       '@nuxtjs/i18n':
         specifier: ^10.6.0
@@ -468,7 +487,7 @@ importers:
         specifier: ^3.3.14
         version: 3.3.14(typescript@5.9.3)
 
-  templates/typescript/vite-react:
+  templates/node/vite-react:
     dependencies:
       i18next:
         specifier: ^26.7.1
@@ -505,7 +524,7 @@ importers:
         specifier: ^8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
-  templates/typescript/vite-vue:
+  templates/node/vite-vue:
     dependencies:
       i18next:
         specifier: ^26.7.1

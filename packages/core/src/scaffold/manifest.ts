@@ -1,4 +1,5 @@
-import type { ScaffoldConfig, ValidationResult } from "../types.js";
+import { getTemplate } from "../registry/index.js";
+import type { EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
 
 export type ManifestFieldConflict = {
   field: "dependencies" | "devDependencies" | "scripts";
@@ -24,19 +25,28 @@ export type ManifestAdapter = {
   validateProjectName(name: string): ValidationResult;
 };
 
-let adapter: ManifestAdapter | undefined;
+const adapters = new Map<EcosystemId, ManifestAdapter>();
 
-export function setManifestAdapter(next: ManifestAdapter): void {
-  adapter = next;
+export function setManifestAdapter(ecosystem: EcosystemId, next: ManifestAdapter): void {
+  adapters.set(ecosystem, next);
 }
 
-export function getManifestAdapter(): ManifestAdapter {
+export function getManifestAdapter(ecosystem: EcosystemId = "node"): ManifestAdapter {
+  const adapter = adapters.get(ecosystem);
   if (!adapter) {
     throw new Error(
-      "No manifest adapter registered. Call registerTypescriptEcosystem() (or another ecosystem) before scaffolding.",
+      `No manifest adapter registered for ecosystem '${ecosystem}'. Call registerNodeEcosystem() / registerGoEcosystem() before scaffolding.`,
     );
   }
   return adapter;
+}
+
+export function resolveTemplateEcosystem(templateId: string): EcosystemId {
+  return getTemplate(templateId)?.ecosystem ?? "node";
+}
+
+export function getManifestAdapterForConfig(config: ScaffoldConfig): ManifestAdapter {
+  return getManifestAdapter(resolveTemplateEcosystem(config.templateId));
 }
 
 export function emptyPackagePlan(): PackagePlan {

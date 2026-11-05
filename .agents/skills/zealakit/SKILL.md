@@ -25,19 +25,20 @@ template → recipes (shared + overlay) → merge package.json → fileTransform
 
 ## Top-level layout
 
-| Path                             | Role                                                                         |
-| -------------------------------- | ---------------------------------------------------------------------------- |
-| `apps/cli/`                      | Commander CLI entry, prompts, info, preview                                  |
-| `packages/core/`                 | Ecosystem-independent engine (scaffold, compat, registry catalog, contracts) |
-| `packages/ecosystem-typescript/` | TS/JS templates+recipes registry, npm manifest adapter                       |
-| `templates/typescript/<id>/`     | Base apps shipped with the kit                                               |
-| `templates/go/`                  | Reserved (no Go templates yet)                                               |
-| `recipes/typescript/<id>/`       | Optional layers applied on top of a template                                 |
-| `recipes/go/`                    | Reserved (no Go recipes yet)                                                 |
-| `scripts/`                       | Kit tooling (test runner, pack smoke, pack dotfiles)                         |
-| `tests/`                         | `unit/` + in-process `scaffold/` tests (`pnpm test`)                         |
-| `monitor/`                       | Internal dependency dashboard (`pnpm monitor`)                               |
-| `dist/`                          | Built CLI (`tsup`) — do not hand-edit                                        |
+| Path                       | Role                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `apps/cli/`                | Commander CLI entry, prompts, info, preview                                  |
+| `packages/core/`           | Ecosystem-independent engine (scaffold, compat, registry catalog, contracts) |
+| `packages/ecosystem-node/` | Node (TS/JS) templates+recipes registry, npm manifest adapter                |
+| `packages/ecosystem-go/`   | Go templates registry + toolchain detection                                  |
+| `templates/node/<id>/`     | Base apps shipped with the kit                                               |
+| `templates/go/<id>/`       | Go base templates (e.g. `stdlib-api`, `stdlib-worker`)                       |
+| `recipes/node/<id>/`       | Optional layers applied on top of a template                                 |
+| `recipes/go/`              | Reserved (no Go recipes yet)                                                 |
+| `scripts/`                 | Kit tooling (test runner, pack smoke, pack dotfiles)                         |
+| `tests/`                   | `unit/` + in-process `scaffold/` tests (`pnpm test`)                         |
+| `monitor/`                 | Internal dependency dashboard (`pnpm monitor`)                               |
+| `dist/`                    | Built CLI (`tsup`) — do not hand-edit                                        |
 
 Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace packages are private and bundled into `dist/`.
 
@@ -55,20 +56,30 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 | `scaffold/manifest.ts`      | `ManifestAdapter` contract (plan/apply merges, project name) |
 | `validation/`               | Recipe/template/target checks (project name via adapter)     |
 
-### `@zealakit/ecosystem-typescript`
+### `@zealakit/ecosystem-node`
 
 | Area                       | Role                                                        |
 | -------------------------- | ----------------------------------------------------------- |
-| `registry/templates.ts`    | TypeScript template list (`path: typescript/<id>`)          |
+| `registry/templates.ts`    | Node template list (`path: node/<id>`)                      |
 | `registry/recipes/<id>.ts` | One module per recipe (`defineRecipe`; monitor edits these) |
 | `manifest/`                | npm `package.json` merge + conflict plan                    |
-| `index.ts`                 | `registerTypescriptEcosystem()`                             |
+| `index.ts`                 | `registerNodeEcosystem()`                                   |
+
+### `@zealakit/ecosystem-go`
+
+| Area                    | Role                                                          |
+| ----------------------- | ------------------------------------------------------------- |
+| `detect.ts`             | `detectGoEnvironment()` — PATH lookup, `go version`, `go env` |
+| `version.ts`            | Parse/compare Go versions numerically                         |
+| `registry/templates.ts` | Go template list (`path: go/<id>`, `ecosystem: "go"`)         |
+| `index.ts`              | `registerGoEcosystem()`                                       |
 
 ### `@zealakit/cli`
 
 | File                                                  | Role                                                      |
 | ----------------------------------------------------- | --------------------------------------------------------- |
-| `index.ts`                                            | Commander entry; registers TypeScript ecosystem then runs |
+| `index.ts`                                            | Commander entry; registers Node + Go ecosystems then runs |
+| `doctor.ts`                                           | `zealakit doctor` — Node + optional Go environment check  |
 | `prompts.ts` / `prompt-steps.ts` / `prompt-labels.ts` | Interactive flow                                          |
 | `info.ts` / `preview.ts` / `manifest.ts`              | Metadata, dry-run, kit package.json                       |
 
@@ -76,19 +87,19 @@ Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 
 ## Templates
 
-- Registered in `packages/ecosystem-typescript/src/registry/templates.ts`.
-- Folder: `templates/<path>/` where `path` is `typescript/<id>`.
-- `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/typescript/*/overlays/<overlay>/`.
+- Registered in `packages/ecosystem-node/src/registry/templates.ts`.
+- Folder: `templates/<path>/` where `path` is `node/<id>`.
+- `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/node/*/overlays/<overlay>/`.
 - Current templates: `vite-react` / `vite-vue` / `astro-react-client` (`client`), `astro-react-hybrid` / `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
 - Template-owned agent docs live under that template (`.agents/`, `AGENTS.md`) and ship into generated apps — **do not confuse with this kit’s root skills**.
 - Everywhere agent skills/rules live in **`.agents/`**. **`.cursor`** is always a **symlink → `.agents`** (Cursor IDE compatibility).
 
 ## Recipes
 
-Layout under `recipes/typescript/<id>/`:
+Layout under `recipes/node/<id>/`:
 
 ```
-recipes/typescript/<id>/
+recipes/node/<id>/
   shared/           # copied for every template
   overlays/<overlay>/  # e.g. vite-react, next — required if overlays/ exists
   scaffold/agent-entry.md  # lines inserted into generated AGENTS.md / CLAUDE.md
@@ -105,7 +116,7 @@ Copy order in `copyRecipe` (`packages/core/src/scaffold/copy.ts`):
 
 Templates with `srcDir` other than `src` (**`nuxt`** → `app/`): after each recipe copy the scaffolder folds any recipe `src/` tree into `srcDir` and deletes `src/`.
 
-Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `frameworks`, `category` (one or many), `hint`, `finalize`, optional `path` (defaults via `defineRecipe` to `typescript/<id>`).
+Registry fields (`RecipeConfig`): `packages`, `devDependencies`, `overlayPackages` / `overlayDevDependencies`, `scripts`, `fileTransforms`, `exclusive`, `default`, `supportedScopes`, `frameworks`, `category` (one or many), `hint`, `finalize`, optional `path` (defaults via `defineRecipe` to `node/<id>`).
 
 - `frameworks` (e.g. `["react"]`) restricts a recipe to templates with that `framework`; omit for framework-agnostic recipes. Never hardcode recipe ids in prompts/validation.
 - `supportedScopes` is matched strictly (`hybrid` does **not** accept `server`-only recipes). ORM recipes list both `server` and `hybrid`; hybrid prompts / dry-run / scaffold print a small-project caveat (prefer a dedicated backend framework for production APIs).
@@ -119,7 +130,7 @@ Categories / scopes: always use / extend `packages/core/src/constants.ts` — ne
 
 - TypeScript ESM, strict; prefer `type` over `interface` when either works.
 - Match existing style in the file you edit; minimal diffs.
-- Recipe version pins live in `packages/ecosystem-typescript/src/registry/recipes/<id>.ts` (and template `package.json` for base deps).
+- Recipe version pins live in `packages/ecosystem-node/src/registry/recipes/<id>.ts` (and template `package.json` for base deps).
 - After scaffold-behavior changes run `pnpm test` (seconds; filter with `pnpm test next mui`). `pnpm test:pack` is the release smoke test for the packed tarball.
 - Dependency UI for the kit: `pnpm monitor` (Root update runs `pnpm up`).
 
@@ -127,7 +138,7 @@ Categories / scopes: always use / extend `packages/core/src/constants.ts` — ne
 
 | Do                                                                          | Don’t                                                      |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Register templates/recipes in `packages/ecosystem-typescript/src/registry/` | Add a template folder without registry entry               |
+| Register templates/recipes in `packages/ecosystem-node/src/registry/`       | Add a template folder without registry entry               |
 | Put cross-template recipe files in `shared/`                                | Put Next-only wiring in `shared/`                          |
 | Add an overlay per supported family (`vite-react`, `next`, `nest`)          | Assume missing overlay is OK if `overlays/` exists         |
 | Keep kit root `.agents/` (+ `.cursor` → `.agents`) for zealakit maintainers | Put kit maintainer docs only under `templates/*`           |

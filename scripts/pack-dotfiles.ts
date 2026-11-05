@@ -18,8 +18,6 @@ const templatesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 function eachTemplateDir(callback: (templateDir: string) => void): void {
   for (const ecosystem of fs.readdirSync(templatesDir, { withFileTypes: true })) {
     if (!ecosystem.isDirectory()) continue;
-    // Skip reserved placeholder trees without real templates.
-    if (ecosystem.name === "go") continue;
     const ecosystemDir = path.join(templatesDir, ecosystem.name);
     for (const entry of fs.readdirSync(ecosystemDir, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;

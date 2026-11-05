@@ -24,15 +24,18 @@ import {
   validateTemplate,
   withDefaultRecipes,
 } from "@zealakit/core";
-import { registerTypescriptEcosystem } from "@zealakit/ecosystem-typescript";
+import { registerGoEcosystem } from "@zealakit/ecosystem-go";
+import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 import { Command } from "commander";
 import pc from "picocolors";
+import { runDoctor } from "./doctor.js";
 import { printKitInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 
-registerTypescriptEcosystem();
+registerNodeEcosystem();
+registerGoEcosystem();
 
 function parseRecipeList(raw: string): string[] {
   return raw
@@ -98,8 +101,13 @@ function printSuccess(targetDir: string, config: ScaffoldConfig): void {
   printInfo("");
   printInfo(pc.bold("Next steps:"));
   printInfo(`  ${pc.cyan("cd")} ${relativePath}`);
-  printInfo(`  ${pc.cyan("npm install")}`);
-  printInfo(`  ${pc.cyan(devCommand)}`);
+  if ((template?.ecosystem ?? "node") === "go") {
+    printInfo(`  ${pc.cyan(devCommand)}`);
+    printInfo(pc.dim("  Tip: run `zealakit doctor` if the Go toolchain is missing."));
+  } else {
+    printInfo(`  ${pc.cyan("npm install")}`);
+    printInfo(`  ${pc.cyan(devCommand)}`);
+  }
   printInfo("");
 }
 
@@ -200,6 +208,21 @@ program
   .option("--json", "Print only machine-readable JSON (stdout contains nothing else)")
   .action((options: { json?: boolean }) => {
     printKitInfo({ json: options.json === true });
+  });
+
+program
+  .command("doctor")
+  .description("Check Zealakit runtime and optional Go toolchain availability")
+  .option("--json", "Print only machine-readable JSON (stdout contains nothing else)")
+  .option(
+    "--min-go-version <version>",
+    "Require Go >= version (e.g. 1.22.0); missing/incompatible then exits non-zero",
+  )
+  .action(async (options: { json?: boolean; minGoVersion?: string }) => {
+    await runDoctor({
+      json: options.json === true,
+      minGoVersion: options.minGoVersion,
+    });
   });
 
 program.parse(process.argv);

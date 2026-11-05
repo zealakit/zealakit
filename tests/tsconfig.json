@@ -7,7 +7,8 @@
   "include": [
     "./**/*.ts",
     "../packages/core/src/**/*.ts",
-    "../packages/ecosystem-typescript/src/**/*.ts",
+    "../packages/ecosystem-node/src/**/*.ts",
+    "../packages/ecosystem-go/src/**/*.ts",
     "../apps/cli/src/**/*.ts"
   ]
 }

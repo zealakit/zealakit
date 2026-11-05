@@ -4,9 +4,5 @@
     "noEmit": true,
     "rootDir": ".."
   },
-  "include": [
-    "./**/*.ts",
-    "../packages/core/src/**/*.ts",
-    "../packages/ecosystem-typescript/src/**/*.ts"
-  ]
+  "include": ["./**/*.ts", "../packages/core/src/**/*.ts", "../packages/ecosystem-node/src/**/*.ts"]
 }

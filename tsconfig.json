@@ -6,7 +6,7 @@
   "files": [],
   "references": [
     { "path": "./packages/core" },
-    { "path": "./packages/ecosystem-typescript" },
+    { "path": "./packages/ecosystem-node" },
     { "path": "./apps/cli" }
   ]
 }

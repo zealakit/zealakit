@@ -1,6 +1,7 @@
 import { printError } from "../diagnostics.js";
+import { getTemplate } from "../registry/index.js";
 import { getManifestAdapter } from "../scaffold/manifest.js";
-import type { CliOptions, ScaffoldConfig, ValidationResult } from "../types.js";
+import type { CliOptions, EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
 import {
   validateRecipeCompatibility,
   validateRecipeConflicts,
@@ -17,14 +18,23 @@ export {
 } from "./recipes.js";
 export { directoryHasFiles, validateTargetDirectory } from "./target-dir.js";
 
-export function validateProjectName(name: string): ValidationResult {
-  return getManifestAdapter().validateProjectName(name);
+export function validateProjectName(
+  name: string,
+  templateIdOrEcosystem?: string,
+): ValidationResult {
+  let ecosystem: EcosystemId = "node";
+  if (templateIdOrEcosystem === "node" || templateIdOrEcosystem === "go") {
+    ecosystem = templateIdOrEcosystem;
+  } else if (templateIdOrEcosystem) {
+    ecosystem = getTemplate(templateIdOrEcosystem)?.ecosystem ?? "node";
+  }
+  return getManifestAdapter(ecosystem).validateProjectName(name);
 }
 
 /** All checks that do not touch the target directory (no prompts, no I/O on cwd). */
 export function validateScaffoldConfig(config: ScaffoldConfig): ValidationResult {
   const errors = [
-    validateProjectName(config.projectName),
+    validateProjectName(config.projectName, config.templateId),
     validateTemplate(config.templateId),
     validateRecipeIds(config.recipeIds),
     validateRecipeConflicts(config.recipeIds),

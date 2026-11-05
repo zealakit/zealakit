@@ -8,7 +8,7 @@ import {
   type TemplateConfig,
   withDefaultRecipes,
 } from "@zealakit/core";
-import { isValidNpmPackageName } from "@zealakit/ecosystem-typescript";
+import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
 import {
   defaultRecipeIdsForScope,

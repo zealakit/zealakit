@@ -98,8 +98,8 @@ function shouldBePacked(file: string): boolean {
   return (
     file !== "recipes/tsconfig.json" &&
     file !== "recipes/shims.d.ts" &&
-    !file.startsWith("templates/go/") &&
     !file.startsWith("recipes/go/") &&
+    file !== "templates/go/README.md" &&
     !segments.includes(".cursor") &&
     !segments.some((segment) => NEVER_PACKED_SEGMENTS.has(segment)) &&
     !NEVER_PACKED_FILES.has(base) &&

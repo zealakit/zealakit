@@ -1,6 +1,8 @@
-# Go templates (reserved)
+# Go templates
 
-This directory is reserved for future Go project templates.
+| ID | Path | Description |
+| --- | --- | --- |
+| `stdlib-api` | `templates/go/stdlib-api` | Go Standard Library HTTP API (DDD-inspired layers) |
+| `stdlib-worker` | `templates/go/stdlib-worker` | Go Standard Library background worker |
 
-Zealakit does not ship Go templates yet. Do not add ad-hoc starters here
-without registering them through a Go ecosystem package and the core registry.
+Register templates in `packages/ecosystem-go`. Do not add ad-hoc starters without registry entries.
