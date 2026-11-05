@@ -1,0 +1,31 @@
+{
+  "SITE": {
+    "BRAND": "Astro + React",
+    "NAV": {
+      "HOME": "Trang chủ",
+      "ABOUT": "Giới thiệu",
+      "LOGIN": "Đăng nhập",
+      "CONSOLE": "Console",
+      "BACK_TO_SITE": "Về trang chính"
+    }
+  },
+  "PAGE": {
+    "HOME": {
+      "TITLE": "Astro + React",
+      "DESCRIPTION": "Trang này là HTML tĩnh từ Astro. Bộ đếm bên dưới là React island — chỉ gửi JavaScript client vì có hydration directive tường minh.",
+      "COUNTER_HINT": "Ưu tiên client:visible hoặc client:idle khi tương tác nằm dưới fold."
+    },
+    "ABOUT": {
+      "TITLE": "Giới thiệu",
+      "DESCRIPTION": "Trang mẫu đa ngôn ngữ tại src/pages/[locale]/about.astro."
+    },
+    "LOGIN": {
+      "TITLE": "Đăng nhập",
+      "DESCRIPTION": "Trang mẫu entry-layout — dùng cho auth / onboarding."
+    },
+    "CONSOLE": {
+      "TITLE": "Console",
+      "DESCRIPTION": "Trang mẫu console-layout — dùng cho UI đã đăng nhập."
+    }
+  }
+}

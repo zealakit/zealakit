@@ -38,7 +38,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
 - If `recipes/<id>/overlays/` exists, the matching overlay directory is **required**; `compat.ts` rejects the combination up front otherwise.
 - Framework-specific providers (e.g. Next `AppRouterCacheProvider`) belong in `overlays/next`, not `shared/`.
 - Nest-only config (e.g. Biome decorator parser flags, ORM Nest modules) belongs in `overlays/nest`.
-- Exclusive `orm` recipes (`type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`) support `server` and `hybrid`. Prefer a dedicated backend framework for production APIs; hybrid (Next/Nuxt) is best-effort for small apps (prompt + dry-run warn). Add `overlays/<overlayId>/` for every supported template (`nest`, `hono`, `next`, `nuxt`, …).
+- Exclusive `orm` recipes (`type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`) support `server` and `hybrid`. Prefer a dedicated backend framework for production APIs; hybrid (Next/Nuxt/Astro hybrid) is best-effort for small apps (prompt + dry-run warn). Add `overlays/<overlayId>/` for every supported template (`nest`, `hono`, `next`, `nuxt`, `astro-react-hybrid`, …).
 
 ## fileTransforms
 
@@ -52,7 +52,7 @@ fileTransforms: {
 
 - Prefer surgical regex/`append`; a pattern that does not match throws.
 - Server templates `nest` / `hono` use matching overlay ids.
-- Client SPA overlays follow template id (`vite-react`, `vite-vue`). Hybrid overlays: `next`, `nuxt`. React-only UI kits are rejected on Vue templates via `frameworks`, not via empty overlay stubs.
+- Client overlays follow template id (`vite-react`, `vite-vue`, `astro-react-client`). Hybrid overlays: `astro-react-hybrid`, `next`, `nuxt`. React-only UI kits are rejected on Vue templates via `frameworks`, not via empty overlay stubs.
 - **Nuxt:** recipe `src/` is folded into `app/` (`srcDir`). Nuxt `fileTransforms` should target `app/…` paths.
 
 ## Verify

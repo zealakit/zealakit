@@ -1,0 +1,31 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+import { getTranslations } from "@/i18n/translations";
+import BaseLayout from "@/layouts/base-layout/index.astro";
+
+type Props = {
+  title?: string;
+  description?: string;
+  locale?: Locale;
+};
+
+const { title, description, locale: localeProp } = Astro.props;
+
+const locale: Locale =
+  localeProp ??
+  (Astro.currentLocale && isLocale(Astro.currentLocale) ? Astro.currentLocale : defaultLocale);
+const t = getTranslations(locale);
+---
+
+{/* Unauthenticated entry chrome — login, sign-up, forgot password, … */}
+<BaseLayout title={title} description={description} locale={locale}>
+  <div data-layout="entry">
+    <header>
+      <a href={getRelativeLocaleUrl(locale, "/")}>{t.SITE.BRAND}</a>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

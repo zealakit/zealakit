@@ -1,0 +1,17 @@
+---
+import { getEntry, render } from "astro:content";
+import { getTranslations } from "@/i18n/translations";
+import SiteLayout from "@/layouts/site-layout/index.astro";
+
+const locale = "vi" as const;
+const t = getTranslations(locale);
+const landing = await getEntry("landing", "about");
+const { Content } = landing && !landing.data.draft ? await render(landing) : { Content: null };
+const title = landing?.data.title ?? t.PAGE.ABOUT.TITLE;
+const description = landing?.data.description ?? t.PAGE.ABOUT.DESCRIPTION;
+---
+
+<SiteLayout locale={locale} title={title} description={description}>
+  <h1>{title}</h1>
+  {Content ? <Content /> : <p>{description}</p>}
+</SiteLayout>

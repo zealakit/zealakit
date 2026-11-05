@@ -1,0 +1,31 @@
+{
+  "SITE": {
+    "BRAND": "Astro + React",
+    "NAV": {
+      "HOME": "Home",
+      "ABOUT": "About",
+      "LOGIN": "Login",
+      "CONSOLE": "Console",
+      "BACK_TO_SITE": "Back to site"
+    }
+  },
+  "PAGE": {
+    "HOME": {
+      "TITLE": "Astro + React",
+      "DESCRIPTION": "This page is static HTML from Astro. The counter below is a React island — it only ships client JavaScript because of an explicit hydration directive.",
+      "COUNTER_HINT": "Prefer client:visible or client:idle when interaction is below the fold."
+    },
+    "ABOUT": {
+      "TITLE": "About",
+      "DESCRIPTION": "Example localized page under src/pages/[locale]/about.astro."
+    },
+    "LOGIN": {
+      "TITLE": "Login",
+      "DESCRIPTION": "Example entry layout page — use entry-layout for auth / onboarding."
+    },
+    "CONSOLE": {
+      "TITLE": "Console",
+      "DESCRIPTION": "Example console layout page — use console-layout for signed-in product UI."
+    }
+  }
+}

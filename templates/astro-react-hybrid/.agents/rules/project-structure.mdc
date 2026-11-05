@@ -1,0 +1,21 @@
+---
+description: Astro pages/layouts, React islands, and lib kernel placement
+alwaysApply: true
+---
+
+# Project structure
+
+Follow `.agents/skills/project-structure/SKILL.md` when adding pages, islands, or modules.
+
+Hard rules:
+
+- kebab-case **files and folders**; PascalCase **component exports**
+- Layouts: `base-layout` / `site-layout` / `entry-layout` / `console-layout` (folder + `index.astro`)
+- Pick layout in the page: public → site, auth → entry, signed-in → console
+- Shared components are **folders** with `index.astro` / `index.tsx` — never a lone file under `components/`
+- Localized routes live in `src/pages/<locale>/` (folder names match `i18n.locales`)
+- Locale list + copy in `src/i18n/`; use `getRelativeLocaleUrl` for links
+- React islands in `src/components/<name>/index.tsx` — hydrate only with explicit `client:*`
+- Design-system primitives in `src/components/ui/` when a UI recipe is applied
+- APIs, constants, utils in `src/lib/`; rare shared hooks in `src/hooks/`; bootstrap in `src/configs/`
+- Prefer `type` over `interface`; path alias `@/*` → `src/*`

@@ -1,0 +1,16 @@
+---
+description: Astro-first architecture and React island hydration
+alwaysApply: true
+---
+
+# Astro
+
+Follow `.agents/skills/astro/SKILL.md` when adding pages, layouts, or interactive islands.
+
+Hard rules:
+
+- Prefer `.astro` for routing, layouts, and static content (zero JS by default)
+- Use React only for interactivity; never turn the app into a client SPA
+- Always pick an explicit `client:*` directive when hydrating — do not default everything to `client:load`
+- Fetch data in Astro frontmatter when possible; keep secrets off the client
+- Keep `i18n.locales` / `defaultLocale` in sync with `src/i18n/config.ts` and `src/pages/<locale>/`

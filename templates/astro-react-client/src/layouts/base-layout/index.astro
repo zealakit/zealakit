@@ -1,0 +1,101 @@
+---
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+import "../../styles/global.css";
+
+type Props = {
+  title?: string;
+  description?: string;
+  locale?: Locale;
+  /** Absolute canonical URL for this document. */
+  canonicalURL?: URL | string;
+  /** Absolute Open Graph / Twitter image URL. */
+  imageURL?: URL | string;
+  /** Open Graph type — article pages should pass `article`. */
+  ogType?: "website" | "article";
+  /** ISO-8601 publish time for `og:article:published_time`. */
+  publishedTime?: string;
+  /** ISO-8601 modified time for `og:article:modified_time`. */
+  modifiedTime?: string;
+  /** Author name for `og:article:author`. */
+  author?: string;
+  /** JSON-LD object(s) serialized into `<script type="application/ld+json">`. */
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+};
+
+const {
+  title = "Astro + React",
+  description = "Content-focused site with Astro and React islands",
+  locale: localeProp,
+  canonicalURL,
+  imageURL,
+  ogType = "website",
+  publishedTime,
+  modifiedTime,
+  author,
+  jsonLd,
+} = Astro.props;
+
+const locale: Locale =
+  localeProp ??
+  (Astro.currentLocale && isLocale(Astro.currentLocale) ? Astro.currentLocale : defaultLocale);
+
+const siteOrigin = Astro.site ?? new URL("https://example.com");
+const canonical =
+  canonicalURL instanceof URL
+    ? canonicalURL
+    : canonicalURL
+      ? new URL(canonicalURL, siteOrigin)
+      : new URL(Astro.url.pathname, siteOrigin);
+const image =
+  imageURL instanceof URL
+    ? imageURL
+    : imageURL
+      ? new URL(imageURL, siteOrigin)
+      : undefined;
+const jsonLdPayload = jsonLd
+  ? Array.isArray(jsonLd)
+    ? jsonLd
+    : [jsonLd]
+  : undefined;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:locale" content={locale} />
+    <meta property="og:site_name" content="Zealakit" />
+    {image && <meta property="og:image" content={image.href} />}
+    {ogType === "article" && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {ogType === "article" && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )}
+    {ogType === "article" && author && <meta property="article:author" content={author} />}
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {image && <meta name="twitter:image" content={image.href} />}
+
+    {jsonLdPayload?.map((block) => (
+      <script type="application/ld+json" set:html={JSON.stringify(block)} />
+    ))}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

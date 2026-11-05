@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 Hầu hết starter hoặc quá trống, hoặc nhồi quá nhiều thứ không cần. Zealakit cho phép bạn ghép:
 
-1. **Template** — Vite + React, Next.js, NestJS hoặc Hono
+1. **Template** — Vite + React, Vite + Vue, Astro + React (client hoặc hybrid), Next.js, Nuxt, NestJS hoặc Hono
 2. **Recipe** — lớp tùy chọn (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Mỗi recipe mang theo file, package, script và hướng dẫn agent (khi có). Kết quả là một project độc lập bình thường — dùng `npm`, `pnpm`, `yarn` hoặc `bun`.
@@ -93,12 +93,16 @@ npx zealakit@latest [tên-project] [options]
 
 ## Template
 
-| ID           | Loại       | Stack                           | Lệnh dev            |
-| ------------ | ---------- | ------------------------------- | ------------------- |
-| `vite-react` | Client     | Vite + React + TypeScript       | `npm run dev`       |
-| `next`       | Full-stack | Next.js App Router + TypeScript | `npm run dev`       |
-| `nest`       | Server     | NestJS + TypeScript             | `npm run start:dev` |
-| `hono`       | Server     | Hono + TypeScript               | `npm run dev`       |
+| ID                   | Loại       | Stack                              | Lệnh dev            |
+| -------------------- | ---------- | ---------------------------------- | ------------------- |
+| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
+| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
+| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
+| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
+| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
+| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
+| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
 
 Mọi project đều có TypeScript, path alias và tài liệu agent (`.agents/`, `AGENTS.md`).
 
@@ -111,29 +115,29 @@ Mỗi nhóm độc quyền (linter, state, UI kit, HTTP client, ORM, …) chỉ 
 Ngoại lệ:
 
 - **`storybook`** — có thể dùng kèm UI kit
-- **`client-shared-pieces`** — tự thêm trên Vite và Next
+- **`client-shared-pieces`** — tự thêm trên Vite, Astro, Next và Nuxt
 
-| Recipe         | Nhóm           | Template               | Nội dung                     |
-| -------------- | -------------- | ---------------------- | ---------------------------- |
-| `biome`        | Linter         | Tất cả                 | Script lint + format         |
-| `eslint`       | Linter         | Tất cả                 | ESLint flat config           |
-| `zustand`      | State          | Vite, Next             | Ví dụ store Zustand          |
-| `nanostores`   | State          | Vite, Next             | Ví dụ Nanostores             |
-| `hookform-zod` | Forms          | Vite, Next             | React Hook Form + Zod        |
-| `kyjs`         | HTTP           | Vite, Next             | Client Ky                    |
-| `axios`        | HTTP           | Vite, Next             | Client Axios                 |
-| `antd`         | UI             | Vite, Next             | Ant Design                   |
-| `mui`          | UI             | Vite, Next             | MUI                          |
-| `shadcn-ui`    | UI             | Vite, Next             | Tailwind + shadcn/ui         |
-| `storybook`    | Docs / testing | Vite, Next             | Config + script Storybook    |
-| `type-orm`     | ORM            | Nest, Hono, Next, Nuxt | TypeORM + skill agent        |
-| `mikro-orm`    | ORM            | Nest, Hono, Next, Nuxt | MikroORM + skill agent       |
-| `drizzle-orm`  | ORM            | Nest, Hono, Next, Nuxt | Drizzle + script drizzle-kit |
-| `prisma`       | ORM            | Nest, Hono, Next, Nuxt | Prisma schema + migrate      |
+| Recipe         | Nhóm           | Template                             | Nội dung                     |
+| -------------- | -------------- | ------------------------------------ | ---------------------------- |
+| `biome`        | Linter         | Tất cả                               | Script lint + format         |
+| `eslint`       | Linter         | Tất cả                               | ESLint flat config           |
+| `zustand`      | State          | Vite React, Astro, Next              | Ví dụ store Zustand          |
+| `nanostores`   | State          | Vite, Astro, Next, Nuxt              | Ví dụ Nanostores             |
+| `hookform-zod` | Forms          | Vite React, Astro, Next              | React Hook Form + Zod        |
+| `kyjs`         | HTTP           | Vite, Astro, Next, Nuxt              | Client Ky                    |
+| `axios`        | HTTP           | Vite, Astro, Next, Nuxt              | Client Axios                 |
+| `antd`         | UI             | Vite React, Astro, Next              | Ant Design                   |
+| `mui`          | UI             | Vite React, Astro, Next              | MUI                          |
+| `shadcn-ui`    | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui         |
+| `storybook`    | Docs / testing | Vite, Astro, Next, Nuxt              | Config + script Storybook    |
+| `type-orm`     | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM + skill agent        |
+| `mikro-orm`    | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM + skill agent       |
+| `drizzle-orm`  | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + script drizzle-kit |
+| `prisma`       | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate      |
 
 Recipe ORM không gắn cứng driver. Sau khi scaffold, cài driver DB (`pg`, `mysql2`, …) và làm theo skill trong `.agents/skills/<orm>/`.
 
-**Lưu ý hybrid:** ORM trên Next, Nuxt,.etc chỉ phù hợp project **nhỏ** — không mạnh bằng backend framework thuần. Nên dùng backend framework cho API production. CLI cảnh báo ở chế độ tương tác và `--dry-run`.
+**Lưu ý hybrid:** ORM trên Next, Nuxt, Astro hybrid, v.v. chỉ phù hợp project **nhỏ** — không mạnh bằng backend framework thuần. Nên dùng backend framework cho API production. CLI cảnh báo ở chế độ tương tác và `--dry-run`.
 
 ### Ví dụ
 
@@ -143,6 +147,12 @@ npx zealakit@latest web -t vite-react -w biome,zustand,hookform-zod,kyjs -y
 
 # Next.js: shadcn/ui + Storybook
 npx zealakit@latest next-web -t next -w biome,shadcn-ui,storybook -y
+
+# Astro + React islands: Biome + shadcn/ui
+npx zealakit@latest my-astro-app -t astro-react-client -w biome,shadcn-ui -y
+
+# Astro hybrid (SSR + ORM tùy chọn)
+npx zealakit@latest my-astro-hybrid -t astro-react-hybrid -w biome,drizzle-orm -y
 
 # Nest API: Drizzle
 npx zealakit@latest api-nest -t nest -w biome,drizzle-orm -y

@@ -1,0 +1,24 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import type { Locale } from "@/i18n/config";
+import { getTranslations } from "@/i18n/translations";
+import LocaleSwitcher from "@/components/locale-switcher/index.astro";
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+const t = getTranslations(locale);
+---
+
+<header>
+  <a href={getRelativeLocaleUrl(locale, "/")}>{t.SITE.BRAND}</a>
+  <nav aria-label="Primary">
+    <a href={getRelativeLocaleUrl(locale, "/")}>{t.SITE.NAV.HOME}</a>
+    <a href={getRelativeLocaleUrl(locale, "about")}>{t.SITE.NAV.ABOUT}</a>
+    <a href={getRelativeLocaleUrl(locale, "auth/login")}>{t.SITE.NAV.LOGIN}</a>
+    <a href={getRelativeLocaleUrl(locale, "console")}>{t.SITE.NAV.CONSOLE}</a>
+  </nav>
+  <LocaleSwitcher locale={locale} />
+</header>

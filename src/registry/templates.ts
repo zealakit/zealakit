@@ -19,6 +19,25 @@ export const templates: Record<string, TemplateConfig> = {
     description: "Minimal Vite + Vue + TypeScript starter",
     path: "vite-vue",
   },
+  "astro-react-client": {
+    id: "astro-react-client",
+    name: "Astro + React",
+    label: "Astro + React + TypeScript",
+    scope: "client",
+    framework: "react",
+    description: "Content-focused sites with Astro, static rendering, and React islands",
+    path: "astro-react-client",
+  },
+  "astro-react-hybrid": {
+    id: "astro-react-hybrid",
+    name: "Astro + React (Hybrid)",
+    label: "Astro + React hybrid (SSR, Actions, Sessions)",
+    scope: "hybrid",
+    framework: "react",
+    description:
+      "Astro + React with Node adapter, sessions, middleware, Actions, server islands, and optional ORM",
+    path: "astro-react-hybrid",
+  },
   next: {
     id: "next",
     name: "Next.js",

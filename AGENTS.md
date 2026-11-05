@@ -11,13 +11,13 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 
 ## Quick map
 
-| Area                | Path                                                                    |
-| ------------------- | ----------------------------------------------------------------------- |
-| CLI                 | `src/`                                                                  |
-| Templates           | `templates/` (`vite-react`, `vite-vue`, `next`, `nuxt`, `nest`, `hono`) |
-| Recipes             | `recipes/`                                                              |
-| Tests               | `tests/` (`pnpm test`), pack smoke `scripts/test-e2e-pack.ts`           |
-| Dep monitor         | `monitor/` (`pnpm monitor`)                                             |
-| Scopes / categories | `src/constants.ts`                                                      |
+| Area                | Path                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| CLI                 | `src/`                                                                                                              |
+| Templates           | `templates/` (`vite-react`, `vite-vue`, `astro-react-client`, `astro-react-hybrid`, `next`, `nuxt`, `nest`, `hono`) |
+| Recipes             | `recipes/`                                                                                                          |
+| Tests               | `tests/` (`pnpm test`), pack smoke `scripts/test-e2e-pack.ts`                                                       |
+| Dep monitor         | `monitor/` (`pnpm monitor`)                                                                                         |
+| Scopes / categories | `src/constants.ts`                                                                                                  |
 
 Path alias `@/*` applies inside **templates**, not the kit `src/` CLI.

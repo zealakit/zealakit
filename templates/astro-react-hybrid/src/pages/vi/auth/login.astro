@@ -1,0 +1,12 @@
+---
+import { getTranslations } from "@/i18n/translations";
+import EntryLayout from "@/layouts/entry-layout/index.astro";
+
+const locale = "vi" as const;
+const t = getTranslations(locale);
+---
+
+<EntryLayout locale={locale} title={t.PAGE.LOGIN.TITLE} description={t.PAGE.LOGIN.DESCRIPTION}>
+  <h1>{t.PAGE.LOGIN.TITLE}</h1>
+  <p>{t.PAGE.LOGIN.DESCRIPTION}</p>
+</EntryLayout>

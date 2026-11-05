@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 常见 starter 要么太空，要么塞满用不到的东西。Zealakit 让你自由组合：
 
-1. **模板（Template）** — Vite + React、Next.js、NestJS 或 Hono
+1. **模板（Template）** — Vite + React、Vite + Vue、Astro + React（client 或 hybrid）、Next.js、Nuxt、NestJS 或 Hono
 2. **配方（Recipe）** — 可选层（Biome、Zustand、shadcn/ui、Drizzle、Storybook 等）
 
 每个 Recipe 会带上对应的文件、包、脚本，以及（如有）Agent 指引。结果是一个普通的独立项目——可用 `npm`、`pnpm`、`yarn` 或 `bun`。
@@ -93,12 +93,16 @@ npx zealakit@latest [项目名] [选项]
 
 ## 模板
 
-| ID           | 类型   | 技术栈                          | 开发命令            |
-| ------------ | ------ | ------------------------------- | ------------------- |
-| `vite-react` | 客户端 | Vite + React + TypeScript       | `npm run dev`       |
-| `next`       | 全栈   | Next.js App Router + TypeScript | `npm run dev`       |
-| `nest`       | 服务端 | NestJS + TypeScript             | `npm run start:dev` |
-| `hono`       | 服务端 | Hono + TypeScript               | `npm run dev`       |
+| ID                   | 类型       | 技术栈                             | 开发命令            |
+| -------------------- | ---------- | ---------------------------------- | ------------------- |
+| `vite-react`         | 客户端     | Vite + React + TypeScript          | `npm run dev`       |
+| `vite-vue`           | 客户端     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `astro-react-client` | 客户端/SSG | Astro + React islands + TypeScript | `npm run dev`       |
+| `astro-react-hybrid` | 混合       | Astro + React SSR / Actions / ORM  | `npm run dev`       |
+| `next`               | 混合       | Next.js App Router + TypeScript    | `npm run dev`       |
+| `nuxt`               | 混合       | Nuxt + TypeScript                  | `npm run dev`       |
+| `nest`               | 服务端     | NestJS + TypeScript                | `npm run start:dev` |
+| `hono`               | 服务端     | Hono + TypeScript                  | `npm run dev`       |
 
 每个项目都包含 TypeScript、路径别名和 Agent 文档（`.agents/`、`AGENTS.md`）。
 
@@ -111,29 +115,29 @@ npx zealakit@latest [项目名] [选项]
 例外：
 
 - **`storybook`** — 可与 UI 套件同时使用
-- **`client-shared-pieces`** — 在 Vite / Next 上自动添加
+- **`client-shared-pieces`** — 在 Vite / Astro / Next / Nuxt 上自动添加
 
-| Recipe         | 分类        | 适用模板               | 内容                       |
-| -------------- | ----------- | ---------------------- | -------------------------- |
-| `biome`        | Linter      | 全部                   | Lint + Format 脚本         |
-| `eslint`       | Linter      | 全部                   | ESLint flat config         |
-| `zustand`      | State       | Vite、Next             | Zustand 示例               |
-| `nanostores`   | State       | Vite、Next             | Nanostores 示例            |
-| `hookform-zod` | Forms       | Vite、Next             | React Hook Form + Zod      |
-| `kyjs`         | HTTP        | Vite、Next             | Ky 客户端                  |
-| `axios`        | HTTP        | Vite、Next             | Axios 客户端               |
-| `antd`         | UI          | Vite、Next             | Ant Design                 |
-| `mui`          | UI          | Vite、Next             | MUI                        |
-| `shadcn-ui`    | UI          | Vite、Next             | Tailwind + shadcn/ui       |
-| `storybook`    | 文档 / 测试 | Vite、Next             | Storybook 配置与脚本       |
-| `type-orm`     | ORM         | Nest、Hono、Next、Nuxt | TypeORM + Agent skill      |
-| `mikro-orm`    | ORM         | Nest、Hono、Next、Nuxt | MikroORM + Agent skill     |
-| `drizzle-orm`  | ORM         | Nest、Hono、Next、Nuxt | Drizzle + drizzle-kit 脚本 |
-| `prisma`       | ORM         | Nest、Hono、Next、Nuxt | Prisma schema + migrate    |
+| Recipe         | 分类        | 适用模板                             | 内容                       |
+| -------------- | ----------- | ------------------------------------ | -------------------------- |
+| `biome`        | Linter      | 全部                                 | Lint + Format 脚本         |
+| `eslint`       | Linter      | 全部                                 | ESLint flat config         |
+| `zustand`      | State       | Vite React、Astro、Next              | Zustand 示例               |
+| `nanostores`   | State       | Vite、Astro、Next、Nuxt              | Nanostores 示例            |
+| `hookform-zod` | Forms       | Vite React、Astro、Next              | React Hook Form + Zod      |
+| `kyjs`         | HTTP        | Vite、Astro、Next、Nuxt              | Ky 客户端                  |
+| `axios`        | HTTP        | Vite、Astro、Next、Nuxt              | Axios 客户端               |
+| `antd`         | UI          | Vite React、Astro、Next              | Ant Design                 |
+| `mui`          | UI          | Vite React、Astro、Next              | MUI                        |
+| `shadcn-ui`    | UI          | Vite React、Astro、Next              | Tailwind + shadcn/ui       |
+| `storybook`    | 文档 / 测试 | Vite、Astro、Next、Nuxt              | Storybook 配置与脚本       |
+| `type-orm`     | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | TypeORM + Agent skill      |
+| `mikro-orm`    | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | MikroORM + Agent skill     |
+| `drizzle-orm`  | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Drizzle + drizzle-kit 脚本 |
+| `prisma`       | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Prisma schema + migrate    |
 
 ORM Recipe 不绑定具体数据库驱动。脚手架完成后自行安装驱动（`pg`、`mysql2` 等），并参考 `.agents/skills/<orm>/` 中的说明。
 
-**Hybrid 注意：** Next, Nuxt,.etc 上的 ORM 仅适合**小型**项目，不如纯后端框架完善。生产 API 请优先使用后端框架。交互模式与 `--dry-run` 会给出警告。
+**Hybrid 注意：** Next、Nuxt、Astro hybrid 等上的 ORM 仅适合**小型**项目，不如纯后端框架完善。生产 API 请优先使用后端框架。交互模式与 `--dry-run` 会给出警告。
 
 ### 示例
 
@@ -143,6 +147,12 @@ npx zealakit@latest web -t vite-react -w biome,zustand,hookform-zod,kyjs -y
 
 # Next.js：shadcn/ui + Storybook
 npx zealakit@latest next-web -t next -w biome,shadcn-ui,storybook -y
+
+# Astro + React islands：Biome + shadcn/ui
+npx zealakit@latest my-astro-app -t astro-react-client -w biome,shadcn-ui -y
+
+# Astro hybrid（SSR + 可选 ORM）
+npx zealakit@latest my-astro-hybrid -t astro-react-hybrid -w biome,drizzle-orm -y
 
 # Nest API：Drizzle
 npx zealakit@latest api-nest -t nest -w biome,drizzle-orm -y

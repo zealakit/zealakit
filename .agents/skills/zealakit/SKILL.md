@@ -66,7 +66,7 @@ Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 - Registered in `src/registry/templates.ts` (`id`, `name`, `label`, `scope`, `path`, optional `framework`, `overlay`, `srcDir`, `devCommand`).
 - Folder: `templates/<path>/` (usually `path === id`).
 - `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/*/overlays/<overlay>/`.
-- Current templates: `vite-react` / `vite-vue` (`client`), `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
+- Current templates: `vite-react` / `vite-vue` / `astro-react-client` (`client`), `astro-react-hybrid` / `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
 - Template-owned agent docs live under that template (`.agents/`, `AGENTS.md`) and ship into generated apps — **do not confuse with this kit’s root skills**.
 - Everywhere agent skills/rules live in **`.agents/`**. **`.cursor`** is always a **symlink → `.agents`** (Cursor IDE compatibility).
 

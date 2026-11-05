@@ -1,0 +1,11 @@
+---
+import SiteLayout from "@/layouts/site-layout/index.astro";
+
+Astro.response.status = 404;
+---
+
+<SiteLayout title="Page not found" description="The page you requested could not be found.">
+  <h1>404</h1>
+  <p>Page not found.</p>
+  <p><a href="/">Back home</a></p>
+</SiteLayout>

@@ -23,6 +23,14 @@ export default defineRecipe({
       "eslint-plugin-react-hooks": "^7.1.1",
       "eslint-plugin-react-refresh": "^0.5.7",
     },
+    "astro-react-client": {
+      "eslint-plugin-react-hooks": "^7.1.1",
+      "eslint-plugin-astro": "^3.2.1",
+    },
+    "astro-react-hybrid": {
+      "eslint-plugin-react-hooks": "^7.1.1",
+      "eslint-plugin-astro": "^3.2.1",
+    },
     "vite-vue": {
       "eslint-plugin-vue": "^10.12.0",
     },

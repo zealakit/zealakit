@@ -1,0 +1,31 @@
+---
+import { actions } from "astro:actions";
+import { Counter } from "@/components/counter/index";
+import UserProfileIsland from "@/components/user-profile-island/index.astro";
+import { getTranslations } from "@/i18n/translations";
+import SiteLayout from "@/layouts/site-layout/index.astro";
+
+const locale = "en" as const;
+const t = getTranslations(locale);
+---
+
+<SiteLayout locale={locale} title={t.PAGE.HOME.TITLE} description={t.PAGE.HOME.DESCRIPTION}>
+  <h1>{t.PAGE.HOME.TITLE}</h1>
+  <p>{t.PAGE.HOME.DESCRIPTION}</p>
+  <p><small>{t.PAGE.HOME.COUNTER_HINT}</small></p>
+  <!-- Prefer client:visible or client:idle when interaction is below the fold. -->
+  <Counter client:load />
+
+  <!-- Server Island: static shell first, personalized block fetched deferred. -->
+  <UserProfileIsland server:defer>
+    <p slot="fallback">Loading profile…</p>
+  </UserProfileIsland>
+
+  <form method="POST" action={actions.setDisplayName}>
+    <label>
+      Display name
+      <input type="text" name="name" maxlength="64" required />
+    </label>
+    <button type="submit">Save</button>
+  </form>
+</SiteLayout>

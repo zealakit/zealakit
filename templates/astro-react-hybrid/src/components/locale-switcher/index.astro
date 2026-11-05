@@ -1,0 +1,30 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { locales, type Locale } from "@/i18n/config";
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+const pathWithoutLocale =
+  Astro.url.pathname.replace(new RegExp(`^/${locale}/?`), "").replace(/\/$/, "") || "/";
+---
+
+<nav aria-label="Language">
+  <ul>
+    {
+      locales.map((code) => (
+        <li>
+          {code === locale ? (
+            <span aria-current="page">{code.toUpperCase()}</span>
+          ) : (
+            <a href={getRelativeLocaleUrl(code, pathWithoutLocale)} hreflang={code} lang={code}>
+              {code.toUpperCase()}
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</nav>

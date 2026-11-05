@@ -1,0 +1,12 @@
+---
+import { getTranslations } from "@/i18n/translations";
+import ConsoleLayout from "@/layouts/console-layout/index.astro";
+
+const locale = "vi" as const;
+const t = getTranslations(locale);
+---
+
+<ConsoleLayout locale={locale} title={t.PAGE.CONSOLE.TITLE} description={t.PAGE.CONSOLE.DESCRIPTION}>
+  <h1>{t.PAGE.CONSOLE.TITLE}</h1>
+  <p>{t.PAGE.CONSOLE.DESCRIPTION}</p>
+</ConsoleLayout>

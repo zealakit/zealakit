@@ -44,7 +44,7 @@ const ORM_STEP_HYBRID: SelectStep = {
   message: "Select ORM (optional, small apps only):",
   noneLabel: "No ORM",
   notice:
-    "Warning: hybrid templates (Next, Nuxt, etc.) are not a pure backend. ORM support is limited — use only for small projects; prefer a dedicated backend framework for production APIs.",
+    "\nWarning: hybrid templates (Next, Nuxt, Astro hybrid, etc.) are not a pure backend. ORM support is limited — use only for small projects; prefer a dedicated backend framework for production APIs.",
 };
 
 const CLIENT_CORE_STEPS: PromptStep[] = [

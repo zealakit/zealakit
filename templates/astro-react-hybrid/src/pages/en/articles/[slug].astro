@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+
+import ArticlePage from "@/components/article-page/index.astro";
+import { loadArticle } from "@/lib/articles/load-article";
+
+const locale = "en" as const;
+const article = await loadArticle(Astro.params.slug, locale);
+if (!article) {
+  Astro.response.status = 404;
+  return Astro.rewrite("/404");
+}
+---
+
+<ArticlePage locale={locale} article={article} />

@@ -3,7 +3,7 @@ name: storybook
 description: >-
   Storybook setup for documenting and testing UI components in isolation.
   Use when adding stories, configuring .storybook/, or running the Storybook
-  workspace (Vite React, Vite Vue, or Next.js).
+  workspace (Vite React, Astro React islands, Vite Vue, or Next.js).
 ---
 
 # Storybook

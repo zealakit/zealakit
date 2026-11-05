@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 Most starters are either empty or overloaded. Zealakit lets you compose:
 
-1. **Template** — Vite + React, Vite + Vue, Next.js, NestJS, or Hono
+1. **Template** — Vite + React, Vite + Vue, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, or Hono
 2. **Recipes** — optional layers (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Each recipe brings files, packages, scripts, and agent guidance when relevant. The result is a normal standalone project — use `npm`, `pnpm`, `yarn`, or `bun`.
@@ -93,14 +93,16 @@ npx zealakit@latest [project-name] [options]
 
 ## Templates
 
-| ID           | Kind       | Stack                           | Dev command         |
-| ------------ | ---------- | ------------------------------- | ------------------- |
-| `vite-react` | Client     | Vite + React + TypeScript       | `npm run dev`       |
-| `vite-vue`   | Client     | Vite + Vue + TypeScript         | `npm run dev`       |
-| `next`       | Full-stack | Next.js App Router + TypeScript | `npm run dev`       |
-| `nuxt`       | Full-stack | Nuxt + TypeScript               | `npm run dev`       |
-| `nest`       | Server     | NestJS + TypeScript             | `npm run start:dev` |
-| `hono`       | Server     | Hono + TypeScript               | `npm run dev`       |
+| ID                   | Kind       | Stack                              | Dev command         |
+| -------------------- | ---------- | ---------------------------------- | ------------------- |
+| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
+| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
+| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
+| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
+| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
+| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
+| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
 
 Every project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`).
 
@@ -113,33 +115,33 @@ Choose **at most one** recipe per exclusive category (linter, state, UI kit, HTT
 Exceptions:
 
 - **`storybook`** — can be combined with a UI kit
-- **`client-shared-pieces`** — added automatically on Vite, Next, and Nuxt
+- **`client-shared-pieces`** — added automatically on Vite, Astro, Next, and Nuxt
 
-| Recipe             | Category       | Templates              | Adds                            |
-| ------------------ | -------------- | ---------------------- | ------------------------------- |
-| `biome`            | Linter         | All                    | Lint + format scripts           |
-| `eslint`           | Linter         | All                    | ESLint flat config              |
-| `zustand`          | State          | Vite React, Next       | Zustand store example           |
-| `pinia`            | State          | Vite Vue, Nuxt         | Pinia store example             |
-| `nanostores`       | State          | Vite, Next, Nuxt       | Nanostores example              |
-| `hookform-zod`     | Forms          | Vite React, Next       | React Hook Form + Zod           |
-| `vee-validate-zod` | Forms          | Vite Vue, Nuxt         | VeeValidate + Zod               |
-| `kyjs`             | HTTP           | Vite, Next, Nuxt       | Ky client                       |
-| `axios`            | HTTP           | Vite, Next, Nuxt       | Axios client                    |
-| `antd`             | UI             | Vite React, Next       | Ant Design setup                |
-| `mui`              | UI             | Vite React, Next       | MUI setup                       |
-| `shadcn-ui`        | UI             | Vite React, Next       | Tailwind + shadcn/ui            |
-| `shadcn-vue`       | UI             | Vite Vue, Nuxt         | Tailwind + shadcn-vue           |
-| `nuxt-ui`          | UI             | Vite Vue, Nuxt         | Tailwind + Nuxt UI              |
-| `storybook`        | Docs / testing | Vite, Next, Nuxt       | Storybook config + scripts      |
-| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt | TypeORM wiring + agent skill    |
-| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt | MikroORM wiring + agent skill   |
-| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt | Drizzle + drizzle-kit scripts   |
-| `prisma`           | ORM            | Nest, Hono, Next, Nuxt | Prisma schema + migrate scripts |
+| Recipe             | Category       | Templates                            | Adds                            |
+| ------------------ | -------------- | ------------------------------------ | ------------------------------- |
+| `biome`            | Linter         | All                                  | Lint + format scripts           |
+| `eslint`           | Linter         | All                                  | ESLint flat config              |
+| `zustand`          | State          | Vite React, Astro, Next              | Zustand store example           |
+| `pinia`            | State          | Vite Vue, Nuxt                       | Pinia store example             |
+| `nanostores`       | State          | Vite, Astro, Next, Nuxt              | Nanostores example              |
+| `hookform-zod`     | Forms          | Vite React, Astro, Next              | React Hook Form + Zod           |
+| `vee-validate-zod` | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod               |
+| `kyjs`             | HTTP           | Vite, Astro, Next, Nuxt              | Ky client                       |
+| `axios`            | HTTP           | Vite, Astro, Next, Nuxt              | Axios client                    |
+| `antd`             | UI             | Vite React, Astro, Next              | Ant Design setup                |
+| `mui`              | UI             | Vite React, Astro, Next              | MUI setup                       |
+| `shadcn-ui`        | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui            |
+| `shadcn-vue`       | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue           |
+| `nuxt-ui`          | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI              |
+| `storybook`        | Docs / testing | Vite, Astro, Next, Nuxt              | Storybook config + scripts      |
+| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM wiring + agent skill    |
+| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM wiring + agent skill   |
+| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + drizzle-kit scripts   |
+| `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate scripts |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 
-**Hybrid caveat:** ORM on Next, Nuxt,.etc is best-effort for **small** apps — not as strong as a dedicated backend framework. Prefer a backend framework for production APIs. The CLI warns in interactive mode and `--dry-run`.
+**Hybrid caveat:** ORM on Next, Nuxt, Astro hybrid, etc. is best-effort for **small** apps — not as strong as a dedicated backend framework. Prefer a backend framework for production APIs. The CLI warns in interactive mode and `--dry-run`.
 
 ### Examples
 
@@ -155,6 +157,12 @@ npx zealakit@latest web-nuxt -t nuxt -w biome,pinia,vee-validate-zod,kyjs,nuxt-u
 
 # Next.js: shadcn/ui + Storybook
 npx zealakit@latest next-web -t next -w biome,shadcn-ui,storybook -y
+
+# Astro + React islands: Biome + shadcn/ui
+npx zealakit@latest my-astro-app -t astro-react-client -w biome,shadcn-ui -y
+
+# Astro hybrid (SSR + optional ORM): Biome + Drizzle
+npx zealakit@latest my-astro-hybrid -t astro-react-hybrid -w biome,drizzle-orm -y
 
 # Nest API: Drizzle
 npx zealakit@latest api-nest -t nest -w biome,drizzle-orm -y

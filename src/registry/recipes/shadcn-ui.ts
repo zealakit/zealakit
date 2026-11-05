@@ -21,6 +21,12 @@ export default defineRecipe({
     "vite-react": {
       "@tailwindcss/vite": "^4.3.3",
     },
+    "astro-react-client": {
+      "@tailwindcss/vite": "^4.3.3",
+    },
+    "astro-react-hybrid": {
+      "@tailwindcss/vite": "^4.3.3",
+    },
     next: {
       "@tailwindcss/postcss": "^4.3.3",
     },
@@ -29,5 +35,7 @@ export default defineRecipe({
   scripts: {},
   fileTransforms: {
     "vite-react": [appendExport("src/lib/utils/index.ts", "./other")],
+    "astro-react-client": [appendExport("src/lib/utils/index.ts", "./other")],
+    "astro-react-hybrid": [appendExport("src/lib/utils/index.ts", "./other")],
   },
 });

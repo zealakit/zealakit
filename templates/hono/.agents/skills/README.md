@@ -8,8 +8,8 @@ Agent skills for this Hono + DDD repository. Each skill lives under `.agents/ski
 | --- | --- |
 | [structure-ddd](structure-ddd/SKILL.md) | `src/` hexagonal layout, layer dependency rules |
 | [hono](hono/SKILL.md) | Routes, middleware, Node server, testing |
-| [typescript](typescript/SKILL.md) | Types, tsconfig, narrowing, erasable syntax |
-| [javascript](javascript/SKILL.md) | JS idioms, modules, async, naming |
+| [typescript](typescript/SKILL.md) | Slim project typing rules (`strict`, nodenext, no encyclopedia) |
+| [javascript](javascript/SKILL.md) | Slim ESM/async/naming defaults (no language dump) |
 
 ## Conventions (all skills)
 

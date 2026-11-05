@@ -1,0 +1,15 @@
+---
+/**
+ * Server Island — rendered on demand via `server:defer`.
+ * Reads session + locals that only exist on the server.
+ */
+const displayName = (await Astro.session?.get("displayName")) ?? "Guest";
+const visitCount = (await Astro.session?.get("visitCount")) ?? 0;
+const requestId = Astro.locals.requestId;
+---
+
+<aside data-server-island="user-profile">
+  <p><strong>{displayName}</strong></p>
+  <p>Visits this session: {visitCount}</p>
+  <p><small>request: {requestId}</small></p>
+</aside>

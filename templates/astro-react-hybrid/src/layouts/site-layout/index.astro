@@ -1,0 +1,55 @@
+---
+import SiteHeader from "@/components/site-header/index.astro";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+import BaseLayout from "@/layouts/base-layout/index.astro";
+
+type Props = {
+  title?: string;
+  description?: string;
+  locale?: Locale;
+  canonicalURL?: URL | string;
+  imageURL?: URL | string;
+  ogType?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+};
+
+const {
+  title,
+  description,
+  locale: localeProp,
+  canonicalURL,
+  imageURL,
+  ogType,
+  publishedTime,
+  modifiedTime,
+  author,
+  jsonLd,
+} = Astro.props;
+
+const locale: Locale =
+  localeProp ??
+  (Astro.currentLocale && isLocale(Astro.currentLocale) ? Astro.currentLocale : defaultLocale);
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  locale={locale}
+  canonicalURL={canonicalURL}
+  imageURL={imageURL}
+  ogType={ogType}
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  author={author}
+  jsonLd={jsonLd}
+>
+  <div data-layout="site">
+    <SiteHeader locale={locale} />
+    <main>
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

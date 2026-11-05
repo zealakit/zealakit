@@ -33,5 +33,6 @@ export default defineRecipe({
     nest: wiring.nest,
     hono: [...wiring.hono, ENABLE_TS_DECORATORS],
     next: [ENABLE_TS_DECORATORS],
+    "astro-react-hybrid": [ENABLE_TS_DECORATORS],
   },
 });

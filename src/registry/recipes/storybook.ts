@@ -12,6 +12,14 @@ export default defineRecipe({
       storybook: "^10.6.5",
       "@storybook/react-vite": "^10.6.5",
     },
+    "astro-react-client": {
+      storybook: "^10.6.5",
+      "@storybook/react-vite": "^10.6.5",
+    },
+    "astro-react-hybrid": {
+      storybook: "^10.6.5",
+      "@storybook/react-vite": "^10.6.5",
+    },
     next: {
       storybook: "^10.6.5",
       "@storybook/nextjs": "^10.6.5",

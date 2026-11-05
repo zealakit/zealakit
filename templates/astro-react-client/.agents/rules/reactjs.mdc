@@ -1,0 +1,11 @@
+---
+description: React island patterns for Astro pages
+alwaysApply: false
+globs: "**/*.{tsx,jsx}"
+---
+
+# React
+
+Follow `.agents/skills/reactjs/SKILL.md` when editing React islands.
+
+Keep interactivity local to the island. Do not introduce a client-side app shell.

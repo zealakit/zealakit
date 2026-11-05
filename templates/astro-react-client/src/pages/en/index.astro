@@ -1,0 +1,16 @@
+---
+import { Counter } from "@/components/counter/index";
+import { getTranslations } from "@/i18n/translations";
+import SiteLayout from "@/layouts/site-layout/index.astro";
+
+const locale = "en" as const;
+const t = getTranslations(locale);
+---
+
+<SiteLayout locale={locale} title={t.PAGE.HOME.TITLE} description={t.PAGE.HOME.DESCRIPTION}>
+  <h1>{t.PAGE.HOME.TITLE}</h1>
+  <p>{t.PAGE.HOME.DESCRIPTION}</p>
+  <p><small>{t.PAGE.HOME.COUNTER_HINT}</small></p>
+  <!-- Prefer client:visible or client:idle when interaction is below the fold. -->
+  <Counter client:load />
+</SiteLayout>

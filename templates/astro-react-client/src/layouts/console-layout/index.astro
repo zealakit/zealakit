@@ -1,0 +1,32 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+import { getTranslations } from "@/i18n/translations";
+import BaseLayout from "@/layouts/base-layout/index.astro";
+
+type Props = {
+  title?: string;
+  description?: string;
+  locale?: Locale;
+};
+
+const { title, description, locale: localeProp } = Astro.props;
+
+const locale: Locale =
+  localeProp ??
+  (Astro.currentLocale && isLocale(Astro.currentLocale) ? Astro.currentLocale : defaultLocale);
+const t = getTranslations(locale);
+---
+
+{/* Authenticated console chrome — sidebar / header / footer stubs */}
+<BaseLayout title={title} description={description} locale={locale}>
+  <div data-layout="console">
+    <aside>
+      <a href={getRelativeLocaleUrl(locale, "console")}>{t.SITE.NAV.CONSOLE}</a>
+      <a href={getRelativeLocaleUrl(locale, "/")}>{t.SITE.NAV.BACK_TO_SITE}</a>
+    </aside>
+    <main>
+      <slot />
+    </main>
+  </div>
+</BaseLayout>
