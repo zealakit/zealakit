@@ -1,6 +1,8 @@
 packages:
   - .
-  - templates/*
+  - apps/*
+  - packages/*
+  - templates/typescript/*
 
 allowBuilds:
   "@biomejs/biome": true

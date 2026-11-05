@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PACKED_DOTFILES } from "../src/scaffold/copy.js";
+import { PACKED_DOTFILES } from "@zealakit/core";
 
 /**
  * Release smoke test for the published artifact: build → pack → tarball contents
@@ -98,6 +98,8 @@ function shouldBePacked(file: string): boolean {
   return (
     file !== "recipes/tsconfig.json" &&
     file !== "recipes/shims.d.ts" &&
+    !file.startsWith("templates/go/") &&
+    !file.startsWith("recipes/go/") &&
     !segments.includes(".cursor") &&
     !segments.some((segment) => NEVER_PACKED_SEGMENTS.has(segment)) &&
     !NEVER_PACKED_FILES.has(base) &&
@@ -237,8 +239,8 @@ const SMOKE_CASES: SmokeCase[] = [
     ],
   },
   {
-    name: "server-only recipe on next is rejected before writing files",
-    args: ["smoke-next-orm", "-t", "next", "-w", "type-orm", "-y"],
+    name: "vue-only recipe on next is rejected before writing files",
+    args: ["smoke-next-pinia", "-t", "next", "-w", "pinia", "-y"],
     check: (result, appDir) => [...expectExit(result, false), ...expectNoApp(appDir)],
   },
 ];

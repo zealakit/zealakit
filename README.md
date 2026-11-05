@@ -224,6 +224,21 @@ Prints a single JSON document on stdout (nothing else): CLI name/version, templa
 
 ---
 
+## Repository layout
+
+This repo is a pnpm monorepo. The published npm package remains **`zealakit`** (root); workspace packages are private and bundled into `dist/`.
+
+```text
+apps/cli/                         # CLI entry (prompts, flags, UX)
+packages/core/                    # Ecosystem-independent scaffold engine
+packages/ecosystem-typescript/    # TS/JS registry + npm package.json adapter
+templates/typescript/<id>/        # Base templates (ids unchanged)
+recipes/typescript/<id>/          # Recipes (ids unchanged)
+templates/go/ · recipes/go/       # Reserved for a future Go ecosystem
+```
+
+---
+
 ## License
 
 [MIT](LICENSE)

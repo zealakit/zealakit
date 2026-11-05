@@ -1,7 +1,8 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatRecipeResolveError, resolveRecipeDependencies } from "../../src/resolve-recipes.js";
-import type { RecipeConfig } from "../../src/types.js";
+import type { RecipeConfig } from "@zealakit/core";
+import { formatRecipeResolveError, resolveRecipeDependencies } from "@zealakit/core";
 
 function recipe(partial: Partial<RecipeConfig> & Pick<RecipeConfig, "id">): RecipeConfig {
   return {

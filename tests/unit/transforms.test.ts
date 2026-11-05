@@ -1,7 +1,7 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { insertAgentEntry } from "../../src/scaffold/agent-docs.js";
-import { transformSource } from "../../src/scaffold/transforms.js";
+import { insertAgentEntry, transformSource } from "@zealakit/core";
 
 describe("transformSource", () => {
   it("appends a missing line once", () => {

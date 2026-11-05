@@ -4,10 +4,10 @@ Use this when adding or changing templates/recipes in the **kit repo**.
 
 ## Add a template (e.g. a new framework such as SvelteKit)
 
-1. Create `templates/<id>/` (runnable starter + its own `.agents/` / `AGENTS.md` for **generated** apps). Add `.cursor` as a symlink to `.agents`.
-2. If the framework is new, add it to `FRAMEWORKS` in `src/constants.ts`.
-3. Register in `src/registry/templates.ts`:
-   - `id`, `path`, `scope` (from `SCOPES`), `name`, `label` (prompt text), `description`
+1. Create `templates/typescript/<id>/` (runnable starter + its own `.agents/` / `AGENTS.md` for **generated** apps). Add `.cursor` as a symlink to `.agents`.
+2. If the framework is new, add it to `FRAMEWORKS` in `packages/core/src/constants.ts`.
+3. Register in `packages/ecosystem-typescript/src/registry/templates.ts`:
+   - `id`, `path: "typescript/<id>"`, `scope` (from `SCOPES`), `name`, `label` (prompt text), `description`
    - `framework` for UI templates (omit for server templates)
    - optional `overlay` if overlay folder name ≠ `id`
    - optional `srcDir` when the app root is not `src/` (Nuxt: `app`)
@@ -17,8 +17,9 @@ Use this when adding or changing templates/recipes in the **kit repo**.
 
 ## Add a recipe
 
-1. Create `recipes/<id>/` with `shared/` and/or `overlays/<overlay>/` as needed.
-2. Create `src/registry/recipes/<id>.ts` exporting `defineRecipe({ … })` (file name **must** equal the id — the monitor edits that file) and add it to `RECIPE_LIST` in `src/registry/recipes/index.ts` (list order = prompt order).
+1. Create `recipes/typescript/<id>/` with `shared/` and/or `overlays/<overlay>/` as needed.
+2. Create `packages/ecosystem-typescript/src/registry/recipes/<id>.ts` exporting `defineRecipe({ … })` (file name **must** equal the id — the monitor edits that file) and add it to `RECIPE_LIST` in `packages/ecosystem-typescript/src/registry/recipes/index.ts` (list order = prompt order).
+   - `defineRecipe` sets `path` to `typescript/<id>` by default
    - `category` from `RECIPE_CATEGORIES` (single value or array for multi-tag recipes)
    - `frameworks` when the recipe only works with some UI frameworks (`["react"]`, `["vue"]`); omit for agnostic recipes (linters, fetchers, ORMs, Storybook)
    - `supportedScopes`, `exclusive` / `default` as appropriate; optional `hint` for prompts
@@ -28,14 +29,14 @@ Use this when adding or changing templates/recipes in the **kit repo**.
    - optional `finalize(targetDir)` for post-copy fixes that are not text transforms
 3. Optional `scaffold/agent-entry.md` — markdown list lines linked into generated `AGENTS.md` / `CLAUDE.md`.
 4. Optional `.agents/skills|rules` — copied into the generated project (consumer guidance), not kit maintainer docs. Keep recipe `.cursor` → `.agents` symlink (no duplicate content under `.cursor`).
-5. Prompts pick the recipe up automatically for its category (no prompt code changes). A new **category** needs a step in `STEPS_BY_SCOPE` in `src/prompt-steps.ts`.
+5. Prompts pick the recipe up automatically for its category (no prompt code changes). A new **category** needs a step in `STEPS_BY_SCOPE` in `apps/cli/src/prompt-steps.ts`.
 6. Add expectations to the relevant `tests/scaffold/<template>.test.ts` files; the matrix already checks deps, scripts, agent entries, and leaks.
-7. If introducing a new category, scope, or framework value, update `src/constants.ts` first.
+7. If introducing a new category, scope, or framework value, update `packages/core/src/constants.ts` first.
 
 ## Overlay rules
 
 - Overlay id = `template.overlay ?? template.id` (`getTemplateOverlayId`).
-- If `recipes/<id>/overlays/` exists, the matching overlay directory is **required**; `compat.ts` rejects the combination up front otherwise.
+- If `recipes/typescript/<id>/overlays/` exists, the matching overlay directory is **required**; `compat.ts` rejects the combination up front otherwise.
 - Framework-specific providers (e.g. Next `AppRouterCacheProvider`) belong in `overlays/next`, not `shared/`.
 - Nest-only config (e.g. Biome decorator parser flags, ORM Nest modules) belongs in `overlays/nest`.
 - Exclusive `orm` recipes (`type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`) support `server` and `hybrid`. Prefer a dedicated backend framework for production APIs; hybrid (Next/Nuxt/Astro hybrid) is best-effort for small apps (prompt + dry-run warn). Add `overlays/<overlayId>/` for every supported template (`nest`, `hono`, `next`, `nuxt`, `astro-react-hybrid`, …).
@@ -59,7 +60,7 @@ fileTransforms: {
 
 ```bash
 pnpm check          # biome
-pnpm typecheck      # src, tests, scripts, monitor
+pnpm typecheck      # packages, apps, tests, scripts, monitor
 pnpm test           # unit + in-process scaffold tests (seconds)
 pnpm test next mui  # only tests whose names match "next" or "mui"
 pnpm test --unit    # unit tests only (--scaffold for scaffold tests)
@@ -69,5 +70,5 @@ pnpm monitor        # dependency dashboard (kit-internal)
 
 ## Monitor notes
 
-- Scans root + `templates/*/package.json` + recipe pins from `src/registry/recipes/<id>.ts`.
-- Sort orders for scope/category come from `src/constants.ts` (injected into UI / API).
+- Scans root + `templates/typescript/*/package.json` + recipe pins from `packages/ecosystem-typescript/src/registry/recipes/<id>.ts`.
+- Sort orders for scope/category come from `packages/core/src/constants.ts` (injected into UI / API).

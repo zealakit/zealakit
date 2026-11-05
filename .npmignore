@@ -1,8 +1,9 @@
 # The published surface is whitelisted in package.json "files".
 # This file strips source, tooling, and local artifacts from included folders.
 
-# Source & tooling
-src/
+# Source & tooling (published surface is dist + templates + recipes only)
+apps/
+packages/
 scripts/
 monitor/
 .github/

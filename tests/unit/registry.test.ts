@@ -1,17 +1,25 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { FRAMEWORKS, RECIPE_CATEGORIES, SCOPES } from "../../src/constants.js";
 import {
+  FRAMEWORKS,
   getRecipeCategories,
+  getRecipeDir,
+  getTemplateDir,
   getTemplateOverlayId,
+  PACKAGE_ROOT,
+  RECIPE_CATEGORIES,
   recipes,
+  SCOPES,
   templates,
-} from "../../src/registry/index.js";
-import { getRecipeDir, getTemplateDir, PACKAGE_ROOT } from "../../src/scaffold/paths.js";
+} from "@zealakit/core";
 
-const RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "src/registry/recipes");
+const RECIPE_MODULES_DIR = path.join(
+  PACKAGE_ROOT,
+  "packages/ecosystem-typescript/src/registry/recipes",
+);
 const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts"]);
 
 const familyKeys = new Set([

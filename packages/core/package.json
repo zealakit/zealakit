@@ -1,0 +1,19 @@
+{
+  "name": "@zealakit/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "fs-extra": "^11.4.1",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

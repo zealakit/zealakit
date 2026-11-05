@@ -1,15 +1,19 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { getRecipeIncompatibility } from "../../src/compat.js";
-import { RECIPE_CATEGORIES } from "../../src/constants.js";
-import { buildKitInfo, INFO_SCHEMA_VERSION, type KitInfo } from "../../src/info.js";
-import { readKitManifest } from "../../src/manifest.js";
-import { recipes, templates } from "../../src/registry/index.js";
-import { PACKAGE_ROOT } from "../../src/scaffold/paths.js";
+import {
+  getRecipeIncompatibility,
+  PACKAGE_ROOT,
+  RECIPE_CATEGORIES,
+  recipes,
+  templates,
+} from "@zealakit/core";
+import { buildKitInfo, INFO_SCHEMA_VERSION, type KitInfo } from "../../apps/cli/src/info.js";
+import { readKitManifest } from "../../apps/cli/src/manifest.js";
 
-const CLI_ENTRY = path.join(PACKAGE_ROOT, "src/index.ts");
+const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");
 
 /** Colors are forced on to prove the JSON path never emits them. */
 function runCli(args: string[]) {

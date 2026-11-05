@@ -1,13 +1,17 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getRecipeIncompatibility, suggestAlternatives } from "../../src/compat.js";
-import { getRecipe, getTemplate, withDefaultRecipes } from "../../src/registry/index.js";
 import {
-  isValidNpmPackageName,
+  getRecipe,
+  getRecipeIncompatibility,
+  getTemplate,
+  suggestAlternatives,
   validateRecipeConflicts,
   validateRecipeIds,
   validateScaffoldConfig,
-} from "../../src/validation/index.js";
+  withDefaultRecipes,
+} from "@zealakit/core";
+import { isValidNpmPackageName } from "@zealakit/ecosystem-typescript";
 
 function incompatibility(recipeId: string, templateId: string): string | undefined {
   const recipe = getRecipe(recipeId);

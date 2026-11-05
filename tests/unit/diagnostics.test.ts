@@ -1,3 +1,4 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
@@ -5,7 +6,7 @@ import {
   formatDiagnostic,
   recipeConflictDiagnostic,
   unknownTemplateDiagnostic,
-} from "../../src/diagnostics.js";
+} from "@zealakit/core";
 
 describe("formatDiagnostic", () => {
   it("renders title, selected, reason, and resolution", () => {

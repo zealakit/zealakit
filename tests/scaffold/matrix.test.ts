@@ -1,8 +1,15 @@
+import "../register.js";
 import { describe, it } from "node:test";
-import { getCompatibleRecipes, isRecipeCompatible } from "../../src/compat.js";
-import { RECIPE_CATEGORIES } from "../../src/constants.js";
-import { getRecipeCategories, getTemplate, recipes, templates } from "../../src/registry/index.js";
-import type { RecipeConfig, TemplateConfig } from "../../src/types.js";
+import type { RecipeConfig, TemplateConfig } from "@zealakit/core";
+import {
+  getCompatibleRecipes,
+  getRecipeCategories,
+  getTemplate,
+  isRecipeCompatible,
+  RECIPE_CATEGORIES,
+  recipes,
+  templates,
+} from "@zealakit/core";
 import { assertScaffoldInvariants, expectRejected, scaffold } from "../helpers/scaffold.js";
 
 /**

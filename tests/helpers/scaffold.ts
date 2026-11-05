@@ -1,3 +1,4 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -5,14 +6,14 @@ import path from "node:path";
 import { after } from "node:test";
 import {
   getRecipe,
+  getRecipeAgentEntry,
   getTemplate,
   getTemplateOverlayId,
+  resolveRecipeDependencies,
+  scaffoldProject,
+  validateScaffoldConfig,
   withDefaultRecipes,
-} from "../../src/registry/index.js";
-import { resolveRecipeDependencies } from "../../src/resolve-recipes.js";
-import { getRecipeAgentEntry } from "../../src/scaffold/agent-docs.js";
-import { scaffoldProject } from "../../src/scaffold/index.js";
-import { validateScaffoldConfig } from "../../src/validation/index.js";
+} from "@zealakit/core";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-test-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));
