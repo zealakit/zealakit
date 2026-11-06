@@ -1,9 +1,6 @@
-import type { RecipeCategory, Scope, UiFramework } from "./constants.js";
+import type { EcosystemId, RecipeCategory, Scope, UiFramework } from "./constants.js";
 
-export type { RecipeCategory, Scope, UiFramework };
-
-/** Scaffolding ecosystem that owns templates/recipes and a ManifestAdapter. */
-export type EcosystemId = "node" | "go";
+export type { EcosystemId, RecipeCategory, Scope, UiFramework };
 
 export type TemplateConfig = {
   id: string;
@@ -74,6 +71,11 @@ export type RecipeConfig = {
    * Directory under `recipes/` (e.g. `node/mui`). Defaults to `id` when omitted.
    */
   path?: string;
+  /**
+   * Owning ecosystem. Defaults to `node` (set by `defineRecipe`) and falls back
+   * to the `recipes/<ecosystem>/` path prefix for unregistered configs.
+   */
+  ecosystem?: EcosystemId;
   /**
    * npm dependency contributions (Node ecosystem).
    * Kept on the shared recipe type for migration compatibility.

@@ -175,10 +175,19 @@ const SMOKE_CASES: SmokeCase[] = [
     args: ["info", "--json"],
     check: (result) => {
       try {
-        const info = JSON.parse(result.output) as { templates: unknown[]; recipes: unknown[] };
+        const info = JSON.parse(result.output) as {
+          schemaVersion: number;
+          command: string;
+          data: { templates: unknown[]; recipes: unknown[] };
+        };
         return [
           ...expectExit(result, true),
-          ...(info.templates.length > 0 && info.recipes.length > 0 ? [] : ["empty metadata"]),
+          ...(info.schemaVersion === 4 && info.command === "info"
+            ? []
+            : ["unexpected info envelope"]),
+          ...(info.data.templates.length > 0 && info.data.recipes.length > 0
+            ? []
+            : ["empty metadata"]),
         ];
       } catch (error) {
         return [`stdout/stderr is not pure JSON: ${(error as Error).message}`];

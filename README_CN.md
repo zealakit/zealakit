@@ -4,7 +4,7 @@
   <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
 </p>
 
-**基于 Recipe 的 TypeScript 项目脚手架。**
+**基于 Recipe 的多生态项目脚手架。**
 
 选择模板，只叠加需要的 Recipe，即可得到可直接安装的项目——包含依赖、脚本和 AI Agent 文档。无需全局安装 CLI。
 

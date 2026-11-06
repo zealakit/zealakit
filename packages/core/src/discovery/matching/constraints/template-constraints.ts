@@ -1,7 +1,8 @@
 import { checkRecipeCompatibility } from "../../../compat.js";
+import { getRecipeIds } from "../../../info/index.js";
 import { resolveRecipeProfile } from "../../../profiles/index.js";
 import type { ResolvedTemplateProfile } from "../../../profiles/types.js";
-import { getAllRecipeIds, getRecipe, getTemplate } from "../../../registry/index.js";
+import { getRecipe, getTemplate } from "../../../registry/index.js";
 import {
   getRequirementsBackend,
   getRequirementsFrontend,
@@ -18,7 +19,7 @@ import type { MatchReason } from "../types.js";
 export function templateHasCompatibleDatabaseRecipe(templateId: string): boolean {
   const template = getTemplate(templateId);
   if (!template) return false;
-  for (const recipeId of getAllRecipeIds()) {
+  for (const recipeId of getRecipeIds()) {
     const profile = resolveRecipeProfile(recipeId);
     const recipe = getRecipe(recipeId);
     if (!profile || !recipe) continue;

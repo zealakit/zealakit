@@ -23,6 +23,11 @@ export {
   type DeploymentTarget,
 } from "./deployment-targets.js";
 export {
+  ECOSYSTEM_LABELS,
+  ECOSYSTEMS,
+  type EcosystemId,
+} from "./ecosystems.js";
+export {
   FRONTEND_DELIVERIES,
   type FrontendDelivery,
 } from "./frontend-delivery.js";

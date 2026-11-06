@@ -1,11 +1,22 @@
-import { type CliOptions, ExitCode, failDiagnostic } from "@zealakit/core";
+import {
+  type CliOptions,
+  ECOSYSTEMS,
+  ExitCode,
+  failDiagnostic,
+  getRecipeIds,
+  getTemplateIds,
+  PROJECT_TYPES,
+  RECIPE_CATEGORIES,
+  SCOPES,
+  UI_FRAMEWORKS,
+} from "@zealakit/core";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 import { Command } from "commander";
 import { attachCreateOptions, runCreateAction } from "./create.js";
 import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
-import { printKitInfo } from "./info.js";
+import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
 
 registerNodeEcosystem();
@@ -38,7 +49,8 @@ attachCreateOptions(program)
   .option("--json", "With --info: print only machine-readable JSON")
   .action(async (projectName: string | undefined, options: CliOptions) => {
     if (options.info) {
-      printKitInfo({ json: options.json === true });
+      // Filters live on `zealakit info`; the root alias stays flag-compatible.
+      process.exitCode = runInfo({ json: options.json === true });
       return;
     }
     if (options.json) {
@@ -57,10 +69,24 @@ attachCreateOptions(program)
 
 program
   .command("info")
-  .description("Print kit metadata: templates, categories, recipes, compatibility rules")
+  .description("Print kit metadata: templates, recipes, ecosystems, categories, Discovery profiles")
   .option("--json", "Print only machine-readable JSON (stdout contains nothing else)")
-  .action((options: { json?: boolean }) => {
-    printKitInfo({ json: options.json === true });
+  .option("--ecosystem <ecosystem>", `Filter by ecosystem: ${ECOSYSTEMS.join(", ")}`)
+  .option("--scope <scope>", `Filter by template scope: ${SCOPES.join(", ")}`)
+  .option(
+    "--project-type <projectType>",
+    `Filter by Discovery project type: ${PROJECT_TYPES.join(", ")}`,
+  )
+  .option("--ui-framework <uiFramework>", `Filter by UI framework: ${UI_FRAMEWORKS.join(", ")}`)
+  .option("--template <templateId>", `Filter by template id: ${getTemplateIds().join(", ")}`)
+  .option("--recipe <recipeId>", `Filter by recipe id: ${getRecipeIds().join(", ")}`)
+  .option("--category <category>", `Filter by recipe category: ${RECIPE_CATEGORIES.join(", ")}`)
+  .option(
+    "--discover",
+    "Include Discovery profiles and keep only Discovery-eligible entries (no questionnaire, no scoring)",
+  )
+  .action((options: InfoCommandOptions) => {
+    process.exitCode = runInfo(options);
   });
 
 program

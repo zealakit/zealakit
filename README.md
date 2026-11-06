@@ -4,7 +4,7 @@
   <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
 </p>
 
-**Recipe-based scaffolding for TypeScript projects.**
+**Recipe-based scaffolding for multi-ecosystem projects.**
 
 Pick a template, add only the recipes you need, and get a ready-to-install project — dependencies, scripts, and AI-agent docs included. No global install required.
 
@@ -153,6 +153,21 @@ npx zealakit@latest create [project-name] [options]
 | `-V, --version`        | Show version                                                            |
 
 Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+
+### Metadata queries (`zealakit info`)
+
+`zealakit info` prints templates, recipes, ecosystems, categories, and the compatibility rules from the registry. `--json` returns one versioned envelope (`schemaVersion: 4`, `command: "info"`, `filters`, `data`) for external UIs and integrations.
+
+```bash
+zealakit info --json --ecosystem node
+zealakit info --json --scope server
+zealakit info --json --template nest
+zealakit info --json --recipe biome
+zealakit info --json --category orm
+zealakit info --json --discover --scope server
+```
+
+Filters combine with AND semantics; unknown values exit `2` (in JSON mode with a machine-readable `error` object) instead of being ignored. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
 
 **Rules**
 

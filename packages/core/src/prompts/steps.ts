@@ -1,12 +1,13 @@
-import {
-  getCompatibleRecipes,
-  getRecipe,
-  isRecipeCompatible,
-  type RecipeCategory,
-  type RecipeConfig,
-  type Scope,
-  type TemplateConfig,
-} from "@zealakit/core";
+import { getCompatibleRecipes, isRecipeCompatible } from "../compat.js";
+import { getRecipe } from "../registry/index.js";
+import type { RecipeCategory, RecipeConfig, Scope, TemplateConfig } from "../types.js";
+
+/**
+ * Interactive `zealakit create` flow, per template scope.
+ *
+ * This is shared metadata (also exposed by `zealakit info` and consumed by
+ * external UIs), not terminal formatting — the CLI only renders the labels.
+ */
 
 /** Pick at most one exclusive recipe of `category` (or none). */
 export type SelectStep = {

@@ -46,17 +46,19 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 
 ### `@zealakit/core`
 
-| Area                      | Role                                                             |
-| ------------------------- | ---------------------------------------------------------------- |
-| `constants/` / `types.ts` | Scopes, UI frameworks, categories, discovery enums, config types |
-| `profiles/`               | Discovery Template/Recipe profiles + validation                  |
-| `discovery/`              | Questionnaire + matching/scoring engine                          |
-| `compat.ts`               | Can recipe X go on template Y?                                   |
-| `resolve-recipes.ts`      | Expand `dependsOn`, cycles, order                                |
-| `registry/`               | Mutable catalog (`registerTemplate` / `registerRecipe`)          |
-| `scaffold/`               | plan → stage → validate → commit; paths; transforms              |
-| `scaffold/manifest.ts`    | `ManifestAdapter` contract (plan/apply merges, project name)     |
-| `validation/`             | Recipe/template/target checks (project name via adapter)         |
+| Area                      | Role                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `constants/` / `types.ts` | Scopes, UI frameworks, categories, ecosystems, discovery enums, config types |
+| `profiles/`               | Discovery Template/Recipe profiles + validation                              |
+| `discovery/`              | Questionnaire + matching/scoring engine                                      |
+| `info/`                   | Shared metadata query layer (`getInfo`, filters, `INFO_SCHEMA_VERSION`)      |
+| `prompts/`                | `STEPS_BY_SCOPE` interactive create flow metadata                            |
+| `compat.ts`               | Can recipe X go on template Y?                                               |
+| `resolve-recipes.ts`      | Expand `dependsOn`, cycles, order                                            |
+| `registry/`               | Mutable catalog (`registerTemplate` / `registerRecipe`)                      |
+| `scaffold/`               | plan → stage → validate → commit; paths; transforms                          |
+| `scaffold/manifest.ts`    | `ManifestAdapter` contract (plan/apply merges, project name)                 |
+| `validation/`             | Recipe/template/target checks (project name via adapter)                     |
 
 ### `@zealakit/ecosystem-node`
 

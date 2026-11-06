@@ -7,6 +7,7 @@ export function defineRecipe(recipe: RecipeConfig): RecipeConfig {
   return {
     ...recipe,
     path: recipe.path ?? `${NODE_RECIPE_PREFIX}${recipe.id}`,
+    ecosystem: recipe.ecosystem ?? "node",
   };
 }
 

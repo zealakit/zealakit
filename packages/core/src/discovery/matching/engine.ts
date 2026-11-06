@@ -1,5 +1,5 @@
+import { getRecipeIds, getTemplateIds } from "../../info/index.js";
 import { resolveRecipeProfile, resolveTemplateProfile } from "../../profiles/index.js";
-import { getAllRecipeIds, getAllTemplateIds } from "../../registry/index.js";
 import type { ProjectRequirements } from "../requirements.js";
 import { evaluateRecipeConstraints } from "./constraints/recipe-constraints.js";
 import { evaluateTemplateConstraints } from "./constraints/template-constraints.js";
@@ -32,7 +32,7 @@ function matchTemplates(requirements: ProjectRequirements): {
   const architecture = new Map<string, number>();
   const results: TemplateMatchResult[] = [];
 
-  for (const templateId of getAllTemplateIds()) {
+  for (const templateId of getTemplateIds()) {
     const profile = resolveTemplateProfile(templateId);
     if (!profile) {
       results.push({
@@ -86,7 +86,7 @@ function matchRecipes(
   results: RecipeMatchResult[];
   recommendedRecipeIds: string[];
 } {
-  const availableRecipeIds = getAllRecipeIds();
+  const availableRecipeIds = getRecipeIds();
   const profileById = new Map(
     availableRecipeIds.map((id) => [id, resolveRecipeProfile(id)] as const),
   );

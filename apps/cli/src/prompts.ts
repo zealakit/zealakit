@@ -2,8 +2,12 @@ import { cancel, confirm, intro, isCancel, outro, select, text } from "@clack/pr
 import {
   DEFAULT_TEMPLATE_ID,
   getAllTemplateIds,
+  getStepInitialValue,
+  getStepOptions,
   getTemplate,
+  type PromptStep,
   resolveRecipeDependencies,
+  STEPS_BY_SCOPE,
   type TemplateConfig,
   withDefaultRecipes,
 } from "@zealakit/core";
@@ -17,12 +21,6 @@ import {
   templateOptionHint,
   templateOptionLabel,
 } from "./prompt-labels.js";
-import {
-  getStepInitialValue,
-  getStepOptions,
-  type PromptStep,
-  STEPS_BY_SCOPE,
-} from "./prompt-steps.js";
 
 const NONE = "none";
 
