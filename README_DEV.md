@@ -37,8 +37,8 @@ versioned envelope, and stdout contains nothing else — no ANSI, no prompts:
 
 - Filters: `--ecosystem`, `--scope`, `--project-type`, `--ui-framework`,
   `--template`, `--recipe`, `--category`, `--discover`. They combine with AND
-  semantics; unknown values exit `2` (JSON mode returns
-  `error.code = "invalid-filter"`) instead of being ignored.
+  semantics; unknown values exit `2` with diagnostics on stderr (stdout stays
+  empty) instead of being ignored.
 - `--discover` only attaches Discovery profiles (`templates[].discovery`,
   `recipes[].discovery`) and keeps Discovery-eligible entries. It never asks
   questionnaire questions, runs scoring, or generates a project.
@@ -49,6 +49,21 @@ versioned envelope, and stdout contains nothing else — no ANSI, no prompts:
 
 Without `--json`, `info` prints a human-readable summary that respects the same
 filters.
+
+## Discovery JSON API
+
+Stateless Discovery operations are exposed through the existing `discovery`
+command group:
+
+```bash
+echo '{"schemaVersion":1,"operation":"questions","answers":{}}' | pnpm -s zealakit discovery query
+```
+
+Operations: `questions`, `recommendations`, `validate`, `scaffold`; one JSON
+response on stdout, schema version `1`. The caller resubmits accumulated
+answers. `scaffold` requires `confirmation.confirmed: true` and reuses the normal
+scaffold pipeline. Contract and exit codes:
+[docs/discovery-json-api.md](docs/discovery-json-api.md).
 
 ## Repository layout
 
@@ -108,6 +123,13 @@ ecosystem package and add its Discovery profile — the query layer, prompts, an
   files (file-path suites match the pattern too).
 - After changing the JSON shape, bump `INFO_SCHEMA_VERSION` and update
   `docs/metadata-query-layer.md` and `scripts/test-e2e-pack.ts`.
+
+## Programmatic API
+
+`@zealakit/core` exposes `createZealakit()` for TypeScript consumers (metadata,
+Discovery, plan, scaffold) without the CLI; register ecosystems explicitly with
+`nodeEcosystem` / `goEcosystem`. See [docs/programmatic-api.md](docs/programmatic-api.md).
+The published `zealakit` package remains CLI-only in this release.
 
 ## Verification
 

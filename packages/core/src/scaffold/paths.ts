@@ -51,6 +51,95 @@ export function getRecipeDir(recipeId: string): string {
   return path.join(RECIPES_DIR, recipe.path ?? recipe.id);
 }
 
+/** Normalize case on case-insensitive platforms before containment checks. */
+function comparablePath(value: string): string {
+  return process.platform === "win32" ? value.toLowerCase() : value;
+}
+
+/** Whether `candidatePath` is `rootDir` itself or a descendant (lexical, no symlink resolution). */
+export function isPathInsideRoot(rootDir: string, candidatePath: string): boolean {
+  const relative = path.relative(
+    comparablePath(path.resolve(rootDir)),
+    comparablePath(path.resolve(candidatePath)),
+  );
+  if (relative === "") {
+    return true;
+  }
+  if (path.isAbsolute(relative)) {
+    return false;
+  }
+  return relative.split(path.sep)[0] !== "..";
+}
+
+/**
+ * Resolve `targetPath` against the staging root and reject anything that would
+ * land outside it. Absolute paths are accepted only when they stay inside.
+ */
+export function resolveStagingPath(stagingRoot: string, targetPath: string): string {
+  const root = path.resolve(stagingRoot);
+  const resolved = path.resolve(root, targetPath);
+  if (!isPathInsideRoot(root, resolved)) {
+    throw new Error(`Path '${targetPath}' resolves outside the staging directory '${root}'.`);
+  }
+  return resolved;
+}
+
+/**
+ * Verify that an existing path still resolves inside the staging root after
+ * following symbolic links. Call only for paths that already exist.
+ */
+export function assertStagingRealPath(stagingRoot: string, absolutePath: string): void {
+  const root = path.resolve(stagingRoot);
+  const realRoot = fs.realpathSync(root);
+  const realTarget = fs.realpathSync(absolutePath);
+  if (!isPathInsideRoot(realRoot, realTarget)) {
+    throw new Error(
+      `Path '${absolutePath}' escapes the staging directory '${root}' via a symbolic link.`,
+    );
+  }
+}
+
+/**
+ * Reject symbolic links in the staged tree that point outside the staging root.
+ *
+ * Writes during generation must not follow such links. Links that stay inside
+ * (including dangling relative links) are allowed; absolute links inside are
+ * accepted after resolution.
+ */
+export function assertStagingSymlinksSafe(stagingRoot: string): void {
+  const root = path.resolve(stagingRoot);
+  const realRoot = fs.realpathSync(root);
+
+  const visit = (dir: string): void => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isSymbolicLink()) {
+        const linkTarget = fs.readlinkSync(fullPath);
+        const resolvedTarget = path.resolve(path.dirname(fullPath), linkTarget);
+        if (!isPathInsideRoot(root, resolvedTarget)) {
+          throw new Error(
+            `Symbolic link '${fullPath}' points outside the staging directory '${root}'.`,
+          );
+        }
+        if (fs.existsSync(fullPath)) {
+          const realTarget = fs.realpathSync(fullPath);
+          if (!isPathInsideRoot(realRoot, realTarget)) {
+            throw new Error(
+              `Symbolic link '${fullPath}' resolves outside the staging directory '${root}'.`,
+            );
+          }
+        }
+        continue;
+      }
+      if (entry.isDirectory()) {
+        visit(fullPath);
+      }
+    }
+  };
+
+  visit(root);
+}
+
 export type OverlayResolution =
   /** Recipe has no `overlays/` folder */
   | { kind: "none" }

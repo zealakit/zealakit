@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import path from "node:path";
+import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core";
 import { defineRecipe } from "./define.js";
 
 /**
@@ -7,10 +7,12 @@ import { defineRecipe } from "./define.js";
  * zealakit repo; scaffolded projects must own their root config.
  */
 function dropNestedRootFlag(targetDir: string): void {
-  const biomeConfigPath = path.join(targetDir, "biome.json");
+  // `finalize` receives the staging root; keep the read/write inside it.
+  const biomeConfigPath = resolveStagingPath(targetDir, "biome.json");
   if (!fs.existsSync(biomeConfigPath)) {
     return;
   }
+  assertStagingRealPath(targetDir, biomeConfigPath);
 
   const biomeConfig = JSON.parse(fs.readFileSync(biomeConfigPath, "utf-8")) as Record<
     string,

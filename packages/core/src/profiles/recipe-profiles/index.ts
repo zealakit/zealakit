@@ -8,10 +8,12 @@ export const RECIPE_PROFILES: readonly RecipeProfile[] = [
   {
     id: "biome",
     capabilities: [],
+    alwaysRelevant: true,
   },
   {
     id: "eslint",
     capabilities: [],
+    alwaysRelevant: true,
   },
   {
     id: "zustand",
@@ -86,25 +88,33 @@ export const RECIPE_PROFILES: readonly RecipeProfile[] = [
   {
     id: "type-orm",
     capabilities: ["database"],
-    projectTypes: ["server-api"],
+    // `ui` covers hybrid templates (Next, Nuxt, Astro hybrid); compat still
+    // requires a server/hybrid scope and a matching overlay.
+    projectTypes: ["server-api", "ui"],
     databases: ["postgresql", "mysql", "sqlite"],
   },
   {
     id: "mikro-orm",
     capabilities: ["database"],
-    projectTypes: ["server-api"],
+    // `ui` covers hybrid templates (Next, Nuxt, Astro hybrid); compat still
+    // requires a server/hybrid scope and a matching overlay.
+    projectTypes: ["server-api", "ui"],
     databases: ["postgresql", "mysql", "sqlite"],
   },
   {
     id: "drizzle-orm",
     capabilities: ["database"],
-    projectTypes: ["server-api"],
+    // `ui` covers hybrid templates (Next, Nuxt, Astro hybrid); compat still
+    // requires a server/hybrid scope and a matching overlay.
+    projectTypes: ["server-api", "ui"],
     databases: ["postgresql", "mysql", "sqlite"],
   },
   {
     id: "prisma",
     capabilities: ["database"],
-    projectTypes: ["server-api"],
+    // `ui` covers hybrid templates (Next, Nuxt, Astro hybrid); compat still
+    // requires a server/hybrid scope and a matching overlay.
+    projectTypes: ["server-api", "ui"],
     databases: ["postgresql", "mysql", "sqlite"],
   },
 ];

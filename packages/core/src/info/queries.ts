@@ -33,6 +33,7 @@ import {
   getTemplateEcosystem,
   matchesRecipeFilter,
   matchesTemplateFilter,
+  normalizeInfoFilter,
   orderInfoFilter,
   recipeSupportsProjectType,
   templateSupportsProjectType,
@@ -45,8 +46,10 @@ import {
   INFO_SCHEMA_VERSION,
   type InfoData,
   type InfoFilter,
+  type InfoFilterInput,
   type InfoOptions,
   type InfoResponse,
+  type MetadataQueryResult,
   type ProjectTypeMetadata,
   type PromptStepMetadata,
   type RecipeCategoryMetadata,
@@ -469,4 +472,23 @@ export function getInfo(filter: InfoFilter = {}, options: InfoOptions = {}): Inf
     filters: effectiveFilter,
     data,
   };
+}
+
+/**
+ * Validate raw (string) query input and return the normalized metadata snapshot.
+ *
+ * This is the shared entry point for consumers that accept user-facing filter
+ * values (for example CLI flags or a future JSON interface). The typed
+ * `getInfo` remains available for callers that already hold an `InfoFilter`.
+ */
+export function queryMetadata(
+  input: InfoFilterInput = {},
+  options: InfoOptions = {},
+): MetadataQueryResult {
+  const normalized = normalizeInfoFilter(input);
+  if (!normalized.ok) {
+    return { ok: false, errors: normalized.errors };
+  }
+  const response = getInfo(normalized.filter, options);
+  return { ok: true, filter: response.filters, data: response.data };
 }

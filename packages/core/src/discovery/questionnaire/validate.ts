@@ -9,7 +9,7 @@ import {
   WORKER_TASKS,
 } from "../../constants.js";
 import type { ValidationResult } from "../../types.js";
-import { getQuestionOptions, getVisibleQuestions } from "./questions.js";
+import { DISCOVERY_QUESTIONS, getQuestionOptions, getVisibleQuestions } from "./questions.js";
 import {
   API_AUTH_NEEDS,
   API_BACKGROUND_NEEDS,
@@ -91,14 +91,35 @@ const ENUMS: Record<DiscoveryQuestionId, readonly string[]> = {
   workerQueueNeed: WORKER_QUEUE_NEEDS,
 };
 
-/** Validate questionnaire answers (enums, required visible questions). */
-export function validateDiscoveryAnswers(answers: DiscoveryAnswers): ValidationResult {
+export type DiscoveryAnswerValidationOptions = {
+  /** Allow required visible questions to be unanswered (stateless question flow). */
+  partial?: boolean;
+};
+
+/** Validate questionnaire answers (enums, types, unknown keys, required visible questions). */
+export function validateDiscoveryAnswers(
+  answers: DiscoveryAnswers,
+  options: DiscoveryAnswerValidationOptions = {},
+): ValidationResult {
   const errors: string[] = [];
+  const questionIds = new Set(DISCOVERY_QUESTIONS.map((question) => question.id));
+  for (const key of Object.keys(answers)) {
+    if (!questionIds.has(key as DiscoveryQuestionId)) {
+      errors.push(`Unknown answer '${key}'.`);
+    }
+  }
+
   const visible = getVisibleQuestions(answers);
 
   for (const question of visible) {
     const raw = answers[question.id];
-    if (question.required) {
+    if (raw !== undefined && question.type === "single-select" && typeof raw !== "string") {
+      errors.push(`Question '${question.id}' must be a single value.`);
+    }
+    if (raw !== undefined && question.type === "multi-select" && !Array.isArray(raw)) {
+      errors.push(`Question '${question.id}' must be a list of values.`);
+    }
+    if (question.required && !options.partial) {
       if (raw === undefined || (Array.isArray(raw) && raw.length === 0)) {
         errors.push(`Question '${question.id}' is required.`);
       }
@@ -126,7 +147,11 @@ export function validateDiscoveryAnswers(answers: DiscoveryAnswers): ValidationR
     }
   }
 
+  const visibleIds = new Set(visible.map((question) => question.id));
   for (const [id, allowed] of Object.entries(ENUMS) as [DiscoveryQuestionId, readonly string[]][]) {
+    if (visibleIds.has(id)) {
+      continue;
+    }
     const raw = answers[id];
     if (raw === undefined) continue;
     if (Array.isArray(raw)) {
@@ -136,5 +161,5 @@ export function validateDiscoveryAnswers(answers: DiscoveryAnswers): ValidationR
     }
   }
 
-  return result(errors);
+  return result([...new Set(errors)]);
 }

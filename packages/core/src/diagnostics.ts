@@ -14,6 +14,22 @@ export const ExitCode = {
 
 export type ExitCode = (typeof ExitCode)[keyof typeof ExitCode];
 
+/**
+ * The scaffold was rejected by validation (preflight plan blockers or the
+ * post-generation output checks). Consumers map this to `ExitCode.VALIDATION`
+ * instead of treating it as an unexpected internal failure.
+ */
+export class ScaffoldValidationError extends Error {
+  /** Individual validation messages, in the order they were reported. */
+  readonly errors: string[];
+
+  constructor(message: string, errors: string[] = []) {
+    super(message);
+    this.name = "ScaffoldValidationError";
+    this.errors = [...errors];
+  }
+}
+
 export type Diagnostic = {
   title: string;
   selected?: string[];

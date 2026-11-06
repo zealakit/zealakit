@@ -4,15 +4,116 @@ import { getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.
 import type { ScaffoldConfig } from "../types.js";
 import { getRecipeAgentEntry } from "./agent-docs.js";
 import { resolveTemplateEcosystem } from "./manifest.js";
+import { assertStagingRealPath, assertStagingSymlinksSafe, isPathInsideRoot } from "./paths.js";
 
 export type OutputValidation = { ok: boolean; errors: string[] };
 
-type PackageJson = {
-  name?: string;
-  scripts?: Record<string, string>;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-};
+type JsonObject = Record<string, unknown>;
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function lstatOrUndefined(target: string): fs.Stats | undefined {
+  try {
+    return fs.lstatSync(target);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Read an optional `Record<string, string>` field, reporting invalid shapes. */
+function readStringRecord(
+  value: unknown,
+  field: string,
+  errors: string[],
+): Record<string, string> | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isJsonObject(value)) {
+    errors.push(`package.json field '${field}' must be an object.`);
+    return undefined;
+  }
+  const record: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry !== "string") {
+      errors.push(`package.json field '${field}.${key}' must be a string.`);
+      continue;
+    }
+    record[key] = entry;
+  }
+  return record;
+}
+
+/**
+ * `.cursor` must be a relative symlink to `.agents`; the link must not escape
+ * the generated project (checked both lexically and after resolving symlinks).
+ */
+function validateAgentConfiguration(targetDir: string, errors: string[]): void {
+  const agentsDir = path.join(targetDir, ".agents");
+  const cursorPath = path.join(targetDir, ".cursor");
+  const cursorStat = lstatOrUndefined(cursorPath);
+  const agentsExists = fs.existsSync(agentsDir);
+
+  if (!agentsExists) {
+    if (cursorStat) {
+      errors.push("Generated project has '.cursor' but no '.agents' directory.");
+    }
+    return;
+  }
+
+  if (!fs.statSync(agentsDir).isDirectory()) {
+    errors.push("Generated project '.agents' must be a directory.");
+    return;
+  }
+  try {
+    assertStagingRealPath(targetDir, agentsDir);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+    return;
+  }
+
+  if (!cursorStat) {
+    errors.push("'.cursor' must be a symlink to '.agents'.");
+    return;
+  }
+  if (!cursorStat.isSymbolicLink()) {
+    errors.push("'.cursor' must be a symlink to '.agents' (found a file or directory).");
+    return;
+  }
+
+  let linkTarget: string;
+  try {
+    linkTarget = fs.readlinkSync(cursorPath);
+  } catch {
+    errors.push("'.cursor' must be a readable symlink to '.agents'.");
+    return;
+  }
+  if (linkTarget !== ".agents") {
+    errors.push(`'.cursor' must point to '.agents' (found '${linkTarget}').`);
+    return;
+  }
+
+  try {
+    const realRoot = fs.realpathSync(targetDir);
+    const realCursor = fs.realpathSync(cursorPath);
+    if (!isPathInsideRoot(realRoot, realCursor)) {
+      errors.push("'.cursor' resolves outside the generated project.");
+    }
+  } catch {
+    errors.push("'.cursor' is a broken symlink.");
+  }
+}
+
+/** No generated symlink may point outside the staged project. */
+function validateSymlinkSafety(targetDir: string, errors: string[]): void {
+  try {
+    assertStagingSymlinksSafe(targetDir);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
+}
 
 function validateCommonLayout(targetDir: string, templateId: string, errors: string[]): void {
   const template = getTemplate(templateId);
@@ -28,17 +129,13 @@ function validateCommonLayout(targetDir: string, templateId: string, errors: str
     );
   }
 
-  const agentsDir = path.join(targetDir, ".agents");
-  if (fs.existsSync(agentsDir)) {
-    const cursor = path.join(targetDir, ".cursor");
-    try {
-      if (!fs.lstatSync(cursor).isSymbolicLink() || fs.readlinkSync(cursor) !== ".agents") {
-        errors.push(".cursor must be a symlink to .agents when .agents exists.");
-      }
-    } catch {
-      errors.push(".cursor must be a symlink to .agents when .agents exists.");
-    }
+  if (fs.readdirSync(targetDir).length === 0) {
+    errors.push("Generated project is empty.");
+    return;
   }
+
+  validateAgentConfiguration(targetDir, errors);
+  validateSymlinkSafety(targetDir, errors);
 }
 
 function validateNpmOutput(targetDir: string, config: ScaffoldConfig, errors: string[]): void {
@@ -48,19 +145,40 @@ function validateNpmOutput(targetDir: string, config: ScaffoldConfig, errors: st
     return;
   }
 
-  let pkg: PackageJson;
+  let parsed: unknown;
   try {
-    pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as PackageJson;
+    parsed = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
   } catch (error) {
     errors.push(
       `package.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
     );
     return;
   }
-
-  if (pkg.name !== config.projectName) {
-    errors.push(`package.json name is '${pkg.name}', expected '${config.projectName}'.`);
+  if (!isJsonObject(parsed)) {
+    errors.push("package.json must contain a JSON object.");
+    return;
   }
+
+  if (parsed.name !== config.projectName) {
+    errors.push(`package.json name is '${String(parsed.name)}', expected '${config.projectName}'.`);
+  }
+  for (const field of ["version", "type", "packageManager"]) {
+    if (parsed[field] !== undefined && typeof parsed[field] !== "string") {
+      errors.push(`package.json field '${field}' must be a string.`);
+    }
+  }
+  if (parsed.private !== undefined && typeof parsed.private !== "boolean") {
+    errors.push("package.json field 'private' must be a boolean.");
+  }
+  if (parsed.engines !== undefined && !isJsonObject(parsed.engines)) {
+    errors.push("package.json field 'engines' must be an object.");
+  }
+
+  const dependencies = readStringRecord(parsed.dependencies, "dependencies", errors);
+  const devDependencies = readStringRecord(parsed.devDependencies, "devDependencies", errors);
+  const scripts = readStringRecord(parsed.scripts, "scripts", errors);
+  readStringRecord(parsed.peerDependencies, "peerDependencies", errors);
+  readStringRecord(parsed.optionalDependencies, "optionalDependencies", errors);
 
   const overlayId = getTemplateOverlayId(config.templateId);
   for (const recipeId of config.recipeIds) {
@@ -74,7 +192,7 @@ function validateNpmOutput(targetDir: string, config: ScaffoldConfig, errors: st
       ...recipe.packages,
       ...recipe.overlayPackages?.[overlayId],
     })) {
-      if (pkg.dependencies?.[name] !== version) {
+      if (dependencies?.[name] !== version) {
         errors.push(`Missing dependency ${name}@${version} from recipe '${recipeId}'.`);
       }
     }
@@ -82,12 +200,12 @@ function validateNpmOutput(targetDir: string, config: ScaffoldConfig, errors: st
       ...recipe.devDependencies,
       ...recipe.overlayDevDependencies?.[overlayId],
     })) {
-      if (pkg.devDependencies?.[name] !== version) {
+      if (devDependencies?.[name] !== version) {
         errors.push(`Missing devDependency ${name}@${version} from recipe '${recipeId}'.`);
       }
     }
     for (const [name, command] of Object.entries(recipe.scripts)) {
-      if (pkg.scripts?.[name] !== command) {
+      if (scripts?.[name] !== command) {
         errors.push(`Missing script '${name}' from recipe '${recipeId}'.`);
       }
     }

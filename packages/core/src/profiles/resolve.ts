@@ -44,5 +44,6 @@ export function resolveRecipeProfile(id: string): ResolvedRecipeProfile | undefi
     uiFrameworks: recipe.uiFrameworks ? [...recipe.uiFrameworks] : undefined,
     dependsOn: [...(recipe.dependsOn ?? [])],
     conflicts: getConflictingRecipes(recipe),
+    exclusive: recipe.exclusive === true,
   };
 }

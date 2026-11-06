@@ -263,31 +263,166 @@ describe("zealakit info filters", () => {
     assert.ok(response.data.categories.every((category) => category.recipes.length === 0));
   });
 
-  it("rejects invalid filters with machine-readable JSON and exit 2", () => {
+  it("rejects invalid filters on stderr with exit 2 and empty stdout", () => {
     const result = runCli(["info", "--json", "--scope", "desktop"]);
     assert.equal(result.status, 2);
-    assert.equal(result.stderr, "");
-    assert.ok(!result.stdout.includes("\u001b["), "no ANSI colors");
-    const error = JSON.parse(result.stdout) as {
-      schemaVersion: number;
-      command: string;
-      error: { code: string; details: string[] };
-    };
-    assert.equal(error.schemaVersion, INFO_SCHEMA_VERSION);
-    assert.equal(error.command, "info");
-    assert.equal(error.error.code, "invalid-filter");
-    assert.ok(error.error.details.some((detail) => detail.includes("desktop")));
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /Unknown scope 'desktop'/);
   });
 
-  it("rejects unknown template and recipe ids", () => {
+  it("rejects unknown ecosystem, template and recipe ids", () => {
     for (const args of [
+      ["info", "--json", "--ecosystem", "deno"],
       ["info", "--json", "--template", "nope"],
       ["info", "--json", "--recipe", "nope"],
     ]) {
       const result = runCli(args);
       assert.equal(result.status, 2, args.join(" "));
-      const error = JSON.parse(result.stdout) as { error: { code: string } };
-      assert.equal(error.error.code, "invalid-filter");
+      assert.equal(result.stdout, "");
+      assert.ok(result.stderr.length > 0, `${args.join(" ")} should report on stderr`);
     }
+  });
+});
+
+describe("zealakit info (human output)", () => {
+  it("keeps the human-readable summary", () => {
+    const result = runCli(["info"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, "");
+    assert.match(result.stdout, /Templates/);
+    assert.match(result.stdout, /Recipes/);
+    assert.doesNotMatch(result.stdout, /^\s*\{/);
+  });
+
+  it("reports invalid filters on stderr without stdout", () => {
+    const result = runCli(["info", "--scope", "desktop"]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /Unknown scope/);
+  });
+
+  it("rejects unknown options as usage errors", () => {
+    const result = runCli(["info", "--nope"]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /unknown option/);
+  });
+});
+
+describe("info --json without a TTY", () => {
+  it("writes only JSON and needs no input", () => {
+    const result = spawnSync(process.execPath, ["--import", "tsx", CLI_ENTRY, "info", "--json"], {
+      cwd: PACKAGE_ROOT,
+      encoding: "utf-8",
+      env: { ...process.env, NO_COLOR: "1" },
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 60_000,
+    });
+    assert.equal(result.status, 0, result.stderr ?? "");
+    assert.equal(result.stderr, "");
+    const data = JSON.parse(result.stdout ?? "") as InfoResponse;
+    assert.equal(data.schemaVersion, INFO_SCHEMA_VERSION);
+    assert.deepEqual(data, buildInfoResponse());
+  });
+
+  it("is deterministic across repeated invocations", () => {
+    const first = runCli(["info", "--json"]);
+    const second = runCli(["info", "--json"]);
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(second.status, 0, second.stderr);
+    assert.equal(first.stdout, second.stdout);
+  });
+
+  it("applies filters in a non-TTY environment", () => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        CLI_ENTRY,
+        "info",
+        "--json",
+        "--discover",
+        "--ecosystem",
+        "node",
+        "--scope",
+        "server",
+      ],
+      {
+        cwd: PACKAGE_ROOT,
+        encoding: "utf-8",
+        env: { ...process.env, NO_COLOR: "1" },
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 60_000,
+      },
+    );
+    assert.equal(result.status, 0, result.stderr ?? "");
+    assert.equal(result.stderr, "");
+    const response = JSON.parse(result.stdout ?? "") as InfoResponse;
+    assert.ok(response.data.templates.length > 0);
+    assert.ok(
+      response.data.templates.every(
+        (template) => template.ecosystem === "node" && template.scope === "server",
+      ),
+    );
+    for (const template of response.data.templates) {
+      assert.equal(template.discovery?.id, template.id);
+    }
+    for (const recipe of response.data.recipes) {
+      assert.equal(recipe.discovery?.id, recipe.id);
+    }
+  });
+});
+
+describe("info discovery metadata filtering", () => {
+  it("includes only Discovery profiles for the filtered result", () => {
+    const result = runCli(["info", "--json", "--discover", "--template", "next"]);
+    assert.equal(result.status, 0, result.stderr);
+    const response = parseJson(result.stdout);
+    assert.deepEqual(
+      response.data.templates.map((template) => template.id),
+      ["next"],
+    );
+    assert.equal(response.data.templates[0]?.discovery?.id, "next");
+    for (const recipe of response.data.recipes) {
+      assert.equal(recipe.discovery?.id, recipe.id);
+      assert.deepEqual(recipe.templates, ["next"]);
+    }
+  });
+
+  it("does not run Discovery scoring or ranking", () => {
+    const result = runCli(["info", "--json", "--discover", "--scope", "server"]);
+    assert.equal(result.status, 0, result.stderr);
+    const response = parseJson(result.stdout);
+    const forbidden = new Set([
+      "score",
+      "reasons",
+      "recommendedTemplateId",
+      "recommendedRecipeIds",
+    ]);
+    const hasForbiddenKey = (value: unknown): boolean => {
+      if (Array.isArray(value)) return value.some(hasForbiddenKey);
+      if (value !== null && typeof value === "object") {
+        return Object.entries(value).some(
+          ([key, entry]) => forbidden.has(key) || hasForbiddenKey(entry),
+        );
+      }
+      return false;
+    };
+    assert.equal(hasForbiddenKey(response), false);
+  });
+
+  it("filters the human-readable summary without changing its format", () => {
+    const result = runCli(["info", "--scope", "server"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Filters/);
+    assert.match(result.stdout, /nest/);
+    assert.doesNotMatch(result.stdout, /vite-react/);
+  });
+
+  it("supports --discover in human mode with a note", () => {
+    const result = runCli(["info", "--discover"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Discovery profiles included/);
   });
 });

@@ -167,7 +167,7 @@ zealakit info --json --category orm
 zealakit info --json --discover --scope server
 ```
 
-Filters combine with AND semantics; unknown values exit `2` (in JSON mode with a machine-readable `error` object) instead of being ignored. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
+Filters combine with AND semantics; unknown values exit `2` with diagnostics on stderr and no JSON on stdout. The same filters also narrow the human-readable summary. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
 
 **Rules**
 

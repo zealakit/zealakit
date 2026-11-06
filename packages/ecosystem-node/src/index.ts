@@ -1,4 +1,9 @@
-import { registerRecipe, registerTemplate, setManifestAdapter } from "@zealakit/core";
+import {
+  type EcosystemRegistration,
+  registerRecipe,
+  registerTemplate,
+  setManifestAdapter,
+} from "@zealakit/core";
 import { nodeManifestAdapter } from "./manifest/adapter.js";
 import { RECIPE_LIST } from "./registry/recipes/index.js";
 import { templateList } from "./registry/templates.js";
@@ -17,6 +22,12 @@ export function registerNodeEcosystem(): void {
   }
   registered = true;
 }
+
+/** Explicit registration handle for programmatic consumers (`createZealakit`). */
+export const nodeEcosystem: EcosystemRegistration = {
+  id: "node",
+  register: registerNodeEcosystem,
+};
 
 export {
   appendExport,

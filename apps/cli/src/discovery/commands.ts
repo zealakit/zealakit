@@ -10,12 +10,17 @@ import {
   setDiscoveryFeedbackEnabled,
 } from "@zealakit/core";
 import type { Command } from "commander";
+import { registerDiscoveryQueryCommand } from "./query.js";
 
 /** `zealakit discovery stats|feedback …` — offline local feedback only. */
 export function registerDiscoveryCommands(program: Command): void {
   const discovery = program
     .command("discovery")
-    .description("Local Project Discovery feedback (offline; no network uploads)");
+    .description(
+      "Local Project Discovery feedback and stateless JSON queries (offline; no network uploads)",
+    );
+
+  registerDiscoveryQueryCommand(discovery);
 
   discovery
     .command("stats")

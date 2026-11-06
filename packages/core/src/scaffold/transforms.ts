@@ -1,7 +1,7 @@
 import fs from "node:fs";
-import path from "node:path";
 import { getTemplateOverlayId } from "../registry/index.js";
 import type { RecipeConfig, RecipeFileTransform } from "../types.js";
+import { assertStagingRealPath, resolveStagingPath } from "./paths.js";
 
 export function getRecipeTransforms(
   recipe: RecipeConfig,
@@ -51,10 +51,12 @@ export function applyFileTransforms(
   targetDir: string,
 ): void {
   for (const transform of getRecipeTransforms(recipe, templateId)) {
-    const filePath = path.join(targetDir, transform.file);
+    // Transforms only ever touch generated files inside the staging directory.
+    const filePath = resolveStagingPath(targetDir, transform.file);
     if (!fs.existsSync(filePath)) {
       throw new Error(`Recipe '${recipe.id}' transform target not found: ${transform.file}`);
     }
+    assertStagingRealPath(targetDir, filePath);
 
     const raw = fs.readFileSync(filePath, "utf-8");
     const next = transformSource(recipe.id, transform, raw);

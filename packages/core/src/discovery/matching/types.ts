@@ -15,6 +15,11 @@ export type TemplateMatchResult = {
   warnings: string[];
 };
 
+/**
+ * `recommended` means relevant and offered to the user (including optional
+ * non-exclusive extras); only ids in `DiscoveryResult.recommendedRecipeIds`
+ * are pre-selected in the recipe multiselect.
+ */
 export type RecipeMatchRole = "recommended" | "dependency" | "excluded" | "irrelevant";
 
 export type RecipeMatchResult = {
@@ -32,7 +37,12 @@ export type DiscoveryResult = {
   recipes: RecipeMatchResult[];
   /** Highest-ranked compatible template, if any. */
   recommendedTemplateId?: string;
-  /** Directly recommended recipe ids (not auto-dependencies). */
+  /**
+   * Recipe ids pre-selected by default: exclusive category winners plus
+   * non-exclusive recipes that fill a required capability. Optional extras
+   * (e.g. Storybook) stay selectable but are not pre-checked. Auto-dependencies
+   * are tracked separately via `role: "dependency"`.
+   */
   recommendedRecipeIds: string[];
 };
 

@@ -1,5 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
 import {
   ECOSYSTEMS,
@@ -16,7 +18,9 @@ import {
   getUiFrameworkMetadata,
   INFO_SCHEMA_VERSION,
   normalizeInfoFilter,
+  PACKAGE_ROOT,
   PROJECT_TYPES,
+  queryMetadata,
   RECIPE_CATEGORIES,
   recipeSupportsScope,
   recipes,
@@ -316,5 +320,118 @@ describe("filter validation", () => {
     assert.deepEqual(Object.keys(info.filters), ["ecosystem", "recipeId", "discovery"]);
     assert.equal(info.schemaVersion, INFO_SCHEMA_VERSION);
     assert.equal(info.command, "info");
+  });
+});
+
+describe("raw metadata queries", () => {
+  it("normalizes string filters and returns metadata with the applied filter", () => {
+    const result = queryMetadata({
+      ecosystem: "node",
+      scope: "server",
+      recipeId: "biome",
+      discovery: true,
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+
+    assert.deepEqual(result.filter, {
+      ecosystem: "node",
+      scope: "server",
+      recipeId: "biome",
+      discovery: true,
+    });
+    assert.deepEqual(
+      result.data.templates.map((template) => template.id),
+      getTemplateMetadata(result.filter).map((template) => template.id),
+    );
+    assert.ok(result.data.templates.every((template) => template.discovery !== undefined));
+    assert.ok(result.data.recipes.every((recipe) => recipe.discovery !== undefined));
+  });
+
+  it("reports every invalid filter value", () => {
+    const result = queryMetadata({ ecosystem: "deno", templateId: "nope" });
+    assert.equal(result.ok, false);
+    if (result.ok) return;
+    assert.equal(result.errors.length, 2);
+    assert.ok(result.errors.some((error) => /deno/.test(error)));
+    assert.ok(result.errors.some((error) => /nope/.test(error)));
+  });
+
+  it("distinguishes unknown ids (empty) from invalid input (errors)", () => {
+    assert.deepEqual(getTemplateMetadata({ templateId: "nope" }), []);
+    assert.deepEqual(getRecipeMetadata({ recipeId: "nope" }), []);
+    assert.equal(queryMetadata({ templateId: "nope" }).ok, false);
+  });
+});
+
+describe("Discovery metadata retrieval", () => {
+  it("attaches resolved profiles only when requested", () => {
+    for (const template of getTemplateMetadata({ discovery: true })) {
+      assert.deepEqual(template.discovery, resolveTemplateProfile(template.id));
+    }
+    for (const recipe of getRecipeMetadata({ discovery: true })) {
+      assert.deepEqual(recipe.discovery, resolveRecipeProfile(recipe.id));
+    }
+    assert.ok(getTemplateMetadata().every((template) => template.discovery === undefined));
+    assert.ok(getRecipeMetadata().every((recipe) => recipe.discovery === undefined));
+  });
+
+  it("supports ecosystem-scoped discovery metadata", () => {
+    const goTemplates = getTemplateMetadata({ ecosystem: "go", discovery: true });
+    assert.ok(goTemplates.length > 0);
+    assert.ok(goTemplates.every((template) => template.ecosystem === "go"));
+    assert.ok(goTemplates.every((template) => template.discovery !== undefined));
+    assert.deepEqual(getRecipeMetadata({ ecosystem: "go" }), []);
+  });
+});
+
+describe("serialization and architecture", () => {
+  it("returns JSON-serializable metadata without runtime-only values", () => {
+    const info = getInfo({ discovery: true });
+    const serialized = JSON.parse(JSON.stringify(info));
+    // Optional undefined fields disappear in JSON; the serialized form must be stable.
+    assert.deepEqual(JSON.parse(JSON.stringify(serialized)), serialized);
+
+    const containsFunction = (value: unknown): boolean => {
+      if (typeof value === "function") return true;
+      if (Array.isArray(value)) return value.some(containsFunction);
+      if (value !== null && typeof value === "object") {
+        return Object.values(value).some(containsFunction);
+      }
+      return false;
+    };
+    assert.equal(containsFunction(info), false);
+  });
+
+  it("keeps core independent from ecosystem packages", () => {
+    const sourceRoot = path.join(PACKAGE_ROOT, "packages/core/src");
+    const offenders: string[] = [];
+    const visit = (dir: string): void => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          visit(fullPath);
+          continue;
+        }
+        if (!entry.name.endsWith(".ts")) continue;
+        const source = fs.readFileSync(fullPath, "utf-8");
+        if (/from\s+["']@zealakit\/ecosystem/.test(source)) {
+          offenders.push(path.relative(PACKAGE_ROOT, fullPath));
+        }
+      }
+    };
+    visit(sourceRoot);
+    assert.deepEqual(offenders, []);
+  });
+
+  it("keeps registry ids as the single source of truth", () => {
+    assert.deepEqual(
+      getTemplateMetadata().map((template) => template.id),
+      Object.keys(templates),
+    );
+    assert.deepEqual(
+      getRecipeMetadata().map((recipe) => recipe.id),
+      Object.keys(recipes),
+    );
   });
 });

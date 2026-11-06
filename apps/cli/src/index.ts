@@ -12,7 +12,7 @@ import {
 } from "@zealakit/core";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
-import { Command } from "commander";
+import { Command, CommanderError } from "commander";
 import { attachCreateOptions, runCreateAction } from "./create.js";
 import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
@@ -39,9 +39,14 @@ attachCreateOptions(
     .description(
       "Create a new project. Modes: interactive prompts, --discover (recommendations), or --template <id>.",
     ),
-).action(async (projectName: string | undefined, options: CliOptions) => {
-  await runCreateAction(projectName, options);
-});
+)
+  .option(
+    "--json",
+    "With --discover: read one Discovery/scaffold JSON request from stdin and print one JSON response",
+  )
+  .action(async (projectName: string | undefined, options: CliOptions) => {
+    await runCreateAction(projectName, options);
+  });
 
 // Backward-compatible root scaffold (`zealakit [name] -t …`) plus --info alias.
 attachCreateOptions(program)
@@ -106,4 +111,22 @@ program
 
 registerDiscoveryCommands(program);
 
-program.parse(process.argv);
+/** Commander exits directly per command; override nested ones so parse errors map to usage. */
+function overrideCommanderExit(command: Command): void {
+  command.exitOverride();
+  for (const subcommand of command.commands) {
+    overrideCommanderExit(subcommand);
+  }
+}
+
+overrideCommanderExit(program);
+
+try {
+  program.parse(process.argv);
+} catch (error) {
+  // Commander exits 1 for parse errors by default; the CLI convention is 2.
+  if (error instanceof CommanderError) {
+    process.exit(error.exitCode === 0 ? ExitCode.OK : ExitCode.USAGE);
+  }
+  throw error;
+}

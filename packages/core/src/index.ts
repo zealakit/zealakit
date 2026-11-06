@@ -1,4 +1,15 @@
 export {
+  createZealakit,
+  type DiscoveryQuery,
+  type EcosystemRegistration,
+  type MetadataQuery,
+  type ScaffoldClient,
+  type ScaffoldExecutionResult,
+  type Zealakit,
+  ZealakitApiError,
+  type ZealakitOptions,
+} from "./client.js";
+export {
   checkRecipeCompatibility,
   getCompatibleRecipes,
   getConflictingRecipes,
@@ -72,9 +83,36 @@ export {
   printInfo,
   printWarning,
   recipeConflictDiagnostic,
+  ScaffoldValidationError,
   unknownRecipesDiagnostic,
   unknownTemplateDiagnostic,
 } from "./diagnostics.js";
+export {
+  DISCOVERY_API_ERROR_CODES,
+  DISCOVERY_API_SCHEMA_VERSION,
+  DISCOVERY_OPERATIONS,
+  type DiscoveryApiError,
+  type DiscoveryApiErrorCode,
+  type DiscoveryApiErrorResponse,
+  type DiscoveryApiOptions,
+  type DiscoveryApiRequest,
+  type DiscoveryApiResponse,
+  type DiscoveryApiSchemaVersion,
+  type DiscoveryApiSuccessResponse,
+  type DiscoveryOperation,
+  type DiscoveryProjectRequest,
+  type DiscoveryQuestionOptionPayload,
+  type DiscoveryQuestionPayload,
+  type DiscoveryQuestionsData,
+  type DiscoveryReasonPayload,
+  type DiscoveryRecipeRecommendationPayload,
+  type DiscoveryRecommendationsData,
+  type DiscoveryScaffoldData,
+  type DiscoverySelectionErrorPayload,
+  type DiscoveryTemplateRecommendationPayload,
+  type DiscoveryValidationData,
+  handleDiscoveryRequest,
+} from "./discovery/api/index.js";
 export {
   buildDiscoverySessionRecord,
   CONFIG_DIR_ENV,
@@ -204,6 +242,7 @@ export {
   type InfoOptions,
   type InfoResponse,
   type InfoSchemaVersion,
+  type MetadataQueryResult,
   matchesRecipeFilter,
   matchesTemplateFilter,
   type NormalizeInfoFilterResult,
@@ -211,6 +250,7 @@ export {
   orderInfoFilter,
   type ProjectTypeMetadata,
   type PromptStepMetadata,
+  queryMetadata,
   type RecipeCategoryMetadata,
   type RecipeMetadata,
   type RuleMetadata,
@@ -277,6 +317,10 @@ export {
   getRecipeAgentEntry,
   insertAgentEntry,
 } from "./scaffold/agent-docs.js";
+export {
+  ScaffoldCommitError,
+  type ScaffoldCommitErrorDetails,
+} from "./scaffold/commit.js";
 export { copyRecipe, copyTemplate, foldIntoSrcDir, PACKED_DOTFILES } from "./scaffold/copy.js";
 export {
   buildScaffoldPlan,
@@ -294,12 +338,16 @@ export {
   validateGeneratedOutput,
 } from "./scaffold/index.js";
 export {
+  assertStagingRealPath,
+  assertStagingSymlinksSafe,
   getRecipeDir,
   getTemplateDir,
+  isPathInsideRoot,
   type OverlayResolution,
   PACKAGE_ROOT,
   RECIPES_DIR,
   resolveRecipeOverlay,
+  resolveStagingPath,
   TEMPLATES_DIR,
 } from "./scaffold/paths.js";
 export {

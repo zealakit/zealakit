@@ -253,3 +253,12 @@ export type InfoOptions = {
   /** CLI/package metadata; core never reads the root package.json itself. */
   cli?: CliMetadata;
 };
+
+/**
+ * Result of a raw metadata query: either normalized metadata plus the applied
+ * filter, or validation errors for the input. Consumers render this themselves
+ * (the query layer never formats terminal output).
+ */
+export type MetadataQueryResult =
+  | { ok: true; filter: InfoFilter; data: InfoData }
+  | { ok: false; errors: string[] };

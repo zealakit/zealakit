@@ -2,6 +2,7 @@ import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  API_TRAFFIC_EXPECTATIONS,
   getTemplateMatchDiagnostics,
   getVisibleQuestions,
   matchDiscovery,
@@ -204,6 +205,32 @@ describe("Backend/API scalability Discovery", () => {
     for (const entry of diagnostics) {
       assert.equal(entry.discovered, true);
       assert.equal(entry.eligible, true);
+    }
+  });
+
+  it("maps every workload level into requirements and keeps Node primary below high", () => {
+    for (const level of API_TRAFFIC_EXPECTATIONS) {
+      const resolved = resolveDiscoveryRequirements({
+        projectType: "server-api",
+        apiTrafficExpectation: level,
+        apiStorageNeed: "none",
+      });
+      assert.ok(resolved.ok, level);
+      if (!resolved.ok) continue;
+      if (resolved.requirements.projectType !== "server-api") continue;
+      assert.equal(resolved.requirements.trafficExpectation, level);
+
+      const result = matchDiscovery(resolved.requirements);
+      const ids = compatibleIds(result);
+      if (level === "low" || level === "medium") {
+        assert.equal(result.recommendedTemplateId, "hono", `${level} keeps TypeScript first`);
+        assert.ok(ids.includes("gin-api"), `${level} keeps Go eligible`);
+      } else {
+        // High / very-high may elevate Go, but Node remains a valid recommendation.
+        assert.ok(ids.includes("hono"), `${level} keeps Hono eligible`);
+        assert.ok(ids.includes("nest"), `${level} keeps Nest eligible`);
+        assert.ok(ids.indexOf("gin-api") < ids.indexOf("hono"), `${level} ranks Go above Hono`);
+      }
     }
   });
 });

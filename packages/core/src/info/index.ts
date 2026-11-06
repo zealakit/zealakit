@@ -21,6 +21,7 @@ export {
   getTemplateIds,
   getTemplateMetadata,
   getUiFrameworkMetadata,
+  queryMetadata,
 } from "./queries.js";
 export { getRuleMetadata } from "./rules.js";
 export {
@@ -40,6 +41,7 @@ export {
   type InfoOptions,
   type InfoResponse,
   type InfoSchemaVersion,
+  type MetadataQueryResult,
   type NormalizeInfoFilterResult,
   type ProjectTypeMetadata,
   type PromptStepMetadata,

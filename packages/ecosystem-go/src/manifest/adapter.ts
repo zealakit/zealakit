@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  assertStagingRealPath,
   emptyPackagePlan,
   type ManifestAdapter,
   type PackagePlan,
+  resolveStagingPath,
   type ScaffoldConfig,
   type ValidationResult,
 } from "@zealakit/core";
@@ -43,10 +45,11 @@ function rewriteGoSources(targetDir: string, fromModule: string, toModule: strin
 }
 
 function applyGoModuleRewrite(targetDir: string, projectName: string): void {
-  const goModPath = path.join(targetDir, "go.mod");
+  const goModPath = resolveStagingPath(targetDir, "go.mod");
   if (!fs.existsSync(goModPath)) {
     throw new Error(`go.mod not found in template at ${targetDir}`);
   }
+  assertStagingRealPath(targetDir, goModPath);
 
   const goMod = fs.readFileSync(goModPath, "utf-8");
   const fromModule = readGoModulePath(goMod);

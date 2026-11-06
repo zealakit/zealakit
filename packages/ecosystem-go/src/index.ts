@@ -1,4 +1,4 @@
-import { registerTemplate, setManifestAdapter } from "@zealakit/core";
+import { type EcosystemRegistration, registerTemplate, setManifestAdapter } from "@zealakit/core";
 import { goManifestAdapter } from "./manifest/adapter.js";
 import { templateList } from "./registry/templates.js";
 
@@ -13,6 +13,12 @@ export function registerGoEcosystem(): void {
   }
   registered = true;
 }
+
+/** Explicit registration handle for programmatic consumers (`createZealakit`). */
+export const goEcosystem: EcosystemRegistration = {
+  id: "go",
+  register: registerGoEcosystem,
+};
 
 export { detectGoEnvironment } from "./detect.js";
 export { goManifestAdapter, readGoModulePath } from "./manifest/adapter.js";

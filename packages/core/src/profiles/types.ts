@@ -58,6 +58,8 @@ export type TemplateProfile = {
  * Semantics:
  * - `capabilities` is what the recipe *adds* (may be empty for tooling-only recipes).
  * - `requires` / `excludes` are capability gates for future matching (omit when unused).
+ * - `alwaysRelevant` marks tooling that every compatible project should see in
+ *   Discovery (linters/formatters); it never overrides compatibility.
  * - Omitted optional fields mean not applicable.
  */
 export type RecipeProfile = {
@@ -67,6 +69,8 @@ export type RecipeProfile = {
   requires?: Capability[];
   excludes?: Capability[];
   databases?: DatabaseType[];
+  /** Tooling recipe offered to every compatible project (relevance only). */
+  alwaysRelevant?: boolean;
 };
 
 /** Template profile merged with live registry fields. */
@@ -88,4 +92,6 @@ export type ResolvedRecipeProfile = RecipeProfile & {
   uiFrameworks?: UiFramework[];
   dependsOn: string[];
   conflicts: string[];
+  /** Registry `exclusive` flag: at most one exclusive recipe per category. */
+  exclusive: boolean;
 };

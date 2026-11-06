@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import fse from "fs-extra";
-import { getRecipeDir, RECIPE_SCAFFOLD_DIR } from "./paths.js";
+import { fse } from "../fs-extra.js";
+import {
+  assertStagingRealPath,
+  getRecipeDir,
+  RECIPE_SCAFFOLD_DIR,
+  resolveStagingPath,
+} from "./paths.js";
 
 const AGENT_ENTRY_FILES = ["AGENTS.md", "CLAUDE.md"];
 
@@ -26,6 +31,7 @@ export function insertAgentEntry(raw: string, entry: string): string {
   return `${raw.trimEnd()}\n\n${block}`;
 }
 
+/** Read the kit-owned recipe entry (intentional read outside the staging dir). */
 export function getRecipeAgentEntry(recipeId: string): string | undefined {
   const entryPath = path.join(getRecipeDir(recipeId), RECIPE_SCAFFOLD_DIR, "agent-entry.md");
   if (!fs.existsSync(entryPath)) {
@@ -41,10 +47,11 @@ export function applyAgentEntry(recipeId: string, targetDir: string): void {
   }
 
   for (const file of AGENT_ENTRY_FILES) {
-    const filePath = path.join(targetDir, file);
+    const filePath = resolveStagingPath(targetDir, file);
     if (!fs.existsSync(filePath)) {
       continue;
     }
+    assertStagingRealPath(targetDir, filePath);
     const raw = fs.readFileSync(filePath, "utf-8");
     const next = insertAgentEntry(raw, entry);
     if (next !== raw) {
@@ -58,10 +65,15 @@ export function applyAgentEntry(recipeId: string, targetDir: string): void {
  * to `.agents` so Cursor IDE and package-agnostic tools both work.
  */
 export function ensureCursorAgentsSymlink(targetDir: string): void {
-  const agentsDir = path.join(targetDir, ".agents");
-  const cursorPath = path.join(targetDir, ".cursor");
+  const agentsDir = resolveStagingPath(targetDir, ".agents");
+  const cursorPath = resolveStagingPath(targetDir, ".cursor");
   if (!fs.existsSync(agentsDir)) {
     return;
+  }
+  // The link target must stay inside staging even if `.agents` is a symlink.
+  assertStagingRealPath(targetDir, agentsDir);
+  if (!fs.statSync(agentsDir).isDirectory()) {
+    throw new Error("Agent docs path '.agents' must be a directory (found a file).");
   }
 
   try {
@@ -69,7 +81,9 @@ export function ensureCursorAgentsSymlink(targetDir: string): void {
     if (cursorStat.isSymbolicLink() && fs.readlinkSync(cursorPath) === ".agents") {
       return;
     }
-    // Copy may have dereferenced the symlink into a real directory; `.agents` wins.
+    // `.cursor` is a compatibility link, not generated content: replace a copied
+    // directory/file or a wrong symlink. Removing a symlink only drops the link,
+    // never its external target, and staging remains recoverable until commit.
     fse.removeSync(cursorPath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
@@ -77,5 +91,17 @@ export function ensureCursorAgentsSymlink(targetDir: string): void {
     }
   }
 
-  fs.symlinkSync(".agents", cursorPath);
+  try {
+    // "dir" is required for directory symlinks on Windows; ignored on POSIX.
+    fs.symlinkSync(".agents", cursorPath, "dir");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (process.platform === "win32" && (code === "EPERM" || code === "EACCES")) {
+      throw new Error(
+        "Could not create the '.cursor' directory symlink. On Windows, enable Developer Mode or grant symlink privileges, then retry.",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }

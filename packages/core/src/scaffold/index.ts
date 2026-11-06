@@ -1,12 +1,15 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import fse from "fs-extra";
+import { ScaffoldValidationError } from "../diagnostics.js";
+import { fse } from "../fs-extra.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import type { RecipeConfig, ScaffoldConfig } from "../types.js";
 import { applyAgentEntry, ensureCursorAgentsSymlink } from "./agent-docs.js";
+import { commitStagedDirectory } from "./commit.js";
 import { copyRecipe, copyTemplate, foldIntoSrcDir } from "./copy.js";
 import { getManifestAdapterForConfig } from "./manifest.js";
+import { assertStagingSymlinksSafe } from "./paths.js";
 import { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
 import { applyFileTransforms } from "./transforms.js";
 import { validateGeneratedOutput } from "./validate-output.js";
@@ -47,9 +50,12 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
 
   fse.ensureDirSync(targetDir);
   copyTemplate(template.id, targetDir);
+  // Any later write must not follow a staged symlink that escapes the staging root.
+  assertStagingSymlinksSafe(targetDir);
 
   for (const recipe of recipes) {
     copyRecipe(recipe.id, template.id, targetDir);
+    assertStagingSymlinksSafe(targetDir);
     foldIntoSrcDir(template, targetDir);
     applyAgentEntry(recipe.id, targetDir);
     applyFileTransforms(recipe, template.id, targetDir);
@@ -58,26 +64,6 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
   runFinalizers(recipes, targetDir);
   getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
   ensureCursorAgentsSymlink(targetDir);
-}
-
-function commitStage(stageDir: string, targetDir: string): void {
-  fse.ensureDirSync(path.dirname(targetDir));
-  if (fs.existsSync(targetDir)) {
-    fse.emptyDirSync(targetDir);
-    fse.copySync(stageDir, targetDir, { overwrite: true });
-    fse.removeSync(stageDir);
-    return;
-  }
-  try {
-    fs.renameSync(stageDir, targetDir);
-  } catch (error) {
-    // Temp dir and project may be on different volumes (EXDEV).
-    if ((error as NodeJS.ErrnoException).code !== "EXDEV") {
-      throw error;
-    }
-    fse.copySync(stageDir, targetDir, { overwrite: true });
-    fse.removeSync(stageDir);
-  }
 }
 
 /**
@@ -90,7 +76,7 @@ export async function scaffoldProject(
 ): Promise<string> {
   const plan = buildScaffoldPlan(config, cwd);
   if (!planIsReady(plan)) {
-    throw new Error(plan.blockers.join("\n"));
+    throw new ScaffoldValidationError(plan.blockers.join("\n"), plan.blockers);
   }
 
   const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-stage-"));
@@ -99,13 +85,21 @@ export async function scaffoldProject(
 
     const output = validateGeneratedOutput(stageDir, plan.config);
     if (!output.ok) {
-      throw new Error(`Post-generation validation failed:\n${output.errors.join("\n")}`);
+      throw new ScaffoldValidationError(
+        `Post-generation validation failed:\n${output.errors.join("\n")}`,
+        output.errors,
+      );
     }
 
-    commitStage(stageDir, plan.targetDir);
+    commitStagedDirectory(stageDir, plan.targetDir);
     return plan.targetDir;
   } catch (error) {
-    fse.removeSync(stageDir);
+    // Staging cleanup is best-effort: never mask the original failure.
+    try {
+      fse.removeSync(stageDir);
+    } catch {
+      // Leave the staging dir for diagnostics; the original error is rethrown.
+    }
     throw error;
   }
 }

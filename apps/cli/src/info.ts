@@ -1,14 +1,14 @@
 import {
   type CliMetadata,
   ExitCode,
-  getInfo,
+  INFO_COMMAND,
   INFO_SCHEMA_VERSION,
-  type InfoErrorResponse,
   type InfoFilterInput,
   type InfoResponse,
   type InfoSchemaVersion,
-  normalizeInfoFilter,
+  type MetadataQueryResult,
   printError,
+  queryMetadata,
 } from "@zealakit/core";
 import pc from "picocolors";
 import { readKitManifest } from "./manifest.js";
@@ -62,13 +62,22 @@ function toFilterInput(options: InfoCommandOptions): InfoFilterInput {
   };
 }
 
+function toInfoResponse(query: Extract<MetadataQueryResult, { ok: true }>): InfoResponse {
+  return {
+    schemaVersion: INFO_SCHEMA_VERSION,
+    command: INFO_COMMAND,
+    filters: query.filter,
+    data: query.data,
+  };
+}
+
 /** Shared metadata snapshot used by `info` (throws on an invalid filter). */
 export function buildInfoResponse(options: InfoCommandOptions = {}): InfoResponse {
-  const normalized = normalizeInfoFilter(toFilterInput(options));
-  if (!normalized.ok) {
-    throw new Error(normalized.errors.join("\n"));
+  const query = queryMetadata(toFilterInput(options), { cli: readCliMetadata() });
+  if (!query.ok) {
+    throw new Error(query.errors.join("\n"));
   }
-  return getInfo(normalized.filter, { cli: readCliMetadata() });
+  return toInfoResponse(query);
 }
 
 function filterLines(response: InfoResponse): string[] {
@@ -117,43 +126,32 @@ function formatInfo(response: InfoResponse): string {
   return lines.join("\n");
 }
 
-function writeInvalidFilterError(errors: string[]): void {
-  const error: InfoErrorResponse = {
-    schemaVersion: INFO_SCHEMA_VERSION,
-    command: "info",
-    error: {
-      code: "invalid-filter",
-      message: "One or more info filters are invalid.",
-      details: errors,
-    },
-  };
-  process.stdout.write(`${JSON.stringify(error, null, 2)}\n`);
-}
-
 /**
  * `zealakit info` action.
  *
- * - JSON mode: stdout receives exactly one JSON document (success envelope or
- *   machine-readable error), never ANSI/Clack output.
- * - Invalid filters exit with `ExitCode.USAGE` (2) and are never ignored.
+ * - JSON mode: stdout receives exactly one JSON document and nothing else.
+ * - Invalid filters exit with `ExitCode.USAGE` (2); diagnostics go to stderr,
+ *   so stdout never contains partial or error JSON.
  */
 export function runInfo(options: InfoCommandOptions = {}): ExitCode {
-  const normalized = normalizeInfoFilter(toFilterInput(options));
-  if (!normalized.ok) {
-    if (options.json) {
-      writeInvalidFilterError(normalized.errors);
-    } else {
-      for (const message of normalized.errors) {
+  try {
+    const query = queryMetadata(toFilterInput(options), { cli: readCliMetadata() });
+    if (!query.ok) {
+      for (const message of query.errors) {
         printError(message);
       }
       printError("Run `zealakit info --help` to see available values.");
+      return ExitCode.USAGE;
     }
-    return ExitCode.USAGE;
-  }
 
-  const response = getInfo(normalized.filter, { cli: readCliMetadata() });
-  process.stdout.write(
-    `${options.json ? JSON.stringify(response, null, 2) : formatInfo(response)}\n`,
-  );
-  return ExitCode.OK;
+    const response = toInfoResponse(query);
+    // Build the whole document first so a failure never writes partial JSON.
+    const output = options.json ? JSON.stringify(response, null, 2) : formatInfo(response);
+    process.stdout.write(`${output}\n`);
+    return ExitCode.OK;
+  } catch (error) {
+    // Retrieval/formatting failures keep stdout empty; diagnostics go to stderr.
+    printError(error instanceof Error ? error.message : String(error));
+    return ExitCode.INTERNAL;
+  }
 }

@@ -1,6 +1,7 @@
 import { getRecipeIds, getTemplateIds } from "../../info/index.js";
 import { resolveRecipeProfile, resolveTemplateProfile } from "../../profiles/index.js";
 import type { ProjectRequirements } from "../requirements.js";
+import { requiredCapabilities } from "../requirements.js";
 import { evaluateRecipeConstraints } from "./constraints/recipe-constraints.js";
 import { evaluateTemplateConstraints } from "./constraints/template-constraints.js";
 import {
@@ -164,13 +165,24 @@ function matchRecipes(
 
   results.sort(compareRecipeMatches);
 
-  const recommendedRecipeIds = selectNonConflictingRecipes(
+  const chosenRecipeIds = selectNonConflictingRecipes(
     results,
     (id) => profileById.get(id)?.conflicts ?? [],
   );
 
+  // Pre-select exclusive category winners plus non-exclusive recipes that fill a
+  // required capability. Optional extras (e.g. Storybook) stay visible in the
+  // recipe list but are not checked by default.
+  const neededCapabilities = requiredCapabilities(requirements);
+  const recommendedRecipeIds = chosenRecipeIds.filter((recipeId) => {
+    const profile = profileById.get(recipeId);
+    if (!profile) return false;
+    if (profile.exclusive) return true;
+    return profile.capabilities.some((capability) => neededCapabilities.includes(capability));
+  });
+
   // Mark non-chosen relevant recipes that lost to exclusivity as excluded-from-set
-  const chosen = new Set(recommendedRecipeIds);
+  const chosen = new Set(chosenRecipeIds);
   for (const entry of results) {
     if (entry.role === "recommended" && !chosen.has(entry.recipeId)) {
       entry.role = "excluded";

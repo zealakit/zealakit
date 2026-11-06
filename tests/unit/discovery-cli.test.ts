@@ -43,7 +43,7 @@ describe("discovery CLI presentation", () => {
     assert.match(choices[0]?.hint ?? "", /client|hybrid|server/i);
   });
 
-  it("preselects recommended recipes and omits irrelevant ones", () => {
+  it("preselects recommended recipes and keeps one exclusive linter", () => {
     const normalized = normalizeDiscoveryAnswers({
       projectType: "server-api",
       backendRuntime: "node",
@@ -59,14 +59,17 @@ describe("discovery CLI presentation", () => {
     });
     const choices = buildRecipeChoices(result);
     assert.ok(choices.every((choice) => choice.match.relevant && choice.match.compatible));
-    assert.ok(!choices.some((choice) => choice.value === "biome"));
+    assert.ok(choices.some((choice) => choice.value === "biome"));
+
+    const linters = result.recommendedRecipeIds.filter((id) => id === "biome" || id === "eslint");
+    assert.deepEqual(linters, ["biome"]);
 
     const selected = defaultSelectedRecipeIds(result);
     assert.ok(selected.length >= 1);
     assert.ok(selected.every((id) => choices.some((choice) => choice.value === id)));
   });
 
-  it("does not auto-select recipes for a simple website", () => {
+  it("auto-selects only the linter for a simple website", () => {
     const normalized = normalizeDiscoveryAnswers({
       projectType: "ui",
       uiTechPreference: "react",
@@ -80,7 +83,8 @@ describe("discovery CLI presentation", () => {
     const result = matchDiscovery(normalized.requirements, {
       templateId: templates.recommendedTemplateId,
     });
-    assert.deepEqual(defaultSelectedRecipeIds(result), []);
+    assert.deepEqual(defaultSelectedRecipeIds(result), ["biome"]);
+    assert.ok(!result.recommendedRecipeIds.includes("storybook"));
   });
 });
 

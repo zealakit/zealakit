@@ -1,13 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import fse from "fs-extra";
+import { fse } from "../fs-extra.js";
 import type { TemplateConfig } from "../types.js";
 import {
+  assertStagingRealPath,
   getRecipeDir,
   getTemplateDir,
   RECIPE_META_DIRS,
   RECIPE_SHARED_DIR,
   resolveRecipeOverlay,
+  resolveStagingPath,
 } from "./paths.js";
 
 /** Local install/build junk that must never ship into a scaffolded app. */
@@ -93,12 +95,16 @@ export function foldIntoSrcDir(template: TemplateConfig, targetDir: string): voi
     return;
   }
 
-  const recipeSrc = path.join(targetDir, "src");
+  const recipeSrc = resolveStagingPath(targetDir, "src");
   if (!fs.existsSync(recipeSrc)) {
     return;
   }
+  assertStagingRealPath(targetDir, recipeSrc);
 
-  const appSrc = path.join(targetDir, template.srcDir);
+  const appSrc = resolveStagingPath(targetDir, template.srcDir);
+  if (fs.existsSync(appSrc)) {
+    assertStagingRealPath(targetDir, appSrc);
+  }
   fse.ensureDirSync(appSrc);
   fse.copySync(recipeSrc, appSrc, { overwrite: true, errorOnExist: false });
   fse.removeSync(recipeSrc);

@@ -35,7 +35,8 @@ function recipeRoleLabel(match: RecipeMatchResult): string {
     case "dependency":
       return "required";
     case "recommended":
-      return "recommended";
+      // Non-exclusive recipes are offered, not part of the default selection.
+      return getRecipe(match.recipeId)?.exclusive ? "recommended" : "optional";
     case "excluded":
       return "alternative";
     default:

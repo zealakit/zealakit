@@ -21,13 +21,16 @@ import {
   recordDiscoverySession,
   resolveRecipeDependencies,
   type ScaffoldConfig,
+  ScaffoldValidationError,
   scaffoldProject,
+  validateRecipeIds,
   validateScaffoldInput,
   validateTemplate,
   withDefaultRecipes,
 } from "@zealakit/core";
 import type { Command } from "commander";
 import pc from "picocolors";
+import { runDiscoveryQuery } from "./discovery/query.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 
@@ -166,11 +169,50 @@ function formatSimpleInternal(message: string): string {
   return message.startsWith("✖") ? message : `✖ Error: ${message}`;
 }
 
+/**
+ * Map a thrown create/scaffold error to the documented CLI exit codes.
+ * Validation errors keep their identity from `@zealakit/core`; filesystem,
+ * commit, and programming failures stay internal.
+ */
+export function exitCodeForError(error: unknown): ExitCode {
+  return error instanceof ScaffoldValidationError ? ExitCode.VALIDATION : ExitCode.INTERNAL;
+}
+
+function assertJsonDiscoveryUsage(projectName: string | undefined, options: CliOptions): void {
+  if (!options.discover) {
+    failDiagnostic(
+      {
+        title: "Invalid usage",
+        reason: "Flag --json requires --discover.",
+        resolution: "Run: zealakit create --discover --json < request.json",
+      },
+      ExitCode.USAGE,
+    );
+  }
+  if (projectName || options.template || options.with || options.yes || options.dryRun) {
+    failDiagnostic(
+      {
+        title: "Invalid usage",
+        reason:
+          "JSON Discovery mode reads the whole request from stdin and cannot be combined with a project name, -t, -w, -y, or --dry-run.",
+        resolution:
+          'Put "project.name", "selection", and "confirmation" in the JSON request instead.',
+      },
+      ExitCode.USAGE,
+    );
+  }
+}
+
 /** Shared create / root-scaffold action. */
 export async function runCreateAction(
   projectName: string | undefined,
   options: CliOptions,
 ): Promise<void> {
+  if (options.json) {
+    assertJsonDiscoveryUsage(projectName, options);
+    process.exit(await runDiscoveryQuery());
+  }
+
   let discoveryFeedback: DiscoverySessionDraft | null = null;
   try {
     const resolved = await resolveScaffoldConfig(projectName, options);
@@ -184,6 +226,19 @@ export async function runCreateAction(
     const withDefaults = template
       ? withDefaultRecipes(template.scope, resolved.config.recipeIds)
       : resolved.config.recipeIds;
+
+    // Validate ids before dependency expansion: an unknown id is a user
+    // configuration error, not a missing `dependsOn`.
+    const recipeIdsCheck = validateRecipeIds(withDefaults);
+    if (!recipeIdsCheck.valid) {
+      safeRecordDiscovery(discoveryFeedback, {
+        status: "generation_failed",
+        generationSucceeded: false,
+      });
+      printValidationErrors(recipeIdsCheck.errors);
+      process.exit(ExitCode.VALIDATION);
+    }
+
     const dependencyResolution = resolveRecipeDependencies(withDefaults);
     if (!dependencyResolution.ok) {
       safeRecordDiscovery(discoveryFeedback, {
@@ -235,8 +290,13 @@ export async function runCreateAction(
       generationSucceeded: false,
     });
     const message = error instanceof Error ? error.message : String(error);
-    printError(message.includes("\n") ? message : formatSimpleInternal(message));
-    process.exit(ExitCode.INTERNAL);
+    if (error instanceof ScaffoldValidationError) {
+      // Validation messages are already actionable; keep them verbatim.
+      printError(message);
+    } else {
+      printError(message.includes("\n") ? message : formatSimpleInternal(message));
+    }
+    process.exit(exitCodeForError(error));
   }
 }
 

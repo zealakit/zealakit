@@ -33,6 +33,7 @@ export type TemplateConfig = {
 };
 
 export type RecipeFileTransform = {
+  /** Path relative to the staging root; may not escape it (traversal is rejected). */
   file: string;
   /** Regex replacement (mutually exclusive with `append`) */
   pattern?: RegExp;
@@ -92,6 +93,9 @@ export type RecipeConfig = {
   /**
    * Optional post-copy hook (e.g. Nest Biome decorator flags). Prefer
    * `fileTransforms` when a regex/append is enough.
+   *
+   * Receives the staging root. Hooks are trusted kit code: keep every write
+   * inside that root (`resolveStagingPath` / `assertStagingRealPath`).
    */
   finalize?: (targetDir: string) => void;
 };

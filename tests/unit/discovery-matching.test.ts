@@ -172,11 +172,13 @@ describe("recipe matching", () => {
     assert.ok(result.recommendedRecipeIds.length >= 1);
   });
 
-  it("marks tooling recipes irrelevant for a simple UI", () => {
+  it("recommends exactly one exclusive linter for a simple UI", () => {
     const input = req({ projectType: "ui", frontend: { framework: "react" } });
     const templates = matchDiscovery(input);
     const result = matchDiscovery(input, { templateId: templates.recommendedTemplateId });
-    assert.ok(!result.recommendedRecipeIds.includes("biome"));
+    const linters = result.recommendedRecipeIds.filter((id) => id === "biome" || id === "eslint");
+    assert.deepEqual(linters, ["biome"]);
+    assert.equal(result.recipes.find((entry) => entry.recipeId === "eslint")?.role, "excluded");
   });
 
   it("recommends fetchers when external API is required on UI", () => {
