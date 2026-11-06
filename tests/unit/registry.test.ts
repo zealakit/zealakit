@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
-  UI_FRAMEWORKS,
   getRecipeCategories,
   getRecipeDir,
   getTemplateDir,
@@ -14,6 +13,7 @@ import {
   recipes,
   SCOPES,
   templates,
+  UI_FRAMEWORKS,
 } from "@zealakit/core";
 
 const RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-node/src/registry/recipes");

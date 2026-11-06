@@ -107,8 +107,8 @@ describe("validateProfiles", () => {
 
   it("flags duplicate profile ids", () => {
     const profiles: TemplateProfile[] = [
-      { id: "vite-react", projectTypes: ["web-app"], capabilities: ["web-ui"] },
-      { id: "vite-react", projectTypes: ["website"], capabilities: ["web-ui"] },
+      { id: "vite-react", projectTypes: ["ui"], capabilities: ["web-ui"] },
+      { id: "vite-react", projectTypes: ["ui"], capabilities: ["web-ui"] },
     ];
     const check = validateProfiles({
       templateIds: ["vite-react"],
@@ -125,7 +125,7 @@ describe("validateProfiles", () => {
       templateIds: ["vite-react"],
       recipeIds: ["biome"],
       templateProfiles: [
-        { id: "ghost-template", projectTypes: ["api"], capabilities: ["http-api"] },
+        { id: "ghost-template", projectTypes: ["server-api"], capabilities: ["http-api"] },
       ],
       recipeProfiles: [{ id: "ghost-recipe", capabilities: [] }],
     });

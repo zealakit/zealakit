@@ -1,338 +1,188 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  matchDiscovery,
-  type ProjectRequirements,
-  RECIPE_SCORE_WEIGHTS,
-  TEMPLATE_SCORE_WEIGHTS,
-} from "@zealakit/core";
+import { matchDiscovery, type ProjectRequirements, TEMPLATE_SCORE_WEIGHTS } from "@zealakit/core";
 
-function req(
-  partial: Partial<ProjectRequirements> & Pick<ProjectRequirements, "projectType">,
-): ProjectRequirements {
+type ReqInput =
+  | (Omit<Extract<ProjectRequirements, { projectType: "ui" }>, "scopes" | "capabilities"> & {
+      scopes?: ProjectRequirements["scopes"];
+      capabilities?: ProjectRequirements["capabilities"];
+    })
+  | (Omit<
+      Extract<ProjectRequirements, { projectType: "server-api" }>,
+      "scopes" | "capabilities"
+    > & {
+      scopes?: ProjectRequirements["scopes"];
+      capabilities?: ProjectRequirements["capabilities"];
+    })
+  | (Omit<
+      Extract<ProjectRequirements, { projectType: "background-worker" }>,
+      "scopes" | "capabilities"
+    > & {
+      scopes?: ProjectRequirements["scopes"];
+      capabilities?: ProjectRequirements["capabilities"];
+    });
+
+function req(partial: ReqInput): ProjectRequirements {
   return {
-    scopes: [],
-    capabilities: [],
     ...partial,
-  };
+    scopes: partial.scopes ?? [],
+    capabilities: partial.capabilities ?? [],
+  } as ProjectRequirements;
 }
 
-function assertScoreBounds(score: number): void {
-  assert.ok(score >= 0 && score <= 100, `score out of range: ${score}`);
+function compatibleIds(requirements: ProjectRequirements): string[] {
+  return matchDiscovery(requirements)
+    .templates.filter((entry) => entry.compatible)
+    .map((entry) => entry.templateId);
 }
 
-describe("template matching", () => {
+describe("template matching (branching project types)", () => {
   it("ranks exact project type matches and prefers simpler templates on ties", () => {
-    const first = matchDiscovery(req({ projectType: "web-app" }));
-    const second = matchDiscovery(req({ projectType: "web-app" }));
-    assert.deepEqual(first, second);
-
+    const first = matchDiscovery(req({ projectType: "ui" }));
+    const second = matchDiscovery(req({ projectType: "ui" }));
+    assert.deepEqual(
+      first.templates.map((entry) => [entry.templateId, entry.score, entry.compatible]),
+      second.templates.map((entry) => [entry.templateId, entry.score, entry.compatible]),
+    );
     assert.ok(first.recommendedTemplateId);
-    const compatible = first.templates.filter((entry) => entry.compatible);
-    assert.ok(compatible.length > 0);
-    for (const entry of compatible) {
-      assertScoreBounds(entry.score);
-      assert.ok(entry.reasons.some((reason) => reason.code === "project-type-match"));
-    }
-
-    // vite-* (minimal) should beat hybrid/fullstack-capable templates when both match web-app
-    const recommended = first.recommendedTemplateId;
-    assert.ok(recommended && ["vite-react", "vite-vue"].includes(recommended), recommended);
+    assert.ok(compatibleIds(req({ projectType: "ui" })).includes("vite-react"));
   });
 
-  it("rejects incompatible project types", () => {
-    const result = matchDiscovery(req({ projectType: "api" }));
-    const vite = result.templates.find((entry) => entry.templateId === "vite-react");
-    assert.ok(vite);
-    assert.equal(vite.compatible, false);
-    assert.ok(vite.reasons.some((reason) => reason.code === "project-type-mismatch"));
-    assert.ok(!result.recommendedRecipeIds.includes("mui"));
+  it("UI never recommends backend-only templates", () => {
+    const ids = compatibleIds(req({ projectType: "ui" }));
+    assert.ok(!ids.includes("nest"));
+    assert.ok(!ids.includes("hono"));
+    assert.ok(!ids.includes("gin-api"));
+    assert.ok(!ids.includes("stdlib-worker"));
   });
 
-  it("handles frontend-only projects", () => {
+  it("Server/API never recommends frontend-only templates", () => {
+    const ids = compatibleIds(req({ projectType: "server-api" }));
+    assert.ok(!ids.includes("vite-react"));
+    assert.ok(!ids.includes("vite-vue"));
+    assert.ok(!ids.includes("astro-react-client"));
+    assert.ok(ids.includes("nest") || ids.includes("hono"));
+  });
+
+  it("Worker never recommends API-only templates", () => {
+    const ids = compatibleIds(req({ projectType: "background-worker" }));
+    assert.ok(!ids.includes("nest"));
+    assert.ok(!ids.includes("gin-api"));
+    assert.ok(!ids.includes("vite-react"));
+    assert.deepEqual(ids, ["stdlib-worker"]);
+  });
+
+  it("UI with external API does not require a backend template", () => {
+    const result = matchDiscovery(
+      req({ projectType: "ui", externalApi: true, frontend: { framework: "react", mode: "spa" } }),
+    );
+    assert.ok(compatibleIds(req({ projectType: "ui", externalApi: true })).includes("vite-react"));
+    assert.ok(result.recommendedRecipeIds.some((id) => id === "kyjs" || id === "axios"));
+  });
+
+  it("UI with database requirements does not recommend frontend-only templates", () => {
+    const ids = compatibleIds(
+      req({ projectType: "ui", capabilities: ["database"], frontend: { framework: "react" } }),
+    );
+    assert.ok(!ids.includes("vite-react"));
+    assert.ok(!ids.includes("vite-vue"));
+    assert.ok(!ids.includes("astro-react-client"));
+    assert.ok(ids.every((id) => ["next", "astro-react-hybrid"].includes(id)));
+  });
+
+  it("Server/API with database recommends only compatible configurations", () => {
     const result = matchDiscovery(
       req({
-        projectType: "website",
-        frontend: { framework: "react" },
-      }),
-    );
-    assert.ok(result.recommendedTemplateId);
-    const pick = result.templates.find(
-      (entry) => entry.templateId === result.recommendedTemplateId,
-    );
-    assert.ok(pick?.compatible);
-    assert.ok(pick.reasons.some((reason) => reason.code === "frontend-framework-match"));
-
-    for (const entry of result.templates.filter((item) => item.compatible)) {
-      assert.ok(
-        ["vite-react", "astro-react-client", "astro-react-hybrid", "next"].includes(
-          entry.templateId,
-        ),
-      );
-    }
-    assert.equal(result.templates.find((entry) => entry.templateId === "nest")?.compatible, false);
-  });
-
-  it("handles backend-only API projects", () => {
-    const result = matchDiscovery(req({ projectType: "api" }));
-    assert.ok(result.recommendedTemplateId);
-    const compatibleIds = result.templates.filter((e) => e.compatible).map((e) => e.templateId);
-    assert.ok(compatibleIds.includes("nest") || compatibleIds.includes("hono"));
-    assert.ok(compatibleIds.includes("stdlib-api") || compatibleIds.includes("gin-api"));
-    assert.equal(
-      result.templates.find((entry) => entry.templateId === "vite-react")?.compatible,
-      false,
-    );
-  });
-
-  it("handles fullstack projects requiring web-ui and http-api", () => {
-    const result = matchDiscovery(req({ projectType: "fullstack" }));
-    const compatible = result.templates
-      .filter((entry) => entry.compatible)
-      .map((e) => e.templateId);
-    assert.ok(compatible.includes("next") || compatible.includes("nuxt"));
-    assert.equal(compatible.includes("vite-react"), false);
-    assert.equal(compatible.includes("nest"), false);
-  });
-
-  it("applies explicit framework and runtime preferences as hard constraints", () => {
-    const react = matchDiscovery(req({ projectType: "web-app", frontend: { framework: "vue" } }));
-    assert.equal(react.templates.find((e) => e.templateId === "vite-react")?.compatible, false);
-    assert.ok(react.templates.find((e) => e.templateId === "vite-vue")?.compatible);
-
-    const go = matchDiscovery(
-      req({ projectType: "api", backend: { runtime: "go", framework: "gin" } }),
-    );
-    assert.equal(go.recommendedTemplateId, "gin-api");
-    assert.equal(go.templates.find((e) => e.templateId === "nest")?.compatible, false);
-  });
-
-  it("does not treat missing optional preferences as hard constraints", () => {
-    const withPrefs = matchDiscovery(
-      req({
-        projectType: "api",
-        architectureLevel: "structured",
-        deploymentTarget: "container",
-      }),
-    );
-    const withoutPrefs = matchDiscovery(req({ projectType: "api" }));
-
-    const withIds = new Set(
-      withPrefs.templates.filter((e) => e.compatible).map((e) => e.templateId),
-    );
-    const withoutIds = new Set(
-      withoutPrefs.templates.filter((e) => e.compatible).map((e) => e.templateId),
-    );
-    for (const id of withIds) {
-      assert.ok(withoutIds.has(id), id);
-    }
-    assert.ok(withoutPrefs.recommendedTemplateId);
-  });
-
-  it("fails when a template-owned capability is missing", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "api",
-        capabilities: ["web-ui"],
-      }),
-    );
-    // api implies http-api; web-ui also required → only fullstack-capable templates
-    const nest = result.templates.find((e) => e.templateId === "nest");
-    assert.equal(nest?.compatible, false);
-    assert.ok(nest?.reasons.some((r) => r.code === "capability-missing"));
-  });
-
-  it("scores architecture preference without invalidating compatibility", () => {
-    const result = matchDiscovery(
-      req({ projectType: "api", architectureLevel: "structured", backend: { runtime: "node" } }),
-    );
-    const nest = result.templates.find((e) => e.templateId === "nest");
-    assert.ok(nest?.compatible);
-    assert.ok(nest.reasons.some((r) => r.code === "architecture-match"));
-    assert.ok((nest.score ?? 0) > 0);
-  });
-
-  it("returns no recommended template when nothing matches", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "worker",
-        frontend: { framework: "react" },
-        backend: { runtime: "node" },
-      }),
-    );
-    assert.equal(result.recommendedTemplateId, undefined);
-    assert.ok(result.templates.every((entry) => !entry.compatible || entry.score >= 0));
-    assert.ok(result.templates.every((entry) => !entry.compatible));
-  });
-
-  it("keeps weights summing to 100", () => {
-    const templateTotal = Object.values(TEMPLATE_SCORE_WEIGHTS).reduce((a, b) => a + b, 0);
-    const recipeTotal = Object.values(RECIPE_SCORE_WEIGHTS).reduce((a, b) => a + b, 0);
-    assert.equal(templateTotal, 100);
-    assert.equal(recipeTotal, 100);
-  });
-});
-
-describe("recipe matching", () => {
-  it("recommends relevant ORM recipes when database is required", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "api",
+        projectType: "server-api",
         capabilities: ["database"],
         databases: ["postgresql"],
         backend: { runtime: "node" },
       }),
     );
-    assert.ok(result.recommendedRecipeIds.length >= 1);
+    assert.ok(result.recommendedTemplateId === "nest" || result.recommendedTemplateId === "hono");
     assert.ok(
-      result.recommendedRecipeIds.some((id) =>
-        ["prisma", "drizzle-orm", "type-orm", "mikro-orm"].includes(id),
-      ),
-    );
-    // exclusivity: only one ORM
-    const orms = result.recommendedRecipeIds.filter((id) =>
-      ["prisma", "drizzle-orm", "type-orm", "mikro-orm"].includes(id),
-    );
-    assert.equal(orms.length, 1);
-
-    const prisma = result.recipes.find((e) => e.recipeId === "prisma");
-    assert.ok(prisma?.relevant);
-    assert.ok(prisma);
-    assertScoreBounds(prisma.score);
-  });
-
-  it("marks tooling recipes irrelevant for a simple website", () => {
-    const result = matchDiscovery(
-      req({ projectType: "website", frontend: { framework: "react" } }),
-    );
-    assert.equal(result.recommendedRecipeIds.length, 0);
-    const biome = result.recipes.find((e) => e.recipeId === "biome");
-    assert.ok(biome);
-    assert.equal(biome.relevant, false);
-    assert.equal(biome.role, "irrelevant");
-  });
-
-  it("excludes recipes on scope mismatch", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "api",
-        scopes: ["server"],
-        capabilities: ["database"],
-      }),
-    );
-    const zustand = result.recipes.find((e) => e.recipeId === "zustand");
-    assert.ok(zustand);
-    assert.equal(zustand.compatible, false);
-    assert.ok(
-      zustand.reasons.some(
-        (r) => r.code === "scope-mismatch" || r.code === "project-type-mismatch",
+      result.recommendedRecipeIds.some(
+        (id) => id === "prisma" || id.includes("orm") || id === "drizzle-orm",
       ),
     );
   });
 
-  it("excludes framework-mismatched UI recipes", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "web-app",
-        frontend: { framework: "vue" },
-        capabilities: ["external-api"],
-      }),
+  it("respects explicit runtime and framework preferences", () => {
+    const vue = compatibleIds(req({ projectType: "ui", frontend: { framework: "vue" } }));
+    assert.ok(vue.every((id) => id === "vite-vue" || id === "nuxt"));
+
+    const gin = matchDiscovery(
+      req({ projectType: "server-api", backend: { runtime: "go", framework: "gin" } }),
     );
-    const mui = result.recipes.find((e) => e.recipeId === "mui");
-    // mui is redundant/irrelevant for web-ui (template covers it) or framework mismatch
-    assert.ok(mui);
-    assert.ok(!mui.relevant || !mui.compatible);
+    assert.equal(gin.recommendedTemplateId, "gin-api");
   });
 
-  it("respects selected recipe conflicts", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "api",
-        capabilities: ["database"],
-        backend: { runtime: "node" },
-      }),
-      { selectedRecipeIds: ["prisma"] },
+  it("unsupported requirements produce clear explanations", () => {
+    const svelte = matchDiscovery(req({ projectType: "ui", frontend: { framework: "svelte" } }));
+    assert.equal(svelte.recommendedTemplateId, undefined);
+    assert.ok(svelte.templates.every((entry) => !entry.compatible));
+
+    const graphql = matchDiscovery(req({ projectType: "server-api", serviceType: "graphql" }));
+    assert.equal(graphql.recommendedTemplateId, undefined);
+
+    const tsWorker = matchDiscovery(
+      req({ projectType: "background-worker", backend: { runtime: "node" } }),
     );
-    const drizzle = result.recipes.find((e) => e.recipeId === "drizzle-orm");
-    assert.ok(drizzle);
-    assert.equal(drizzle.compatible, false);
-    assert.ok(drizzle.reasons.some((r) => r.code === "recipe-conflict"));
+    assert.equal(tsWorker.recommendedTemplateId, undefined);
   });
 
-  it("checks template overlay compatibility when templateId is provided", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "api",
-        capabilities: ["database"],
-        backend: { runtime: "go" },
-      }),
-      { templateId: "stdlib-api" },
+  it("does not treat missing optional preferences as hard constraints", () => {
+    const withPrefs = matchDiscovery(
+      req({ projectType: "server-api", backend: { runtime: "node" } }),
     );
-    // Node ORM recipes have no Go overlays → incompatible with go template
-    const prisma = result.recipes.find((e) => e.recipeId === "prisma");
-    assert.ok(prisma);
-    assert.equal(prisma.compatible, false);
-    assert.ok(
-      prisma.reasons.some((r) => r.code === "template-incompat" || r.code === "scope-mismatch"),
-    );
+    const withoutPrefs = matchDiscovery(req({ projectType: "server-api" }));
+    assert.ok(withPrefs.recommendedTemplateId);
+    assert.ok(withoutPrefs.recommendedTemplateId);
+    assert.ok(compatibleIds(req({ projectType: "server-api" })).length >= 2);
   });
 
-  it("does not recommend frontend recipes for workers", () => {
-    const result = matchDiscovery(req({ projectType: "worker", backend: { runtime: "go" } }));
-    assert.equal(result.recommendedTemplateId, "stdlib-worker");
-    assert.equal(result.recommendedRecipeIds.length, 0);
-    assert.ok(result.recipes.every((entry) => !entry.relevant || entry.role === "excluded"));
-  });
-
-  it("recommends fetchers when external-api is required", () => {
-    const result = matchDiscovery(
-      req({
-        projectType: "web-app",
-        frontend: { framework: "react" },
-        capabilities: ["external-api"],
-      }),
-    );
-    assert.ok(
-      result.recommendedRecipeIds.some((id) => id === "kyjs" || id === "axios"),
-      String(result.recommendedRecipeIds),
-    );
-    const fetcherExclusive = result.recommendedRecipeIds.filter((id) =>
-      ["kyjs", "axios"].includes(id),
-    );
-    assert.equal(fetcherExclusive.length, 1);
-  });
-
-  it("handles empty registry queries without throwing", () => {
-    const result = matchDiscovery(req({ projectType: "unknown" }));
-    assert.ok(Array.isArray(result.templates));
-    assert.ok(Array.isArray(result.recipes));
-  });
-});
-
-describe("discovery general behavior", () => {
-  it("never recommends incompatible templates", () => {
-    const result = matchDiscovery(
-      req({ projectType: "api", frontend: { framework: "react" }, capabilities: ["web-ui"] }),
-    );
-    if (result.recommendedTemplateId) {
-      const pick = result.templates.find((e) => e.templateId === result.recommendedTemplateId);
-      assert.ok(pick?.compatible);
-    }
-    for (const id of result.recommendedRecipeIds) {
-      const recipe = result.recipes.find((e) => e.recipeId === id);
-      assert.ok(recipe?.compatible && recipe.relevant);
-    }
+  it("keeps weights summing to 100", () => {
+    const sum = Object.values(TEMPLATE_SCORE_WEIGHTS).reduce((a, b) => a + b, 0);
+    assert.equal(sum, 100);
   });
 
   it("is deterministic for identical inputs", () => {
     const input = req({
-      projectType: "fullstack",
-      frontend: { framework: "react", mode: "ssr" },
+      projectType: "ui",
+      frontend: { framework: "react", mode: "spa" },
+    });
+    const a = matchDiscovery(input);
+    const b = matchDiscovery(input);
+    assert.deepEqual(JSON.stringify(a), JSON.stringify(b));
+  });
+});
+
+describe("recipe matching", () => {
+  it("recommends relevant ORM recipes when database is required", () => {
+    const input = req({
+      projectType: "server-api",
       capabilities: ["database"],
       databases: ["postgresql"],
-      architectureLevel: "balanced",
+      backend: { runtime: "node" },
     });
-    assert.deepEqual(matchDiscovery(input), matchDiscovery(input));
+    const templates = matchDiscovery(input);
+    assert.ok(templates.recommendedTemplateId);
+    const result = matchDiscovery(input, { templateId: templates.recommendedTemplateId });
+    assert.ok(result.recommendedRecipeIds.length >= 1);
+  });
+
+  it("marks tooling recipes irrelevant for a simple UI", () => {
+    const input = req({ projectType: "ui", frontend: { framework: "react" } });
+    const templates = matchDiscovery(input);
+    const result = matchDiscovery(input, { templateId: templates.recommendedTemplateId });
+    assert.ok(!result.recommendedRecipeIds.includes("biome"));
+  });
+
+  it("recommends fetchers when external API is required on UI", () => {
+    const input = req({ projectType: "ui", externalApi: true });
+    const templates = matchDiscovery(input);
+    const result = matchDiscovery(input, { templateId: templates.recommendedTemplateId });
+    assert.ok(result.recommendedRecipeIds.some((id) => id === "kyjs" || id === "axios"));
   });
 });

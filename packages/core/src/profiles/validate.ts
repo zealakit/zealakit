@@ -1,11 +1,13 @@
 import { getConflictingRecipes } from "../compat.js";
 import {
+  API_TRAFFIC_EXPECTATIONS,
   ARCHITECTURE_LEVELS,
   BACKEND_FRAMEWORKS,
   BACKEND_RUNTIMES,
   CAPABILITIES,
   DATABASE_TYPES,
   DEPLOYMENT_TARGETS,
+  FRONTEND_DELIVERIES,
   FRONTEND_MODES,
   PROJECT_PURPOSES,
   PROJECT_TYPES,
@@ -111,6 +113,12 @@ export function validateProfiles(input: ProfileValidationInput = {}): Validation
     }
     assertMembers(errors, `${label} purposes`, profile.purposes, PROJECT_PURPOSES);
     assertMembers(errors, `${label} frontendModes`, profile.frontendModes, FRONTEND_MODES);
+    if (
+      profile.delivery &&
+      !(FRONTEND_DELIVERIES as readonly string[]).includes(profile.delivery)
+    ) {
+      errors.push(`${label} has unknown delivery '${profile.delivery}'.`);
+    }
     assertMembers(errors, `${label} capabilities`, profile.capabilities, CAPABILITIES);
     assertMembers(errors, `${label} databases`, profile.databases, DATABASE_TYPES);
     assertMembers(
@@ -124,6 +132,12 @@ export function validateProfiles(input: ProfileValidationInput = {}): Validation
       `${label} architectureLevels`,
       profile.architectureLevels,
       ARCHITECTURE_LEVELS,
+    );
+    assertMembers(
+      errors,
+      `${label} trafficExpectations`,
+      profile.trafficExpectations,
+      API_TRAFFIC_EXPECTATIONS,
     );
 
     if (profile.backend) {

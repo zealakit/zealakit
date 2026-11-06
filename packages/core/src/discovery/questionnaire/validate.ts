@@ -1,20 +1,33 @@
 import {
-  ARCHITECTURE_LEVELS,
+  API_TRAFFIC_EXPECTATIONS,
   BACKEND_FRAMEWORKS,
   BACKEND_RUNTIMES,
-  CAPABILITIES,
-  DATABASE_TYPES,
-  DEPLOYMENT_TARGETS,
-  FRONTEND_MODES,
-  PROJECT_PURPOSES,
   PROJECT_TYPES,
-  SCOPES,
-  UI_FRAMEWORKS,
+  SERVICE_GOALS,
+  VISITOR_ACTIONS,
+  WEBSITE_KINDS,
+  WORKER_TASKS,
 } from "../../constants.js";
 import type { ValidationResult } from "../../types.js";
 import { getQuestionOptions, getVisibleQuestions } from "./questions.js";
-import type { DiscoveryAnswers, DiscoveryQuestionId } from "./types.js";
-import { NO_PREFERENCE } from "./types.js";
+import {
+  API_AUTH_NEEDS,
+  API_BACKGROUND_NEEDS,
+  API_STORAGE_NEEDS,
+  CONTENT_CHANGE_FREQUENCIES,
+  DISCOVERY_UI_STACKS,
+  type DiscoveryAnswers,
+  type DiscoveryQuestionId,
+  NO_PREFERENCE,
+  SERVICE_CONSUMERS,
+  UI_BACKEND_APPROACHES,
+  UI_DATA_NEEDS,
+  USER_ACCOUNT_NEEDS,
+  WORKER_DATA_NEEDS,
+  WORKER_QUEUE_NEEDS,
+  WORKER_SCHEDULES,
+  WORKER_VOLUMES,
+} from "./types.js";
 
 function result(errors: string[]): ValidationResult {
   return { valid: errors.length === 0, errors };
@@ -56,16 +69,26 @@ function assertAllowedList(
 
 const ENUMS: Record<DiscoveryQuestionId, readonly string[]> = {
   projectType: PROJECT_TYPES,
-  purpose: PROJECT_PURPOSES,
-  scopes: SCOPES,
-  frontendFramework: UI_FRAMEWORKS,
-  frontendMode: FRONTEND_MODES,
+  websiteKind: WEBSITE_KINDS,
+  visitorActions: VISITOR_ACTIONS,
+  userAccounts: USER_ACCOUNT_NEEDS,
+  uiDataNeed: UI_DATA_NEEDS,
+  uiBackendApproach: UI_BACKEND_APPROACHES,
+  contentChangeFrequency: CONTENT_CHANGE_FREQUENCIES,
+  uiTechPreference: DISCOVERY_UI_STACKS,
+  serviceGoals: SERVICE_GOALS,
+  serviceConsumers: SERVICE_CONSUMERS,
+  apiStorageNeed: API_STORAGE_NEEDS,
+  apiAuthNeed: API_AUTH_NEEDS,
+  apiBackgroundNeed: API_BACKGROUND_NEEDS,
+  apiTrafficExpectation: API_TRAFFIC_EXPECTATIONS,
   backendRuntime: BACKEND_RUNTIMES,
   backendFramework: BACKEND_FRAMEWORKS,
-  capabilities: CAPABILITIES,
-  databases: DATABASE_TYPES,
-  deploymentTarget: DEPLOYMENT_TARGETS,
-  architectureLevel: ARCHITECTURE_LEVELS,
+  workerTasks: WORKER_TASKS,
+  workerSchedule: WORKER_SCHEDULES,
+  workerVolume: WORKER_VOLUMES,
+  workerDataNeed: WORKER_DATA_NEEDS,
+  workerQueueNeed: WORKER_QUEUE_NEEDS,
 };
 
 /** Validate questionnaire answers (enums, required visible questions). */
@@ -93,11 +116,16 @@ export function validateDiscoveryAnswers(answers: DiscoveryAnswers): ValidationR
       );
     } else {
       const values = Array.isArray(raw) ? raw : undefined;
-      assertAllowedList(errors, `Question '${question.id}'`, values, ENUMS[question.id]);
+      const allowedValues = getQuestionOptions(question, answers).map((option) => option.value);
+      assertAllowedList(
+        errors,
+        `Question '${question.id}'`,
+        values,
+        allowedValues.length > 0 ? allowedValues : ENUMS[question.id],
+      );
     }
   }
 
-  // Also reject values on hidden questions that somehow remain (stale state)
   for (const [id, allowed] of Object.entries(ENUMS) as [DiscoveryQuestionId, readonly string[]][]) {
     const raw = answers[id];
     if (raw === undefined) continue;

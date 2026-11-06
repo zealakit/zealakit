@@ -1,11 +1,30 @@
-/** Template scoring weights (sum = 100). Only applicable criteria contribute. */
+/**
+ * Template scoring weights (sum = 100). Only applicable criteria contribute.
+ *
+ * Soft signals stay separate: architecture fit, purpose, ecosystem preference,
+ * and Backend/API scalability (`scalabilityFit`, only when traffic is set).
+ */
 export const TEMPLATE_SCORE_WEIGHTS = {
-  projectType: 25,
-  capabilities: 25,
-  runtimeFramework: 20,
-  scopeFit: 15,
-  architecture: 10,
-  deployment: 5,
+  projectType: 22,
+  capabilities: 18,
+  runtimeFramework: 14,
+  scopeFit: 8,
+  /** Soft rendering / delivery suitability (preferredMode). */
+  architectureFit: 8,
+  /** Soft project-purpose alignment. */
+  purposeFit: 4,
+  /**
+   * Default ecosystem preference when none was chosen:
+   * UI React → Vue → Svelte; Backend/API Node → Go (dampened under high traffic).
+   */
+  frameworkEcosystem: 12,
+  /**
+   * Soft Backend/API traffic / concurrency fit from `trafficExpectation`.
+   * Applicable only when the user answered the traffic question.
+   */
+  scalabilityFit: 10,
+  architecture: 2,
+  deployment: 2,
 } as const;
 
 export type TemplateScoreCriterion = keyof typeof TEMPLATE_SCORE_WEIGHTS;

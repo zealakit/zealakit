@@ -1,11 +1,18 @@
 export { evaluateRecipeConstraints } from "./constraints/recipe-constraints.js";
 export { evaluateTemplateConstraints } from "./constraints/template-constraints.js";
+export {
+  getTemplateMatchDiagnostics,
+  type TemplateCandidateDiagnostic,
+  type TemplateMatchDiagnostic,
+  toTemplateMatchDiagnostic,
+} from "./diagnostics.js";
 export { matchDiscovery } from "./engine.js";
 export { formatNoCompatibleTemplateMessage } from "./explain.js";
 export {
   compareRecipeMatches,
   compareTemplateMatches,
   selectNonConflictingRecipes,
+  templateFrameworkPopularityRank,
   templateSimplicityRank,
 } from "./ranking.js";
 export { REASON_CODES, type ReasonCode, reason } from "./reasons.js";

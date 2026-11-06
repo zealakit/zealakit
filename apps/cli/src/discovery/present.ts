@@ -1,8 +1,11 @@
 import {
+  type BackendFramework,
+  type BackendRuntime,
   type DiscoveryResult,
   getRecipe,
   getTemplate,
   type RecipeMatchResult,
+  resolveTemplateProfile,
   type TemplateMatchResult,
 } from "@zealakit/core";
 
@@ -40,17 +43,40 @@ function recipeRoleLabel(match: RecipeMatchResult): string {
   }
 }
 
+const RUNTIME_LABELS: Record<BackendRuntime, string> = {
+  node: "TypeScript",
+  go: "Go",
+};
+
+const BACKEND_FRAMEWORK_STYLES: Record<BackendFramework, string> = {
+  hono: "Lightweight API",
+  nest: "Structured backend",
+  gin: "Go HTTP framework",
+  stdlib: "Minimal dependencies",
+};
+
+/** Stack hint derived from Discovery profile metadata (no template-id special cases). */
 function templateStackHint(templateId: string): string {
   const template = getTemplate(templateId);
   if (!template) {
     return templateId;
   }
+  const profile = resolveTemplateProfile(templateId);
+  const runtime = profile?.backend?.runtimes?.[0];
+  const framework = profile?.backend?.frameworks?.[0];
+
+  if (profile?.projectTypes.includes("background-worker") && runtime) {
+    return `Background processing · ${RUNTIME_LABELS[runtime]}`;
+  }
+  if (framework && runtime && profile?.projectTypes.includes("server-api")) {
+    return `${BACKEND_FRAMEWORK_STYLES[framework]} · ${RUNTIME_LABELS[runtime]}`;
+  }
+
   const parts: string[] = [template.scope];
   if (template.uiFramework) {
     parts.push(template.uiFramework);
-  }
-  if (template.ecosystem === "go") {
-    parts.push("go");
+  } else if (runtime) {
+    parts.push(RUNTIME_LABELS[runtime]);
   }
   return parts.join(" · ");
 }
@@ -141,20 +167,20 @@ export function formatTemplateDetails(match: TemplateMatchResult): string {
 }
 
 export function formatDiscoverySummary(input: {
-  projectName: string;
   templateId: string;
   recipeIds: string[];
+  /** When omitted, naming is asked in a later Discovery stage. */
+  projectName?: string;
   autoInjectedIds?: string[];
 }): string {
   const template = getTemplate(input.templateId);
   const selected = input.recipeIds.filter((id) => !(input.autoInjectedIds ?? []).includes(id));
   const recipes =
     selected.length > 0 ? selected.map((id) => getRecipe(id)?.name ?? id).join(", ") : "(none)";
-  const lines = [
-    `Name:      ${input.projectName}`,
-    `Template:  ${template?.label ?? input.templateId}`,
-    `Recipes:   ${recipes}`,
-  ];
+  const lines = [`Template:  ${template?.label ?? input.templateId}`, `Recipes:   ${recipes}`];
+  if (input.projectName) {
+    lines.unshift(`Name:      ${input.projectName}`);
+  }
   if (input.autoInjectedIds && input.autoInjectedIds.length > 0) {
     lines.push(
       `Auto:      ${input.autoInjectedIds.map((id) => getRecipe(id)?.name ?? id).join(", ")}`,

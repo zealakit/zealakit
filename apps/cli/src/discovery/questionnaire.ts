@@ -1,7 +1,8 @@
-import { cancel, isCancel, multiselect, select } from "@clack/prompts";
+import { cancel, isCancel, multiselect, note, select } from "@clack/prompts";
 import {
   type DiscoveryAnswers,
   type DiscoveryQuestion,
+  formatUnsupportedProjectTypeMessage,
   getQuestionOptions,
   getVisibleQuestions,
   NO_PREFERENCE,
@@ -25,13 +26,20 @@ function withNoPreference(
   if (!question.allowNoPreference) {
     return options;
   }
-  return [...options, { value: NO_PREFERENCE, label: "No preference" }];
+  return [
+    ...options,
+    {
+      value: NO_PREFERENCE,
+      label: question.noPreferenceLabel ?? "Recommend for me",
+    },
+  ];
 }
 
 async function askQuestion(
   question: DiscoveryQuestion,
   answers: DiscoveryAnswers,
-): Promise<"cancel" | "ok"> {
+  progress: { index: number; total: number },
+): Promise<"cancel" | "ok" | "unsupported"> {
   const options = withNoPreference(
     question,
     getQuestionOptions(question, answers).map((option) => ({
@@ -41,6 +49,7 @@ async function askQuestion(
     })),
   );
 
+  console.log(pc.dim(`  Question ${progress.index} of ${progress.total}`));
   if (question.description) {
     console.log(pc.dim(`  ${question.description}`));
   }
@@ -86,12 +95,19 @@ async function askQuestion(
     return "cancel";
   }
   (answers as Record<string, unknown>)[question.id] = choice;
+
+  if (question.id === "projectType" && choice === "complete-product") {
+    note(formatUnsupportedProjectTypeMessage(), "Coming soon");
+    cancel("Complete Product is not available yet.");
+    return "unsupported";
+  }
+
   return "ok";
 }
 
 /**
  * Walk visible Discovery questions, re-evaluating conditions after each answer.
- * Previous answers are used as defaults when re-running.
+ * Progress counts only the active branch. Previous answers are used as defaults when re-running.
  */
 export async function runDiscoveryQuestionnaire(
   initial: DiscoveryAnswers = {},
@@ -109,13 +125,18 @@ export async function runDiscoveryQuestionnaire(
     }
     Object.assign(answers, pruned);
 
-    const next = getVisibleQuestions(answers).find((question) => !asked.has(question.id));
+    const visible = getVisibleQuestions(answers);
+    const next = visible.find((question) => !asked.has(question.id));
     if (!next) {
       break;
     }
 
-    const status = await askQuestion(next, answers);
-    if (status === "cancel") {
+    const progress = {
+      index: asked.size + 1,
+      total: Math.max(visible.length, asked.size + 1),
+    };
+    const status = await askQuestion(next, answers, progress);
+    if (status === "cancel" || status === "unsupported") {
       return null;
     }
     asked.add(next.id);

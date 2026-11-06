@@ -1,10 +1,12 @@
 import type {
+  ApiTrafficExpectation,
   ArchitectureLevel,
   BackendFramework,
   BackendRuntime,
   Capability,
   DatabaseType,
   DeploymentTarget,
+  FrontendDelivery,
   FrontendMode,
   ProjectPurpose,
   ProjectType,
@@ -29,6 +31,8 @@ export type TemplateProfile = {
   purposes?: ProjectPurpose[];
   /** Present when the template ships a web UI; frameworks come from `TemplateConfig.uiFramework`. */
   frontendModes?: FrontendMode[];
+  /** Meta-framework / delivery stack when distinct from `uiFramework` alone. */
+  delivery?: FrontendDelivery;
   backend?: {
     runtimes: BackendRuntime[];
     /** Omit when the stack is not one of `BACKEND_FRAMEWORKS` (e.g. Astro Node adapter). */
@@ -38,6 +42,11 @@ export type TemplateProfile = {
   databases?: DatabaseType[];
   deploymentTargets?: DeploymentTarget[];
   architectureLevels?: ArchitectureLevel[];
+  /**
+   * Soft traffic/concurrency levels this template is a strong fit for.
+   * Ranking only — not a hard gate and not a performance benchmark claim.
+   */
+  trafficExpectations?: ApiTrafficExpectation[];
 };
 
 /**

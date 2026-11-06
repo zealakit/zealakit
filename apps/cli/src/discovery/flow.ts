@@ -10,6 +10,7 @@ import {
   text,
 } from "@clack/prompts";
 import {
+  createProjectNaming,
   type DiscoveryAnswers,
   type DiscoverySessionDraft,
   didChangeDiscoveryRecommendations,
@@ -17,6 +18,7 @@ import {
   getTemplate,
   matchDiscovery,
   normalizeDiscoveryAnswers,
+  type ProjectNaming,
   recordDiscoverySession,
   resolveRecipeDependencies,
   type ScaffoldConfig,
@@ -43,32 +45,50 @@ async function ask<T>(prompt: Promise<T>): Promise<Exclude<T, symbol> | null> {
   return value as Exclude<T, symbol>;
 }
 
-async function promptProjectName(initial?: string): Promise<string | null> {
-  if (initial) {
-    return initial;
+/**
+ * Final Discovery stage: name the project after recommendations are accepted.
+ * Does not re-run matching. Optional CLI `projectName` arg pre-fills / skips the prompt.
+ */
+async function promptProjectNaming(initialName?: string): Promise<ProjectNaming | null> {
+  if (initialName) {
+    if (!isValidNpmPackageName(initialName)) {
+      console.log(
+        pc.red(
+          "  Invalid project name from the command line. Use lowercase letters, no spaces (npm naming rules).",
+        ),
+      );
+      // Fall through to interactive rename rather than aborting the whole session.
+    } else {
+      return createProjectNaming(initialName);
+    }
   }
-  return ask(
+
+  const name = await ask(
     text({
       message: "What is your project name?",
       placeholder: "my-app",
       validate: (value) => {
-        const name = value?.trim() ?? "";
-        if (!name) {
+        const trimmed = value?.trim() ?? "";
+        if (!trimmed) {
           return "Project name cannot be empty.";
         }
-        if (!isValidNpmPackageName(name)) {
+        if (!isValidNpmPackageName(trimmed)) {
           return "Invalid name. Use lowercase letters, no spaces (npm naming rules).";
         }
       },
     }),
   );
+  if (name === null) {
+    return null;
+  }
+  return createProjectNaming(name.trim());
 }
 
 type ReviewAction = "create" | "recipes" | "template" | "answers" | "cancel";
 
 async function promptReview(summary: string): Promise<ReviewAction | null> {
   console.log(
-    `\n${pc.bold("Project Summary")}\n${summary
+    `\n${pc.bold("Recommended setup")}\n${summary
       .split("\n")
       .map((line) => `  ${line}`)
       .join("\n")}\n`,
@@ -76,9 +96,9 @@ async function promptReview(summary: string): Promise<ReviewAction | null> {
 
   return ask(
     select<ReviewAction>({
-      message: "Create this project?",
+      message: "Continue with this setup?",
       options: [
-        { value: "create", label: "Yes, create project" },
+        { value: "create", label: "Yes — name the project and create" },
         { value: "recipes", label: "Change recipes" },
         { value: "template", label: "Change template" },
         { value: "answers", label: "Adjust discovery answers" },
@@ -93,6 +113,8 @@ export type DiscoveryPromptResult = {
   config: ScaffoldConfig | null;
   /** Present when a Discovery session started; finalize after generation when config is set. */
   feedback: DiscoverySessionDraft | null;
+  /** Set when the user reached the naming stage (even if they cancel before writing). */
+  naming?: ProjectNaming | null;
 };
 
 function createDraft(startedAtMs: number): DiscoverySessionDraft {
@@ -125,6 +147,8 @@ function persistTerminalDraft(draft: DiscoverySessionDraft): void {
 
 /**
  * Interactive Project Discovery flow → ScaffoldConfig for the existing pipeline.
+ *
+ * Order: questionnaire → recommendations → review → **project naming** → generation config.
  */
 export async function runDiscoveryPrompts(initial: {
   projectName?: string;
@@ -141,19 +165,13 @@ export async function runDiscoveryPrompts(initial: {
 
   note(
     [
-      "We ask a few questions about what you are building.",
-      "Then we recommend a template and only the recipes that fit.",
+      "First we ask what you are building, then recommend a template and recipes.",
       "You can change any recommendation before files are written.",
+      "We ask for the project name only after you accept a setup.",
       "Local feedback (IDs only) helps improve Discovery — `zealakit discovery stats`.",
     ].join("\n"),
     "How it works",
   );
-
-  const projectName = await promptProjectName(initial.projectName);
-  if (projectName === null) {
-    persistTerminalDraft(draft);
-    return { config: null, feedback: null };
-  }
 
   let answers: DiscoveryAnswers = {};
   let templateId: string | undefined;
@@ -327,7 +345,6 @@ export async function runDiscoveryPrompts(initial: {
     const autoInjectedIds = finalRecipeIds.filter((id) => !selectedSet.has(id));
 
     const summary = formatDiscoverySummary({
-      projectName,
       templateId,
       recipeIds: finalRecipeIds,
       autoInjectedIds,
@@ -353,6 +370,13 @@ export async function runDiscoveryPrompts(initial: {
       continue;
     }
 
+    // Naming is the last interactive stage — does not re-run matching.
+    const naming = await promptProjectNaming(initial.projectName);
+    if (naming === null) {
+      persistTerminalDraft(draft);
+      return { config: null, feedback: null, naming: null };
+    }
+
     outro(pc.green("Creating project..."));
     const readyDraft = finalizeDraft({
       ...draft,
@@ -362,11 +386,12 @@ export async function runDiscoveryPrompts(initial: {
     });
     return {
       config: {
-        projectName,
+        projectName: naming.projectName,
         templateId,
         recipeIds: finalRecipeIds,
       },
       feedback: readyDraft,
+      naming,
     };
   }
 }

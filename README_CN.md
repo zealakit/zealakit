@@ -75,7 +75,9 @@ npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 
 ## Project Discovery
 
-**Project Discovery** 会询问你在做什么，然后推荐合适的模板以及匹配的 Recipe。写入文件前你可以随时调整选择。
+**Project Discovery** 以产品意图为先——也面向用 AI 辅助开发的非技术用户。问题询问你想让产品做什么（网站类型、访客能做什么、是否保存数据、谁会使用服务），而不是 SPA/SSR 术语、ORM 选择或架构层级。
+
+Zealakit 在内部把这些答案解析为技术需求，再推荐模板与匹配的 Recipe。写入文件前你可以随时调整。
 
 不确定该用哪个 starter 时用 Discovery；已经明确技术栈时优先用 `--template`。
 
@@ -83,13 +85,32 @@ npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 npx zealakit@latest create --discover
 ```
 
+### 项目类型
+
+| 类型                      | 状态     | 典型后续问题（通俗表述）                                              |
+| ------------------------- | -------- | --------------------------------------------------------------------- |
+| **UI / Website**          | 已支持   | 网站类型、访客能力、在相关时询问账号/数据、内容更新频率、可选技术偏好 |
+| **Backend / API Service** | 已支持   | 服务做什么、谁使用、存储需求、在相关时询问登录、可选 TypeScript 或 Go |
+| **Background / Worker**   | 已支持   | 后台任务、何时运行、数据需求、可选 TypeScript 或 Go                   |
+| **Complete Product**      | 即将推出 | 完整产品（从简单网站到多服务系统）——**尚不可**推荐或生成              |
+
+不会展示其他分支的问题。更改根项目类型会清除不兼容的答案。进度只统计当前分支。
+
+**Not sure** / **Recommend for me** / **No preference** 表示跳过该偏好——不会虚构硬性约束。
+
+**已有 API vs 由 Zealakit 生成后端：** 若网站对接你已有的 API，这表示*消费外部 API*，**不会**让 Zealakit 生成后端。新 UI 需要持久化数据时，可能需要具备数据能力的 hybrid starter，而不是纯前端模板。
+
+尚不支持的组合（如 Svelte UI、TypeScript worker、NoSQL）会得到**无兼容模板**及清晰说明，而不是误导性回退。
+
 流程：
 
-1. 回答简短问题（项目类型、可选 UI/runtime 偏好、数据库等 extras）。
-2. 查看按匹配度排序的**兼容**模板及简短说明（不兼容的会被隐藏）。
-3. 查看建议的 Recipe——不会预选不必要的项。
-4. 确认摘要（或返回调整答案 / 模板 / Recipe）。
-5. 生成走与手动 create 相同的脚手架流水线。
+1. 选择要创建的内容（UI / Website、Backend / API Service 或 Background / Worker）。
+2. 回答分支相关的意图问题（仅适用项）。
+3. Zealakit 解析技术需求，再按匹配度排序**兼容**模板及简短说明。
+4. 查看建议的 Recipe——不会预选不必要的项。
+5. 确认推荐配置（或返回调整）。
+6. **仅在接受配置之后**再命名项目（命名不会重新跑 matching）。
+7. 生成走与手动 create 相同的脚手架流水线。
 
 你始终保有控制权：在确认步骤未接受的模板/Recipe，Discovery 不会安装。
 
@@ -101,13 +122,13 @@ npx zealakit@latest create --discover
 
 **绝不记录：** 项目源码、文件内容、环境变量、凭证、个人数据、绝对路径，或问卷原始答案。
 
-| 命令 | 用途 |
-| --- | --- |
-| `zealakit discovery stats` | 离线汇总（次数、常用模板/Recipe、诊断信号） |
-| `zealakit discovery feedback status` | 是否开启及数据存放位置 |
-| `zealakit discovery feedback disable` | 停止采集新会话（已有统计仍可读） |
-| `zealakit discovery feedback enable` | 重新开启采集 |
-| `zealakit discovery feedback clear` | 删除已保留的会话记录 |
+| 命令                                  | 用途                                        |
+| ------------------------------------- | ------------------------------------------- |
+| `zealakit discovery stats`            | 离线汇总（次数、常用模板/Recipe、诊断信号） |
+| `zealakit discovery feedback status`  | 是否开启及数据存放位置                      |
+| `zealakit discovery feedback disable` | 停止采集新会话（已有统计仍可读）            |
+| `zealakit discovery feedback enable`  | 重新开启采集                                |
+| `zealakit discovery feedback clear`   | 删除已保留的会话记录                        |
 
 存储位置：`~/.config/zealakit/discovery-feedback.json`（Windows 为 `%APPDATA%\zealakit\`；可用 `ZEALAKIT_CONFIG_DIR` 覆盖）。最多保留 100 条会话。也可通过 `ZEALAKIT_DISCOVERY_FEEDBACK=0` 关闭。反馈写入失败**不会**阻塞项目生成。
 
@@ -121,15 +142,15 @@ npx zealakit@latest create --discover
 npx zealakit@latest create [项目名] [选项]
 ```
 
-| 选项                   | 说明                                               |
-| ---------------------- | -------------------------------------------------- |
-| `--discover`           | Project Discovery — 根据需求推荐模板/Recipe        |
-| `-t, --template <id>`  | 自行选择基础模板（默认：`vite-react`）             |
-| `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`）         |
-| `-y, --yes`            | 非交互模式（必须提供项目名）                       |
-| `--dry-run`            | 预览生成计划，不写入文件                           |
-| `-h, --help`           | 显示帮助                                           |
-| `-V, --version`        | 显示版本                                           |
+| 选项                   | 说明                                        |
+| ---------------------- | ------------------------------------------- |
+| `--discover`           | Project Discovery — 根据需求推荐模板/Recipe |
+| `-t, --template <id>`  | 自行选择基础模板（默认：`vite-react`）      |
+| `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`）  |
+| `-y, --yes`            | 非交互模式（必须提供项目名）                |
+| `--dry-run`            | 预览生成计划，不写入文件                    |
+| `-h, --help`           | 显示帮助                                    |
+| `-V, --version`        | 显示版本                                    |
 
 其他命令：`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
 
@@ -268,42 +289,6 @@ npm install && npm run dev
 
 **支持 monorepo 吗？**  
 暂不支持。每次运行创建一个独立项目。
-
----
-
-## 工具用元数据
-
-```bash
-npx zealakit@latest info --json   # 别名：zealakit --info --json
-```
-
-在 stdout 上只输出一个 JSON 文档（不含其他内容）：CLI 名称/版本、模板（含交互流程和默认 recipe）、分类、recipe（兼容模板、冲突、依赖包）以及兼容性规则。键均为固定 id；仅在不兼容变更时才会修改 `schemaVersion`。不加 `--json` 时输出便于阅读的摘要。
-
----
-
-## 仓库结构
-
-本仓库为 pnpm monorepo。发布到 npm 的包仍是 **`zealakit`**（根包）；workspace 包为 private，并打包进 `dist/`。
-
-```text
-apps/cli/                   # CLI 入口（prompts、flags、UX、doctor）
-packages/core/              # 与生态无关的脚手架引擎
-packages/ecosystem-node/    # Node 注册表 + npm package.json 适配器
-packages/ecosystem-go/      # 可选 Go 工具链检测
-templates/node/<id>/        # Node 基础模板
-templates/go/stdlib-api/    # Go stdlib HTTP API 模板
-templates/go/gin-api/       # Go Gin HTTP API 模板
-templates/go/stdlib-worker/ # Go stdlib 后台 worker
-recipes/node/<id>/          # Node Recipe
-recipes/go/                 # 预留（尚无 Go Recipe）
-```
-
-检查运行环境（Go 可选；没有 Go 也可跑 TypeScript 工作流）：
-
-```bash
-npx zealakit@latest doctor
-npx zealakit@latest doctor --json
-```
 
 ---
 

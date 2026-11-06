@@ -75,7 +75,9 @@ npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 
 ## Project Discovery
 
-**Project Discovery** asks a few questions about what you are building, then recommends a template and only the recipes that fit. You review and can change anything before files are written.
+**Project Discovery** is designed for product intent first — including non-technical builders using AI-assisted development. Questions ask what you want the product to do (kind of website, visitor actions, whether data is saved, who uses a service), not SPA/SSR jargon, ORM choice, or architecture levels.
+
+Zealakit converts those answers into technical requirements internally, then recommends a template and only the recipes that fit. You review and can change anything before files are written.
 
 Use Discovery when you are unsure which starter matches your needs. Prefer `--template` when you already know the stack.
 
@@ -83,13 +85,32 @@ Use Discovery when you are unsure which starter matches your needs. Prefer `--te
 npx zealakit@latest create --discover
 ```
 
+### Project types
+
+| Type                      | Status      | Typical follow-ups (plain language)                                                                                     |
+| ------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **UI / Website**          | Supported   | Kind of website, what visitors can do, accounts/data when relevant, how often content changes, optional tech preference |
+| **Backend / API Service** | Supported   | What the service does, who uses it, storage needs, sign-in when relevant, optional TypeScript or Go                     |
+| **Background / Worker**   | Supported   | What runs in the background, when it runs, data needs, optional TypeScript or Go                                        |
+| **Complete Product**      | Coming soon | Entire product (simple site through multi-service systems) — **not** recommendable or generatable yet                   |
+
+Questions from other branches are never shown. Changing the root project type clears incompatible answers. Progress counts only the active branch.
+
+**Not sure** / **Recommend for me** / **No preference** means “skip this preference” — it does not invent hard constraints.
+
+**External API vs generated backend:** saying your website talks to an API you already have marks _external API consumption_. That does **not** make Zealakit generate a backend. Saving data in a new UI project can require a data-capable (hybrid) starter instead of a frontend-only one.
+
+Unsupported combinations (for example Svelte UI, TypeScript workers, NoSQL) yield **no compatible template** with a clear explanation, rather than a misleading fallback.
+
 How it works:
 
-1. Answer short questions (project type, optional UI/runtime preferences, extras such as a database).
-2. See ranked **compatible** templates with short explanations (incompatible starters are hidden).
-3. Review suggested recipes — nothing unnecessary is pre-selected.
-4. Confirm the summary (or go back to adjust answers / template / recipes).
-5. Generation uses the same scaffolding pipeline as manual create.
+1. Choose what to create (UI / Website, Backend / API Service, or Background / Worker).
+2. Answer branch-specific intent questions (only what applies).
+3. Zealakit resolves technical requirements, then ranks **compatible** templates with short explanations (incompatible starters are hidden).
+4. Review suggested recipes — nothing unnecessary is pre-selected.
+5. Confirm the recommended setup (or go back to adjust answers / template / recipes).
+6. **Name the project** only after you accept a setup (naming does not re-run matching).
+7. Generation uses the same scaffolding pipeline as manual create.
 
 You always keep control: Discovery never installs a template or recipe you did not accept at the confirmation step.
 
@@ -101,13 +122,13 @@ Completed Discovery sessions can write a **local-only** summary so you can spot 
 
 **Never recorded:** project source, file contents, environment variables, credentials, personal data, absolute project paths, or raw questionnaire answers.
 
-| Command | Purpose |
-| --- | --- |
-| `zealakit discovery stats` | Offline summary (counts, top templates/recipes, diagnostic signals) |
-| `zealakit discovery feedback status` | Whether collection is on and where data is stored |
-| `zealakit discovery feedback disable` | Stop collecting new sessions (existing stats stay readable) |
-| `zealakit discovery feedback enable` | Re-enable collection |
-| `zealakit discovery feedback clear` | Delete retained session records |
+| Command                               | Purpose                                                             |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `zealakit discovery stats`            | Offline summary (counts, top templates/recipes, diagnostic signals) |
+| `zealakit discovery feedback status`  | Whether collection is on and where data is stored                   |
+| `zealakit discovery feedback disable` | Stop collecting new sessions (existing stats stay readable)         |
+| `zealakit discovery feedback enable`  | Re-enable collection                                                |
+| `zealakit discovery feedback clear`   | Delete retained session records                                     |
 
 Storage: `~/.config/zealakit/discovery-feedback.json` (or `%APPDATA%\zealakit\` on Windows; override with `ZEALAKIT_CONFIG_DIR`). At most 100 sessions are kept. You can also disable via `ZEALAKIT_DISCOVERY_FEEDBACK=0`. Feedback write failures never block project generation.
 
@@ -121,15 +142,15 @@ Diagnostic signals from `discovery stats` are hints only — they do **not** aut
 npx zealakit@latest create [project-name] [options]
 ```
 
-| Option                 | Description                                                                 |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `--discover`           | Project Discovery — recommend a template/recipes from your requirements     |
-| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                     |
-| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                            |
-| `-y, --yes`            | Non-interactive mode (requires a project name)                              |
-| `--dry-run`            | Preview the plan without writing files                                      |
-| `-h, --help`           | Show help                                                                   |
-| `-V, --version`        | Show version                                                                |
+| Option                 | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `--discover`           | Project Discovery — recommend a template/recipes from your requirements |
+| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                 |
+| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                       |
+| `-y, --yes`            | Non-interactive mode (requires a project name)                          |
+| `--dry-run`            | Preview the plan without writing files                                  |
+| `-h, --help`           | Show help                                                               |
+| `-V, --version`        | Show version                                                            |
 
 Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
@@ -268,42 +289,6 @@ Yes. Treat it like any other project.
 
 **Monorepos?**  
 Not yet. Each run creates one standalone project.
-
----
-
-## Metadata for tooling
-
-```bash
-npx zealakit@latest info --json   # alias: zealakit --info --json
-```
-
-Prints a single JSON document on stdout (nothing else): CLI name/version, templates (with their prompt flow and default recipes), categories, recipes (compatible templates, conflicts, packages), and compatibility rules. Keys are stable ids; `schemaVersion` changes only on breaking changes. Without `--json`, prints a human-readable summary.
-
----
-
-## Repository layout
-
-This repo is a pnpm monorepo. The published npm package remains **`zealakit`** (root); workspace packages are private and bundled into `dist/`.
-
-```text
-apps/cli/                         # CLI entry (prompts, flags, UX, doctor)
-packages/core/                    # Ecosystem-independent scaffold engine
-packages/ecosystem-node/    # Node registry + npm package.json adapter
-packages/ecosystem-go/            # Optional Go toolchain detection
-templates/node/<id>/        # Node base templates
-templates/go/stdlib-api/          # Go stdlib HTTP API template
-templates/go/gin-api/             # Go Gin HTTP API template
-templates/go/stdlib-worker/       # Go stdlib background worker
-recipes/node/<id>/          # Node recipes
-recipes/go/                       # Reserved (no Go recipes yet)
-```
-
-Check the environment (Go is optional; TypeScript workflows work without it):
-
-```bash
-npx zealakit@latest doctor
-npx zealakit@latest doctor --json
-```
 
 ---
 

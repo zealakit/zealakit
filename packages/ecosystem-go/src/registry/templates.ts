@@ -3,8 +3,8 @@ import type { TemplateConfig } from "@zealakit/core";
 export const templateList: TemplateConfig[] = [
   {
     id: "stdlib-api",
-    name: "Go stdlib API",
-    label: "Go HTTP API (stdlib, DDD layers)",
+    name: "Go Standard Library API",
+    label: "Go Standard Library API",
     scope: "server",
     ecosystem: "go",
     description:
@@ -14,8 +14,8 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "gin-api",
-    name: "Go Gin API",
-    label: "Go HTTP API (Gin)",
+    name: "Gin + Go",
+    label: "Gin + Go",
     scope: "server",
     ecosystem: "go",
     description:

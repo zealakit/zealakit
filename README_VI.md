@@ -75,7 +75,9 @@ npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 
 ## Project Discovery
 
-**Project Discovery** hỏi vài câu về những gì bạn đang xây, rồi gợi ý template và chỉ những recipe phù hợp. Bạn xem lại và có thể đổi bất kỳ lựa chọn nào trước khi ghi file.
+**Project Discovery** ưu tiên ý định sản phẩm — kể cả người không chuyên kỹ thuật dùng AI hỗ trợ coding. Câu hỏi nói về bạn muốn sản phẩm làm gì (loại website, hành vi người dùng, có lưu dữ liệu không, ai dùng service), không hỏi jargon SPA/SSR, chọn ORM, hay architecture level.
+
+Zealakit chuyển câu trả lời thành yêu cầu kỹ thuật nội bộ, rồi gợi ý template và chỉ những recipe phù hợp. Bạn xem lại và có thể đổi trước khi ghi file.
 
 Dùng Discovery khi chưa chắc starter nào khớp. Prefer `--template` khi đã biết stack.
 
@@ -83,13 +85,32 @@ Dùng Discovery khi chưa chắc starter nào khớp. Prefer `--template` khi đ
 npx zealakit@latest create --discover
 ```
 
+### Loại dự án
+
+| Loại                      | Trạng thái | Câu hỏi tiếp theo (ngôn ngữ đời thường)                                                                          |
+| ------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| **UI / Website**          | Hỗ trợ     | Loại website, khách làm được gì, tài khoản/dữ liệu khi cần, tần suất đổi nội dung, preference công nghệ tùy chọn |
+| **Backend / API Service** | Hỗ trợ     | Service làm gì, ai dùng, cần lưu trữ gì, đăng nhập khi liên quan, TypeScript hoặc Go tùy chọn                    |
+| **Background / Worker**   | Hỗ trợ     | Việc chạy nền, khi nào chạy, nhu cầu dữ liệu, TypeScript hoặc Go tùy chọn                                        |
+| **Complete Product**      | Sắp có     | Toàn bộ sản phẩm (từ website đơn giản đến nhiều service) — **chưa** gợi ý / generate                             |
+
+Câu hỏi của nhánh khác không hiện. Đổi loại dự án gốc sẽ xóa câu trả lời không còn hợp lệ. Tiến trình chỉ tính câu hỏi của nhánh đang active.
+
+**Not sure** / **Recommend for me** / **No preference** nghĩa là bỏ qua preference đó — không tạo hard constraint giả.
+
+**API có sẵn vs backend do Zealakit tạo:** nếu website nói chuyện với API bạn đã có, đó là _dùng API bên ngoài_ — **không** khiến Zealakit sinh backend. UI mới cần lưu dữ liệu có thể cần starter hybrid (có data), không chỉ frontend-only.
+
+Tổ hợp chưa hỗ trợ (Svelte UI, worker TypeScript, NoSQL, …) cho kết quả **không có template tương thích** kèm giải thích rõ, không fallback gây hiểu nhầm.
+
 Cách hoạt động:
 
-1. Trả lời câu hỏi ngắn (loại dự án, tùy chọn UI/runtime, extras như database).
-2. Xem template **tương thích** xếp hạng kèm giải thích ngắn (starter không khớp bị ẩn).
-3. Xem recipe gợi ý — không pre-select thứ không cần thiết.
-4. Xác nhận tóm tắt (hoặc quay lại chỉnh câu trả lời / template / recipe).
-5. Generate dùng cùng pipeline scaffold như create thủ công.
+1. Chọn muốn tạo gì (UI / Website, Backend / API Service, hoặc Background / Worker).
+2. Trả lời câu hỏi ý định theo nhánh (chỉ những gì liên quan).
+3. Zealakit resolve yêu cầu kỹ thuật, rồi xếp hạng template **tương thích** kèm giải thích ngắn.
+4. Xem recipe gợi ý — không pre-select thứ không cần.
+5. Xác nhận setup đề xuất (hoặc quay lại chỉnh).
+6. **Đặt tên project** chỉ sau khi bạn chấp nhận setup (đặt tên không chạy lại matching).
+7. Generate dùng cùng pipeline scaffold như create thủ công.
 
 Bạn luôn giữ quyền kiểm soát: Discovery không cài template/recipe nào bạn chưa chấp nhận ở bước xác nhận.
 
@@ -101,13 +122,13 @@ Các phiên Discovery hoàn tất có thể ghi **tóm tắt chỉ trên máy** 
 
 **Không bao giờ ghi:** mã nguồn project, nội dung file, biến môi trường, credential, dữ liệu cá nhân, đường dẫn tuyệt đối, hay câu trả lời thô của questionnaire.
 
-| Lệnh | Mục đích |
-| --- | --- |
-| `zealakit discovery stats` | Tóm tắt offline (số phiên, template/recipe hay chọn, tín hiệu chẩn đoán) |
-| `zealakit discovery feedback status` | Đang bật/tắt và vị trí lưu dữ liệu |
-| `zealakit discovery feedback disable` | Ngừng ghi phiên mới (stats cũ vẫn đọc được) |
-| `zealakit discovery feedback enable` | Bật lại thu thập |
-| `zealakit discovery feedback clear` | Xóa các bản ghi phiên đã giữ |
+| Lệnh                                  | Mục đích                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| `zealakit discovery stats`            | Tóm tắt offline (số phiên, template/recipe hay chọn, tín hiệu chẩn đoán) |
+| `zealakit discovery feedback status`  | Đang bật/tắt và vị trí lưu dữ liệu                                       |
+| `zealakit discovery feedback disable` | Ngừng ghi phiên mới (stats cũ vẫn đọc được)                              |
+| `zealakit discovery feedback enable`  | Bật lại thu thập                                                         |
+| `zealakit discovery feedback clear`   | Xóa các bản ghi phiên đã giữ                                             |
 
 Lưu trữ: `~/.config/zealakit/discovery-feedback.json` (hoặc `%APPDATA%\zealakit\` trên Windows; ghi đè bằng `ZEALAKIT_CONFIG_DIR`). Giữ tối đa 100 phiên. Có thể tắt qua `ZEALAKIT_DISCOVERY_FEEDBACK=0`. Lỗi ghi feedback không bao giờ chặn generate project.
 
@@ -121,15 +142,15 @@ Tín hiệu từ `discovery stats` chỉ mang tính gợi ý — **không** tự
 npx zealakit@latest create [tên-project] [options]
 ```
 
-| Option                 | Mô tả                                                                              |
-| ---------------------- | ---------------------------------------------------------------------------------- |
-| `--discover`           | Project Discovery — gợi ý template/recipe từ yêu cầu của bạn                       |
-| `-t, --template <id>`  | Tự chọn template gốc (mặc định: `vite-react`)                                      |
-| `-w, --with <recipes>` | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`)                     |
-| `-y, --yes`            | Chế độ không hỏi (bắt buộc có tên project)                                         |
-| `--dry-run`            | Xem trước kế hoạch, không ghi file                                                 |
-| `-h, --help`           | Xem trợ giúp                                                                       |
-| `-V, --version`        | Xem phiên bản                                                                      |
+| Option                 | Mô tả                                                          |
+| ---------------------- | -------------------------------------------------------------- |
+| `--discover`           | Project Discovery — gợi ý template/recipe từ yêu cầu của bạn   |
+| `-t, --template <id>`  | Tự chọn template gốc (mặc định: `vite-react`)                  |
+| `-w, --with <recipes>` | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`) |
+| `-y, --yes`            | Chế độ không hỏi (bắt buộc có tên project)                     |
+| `--dry-run`            | Xem trước kế hoạch, không ghi file                             |
+| `-h, --help`           | Xem trợ giúp                                                   |
+| `-V, --version`        | Xem phiên bản                                                  |
 
 Lệnh khác: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
@@ -268,42 +289,6 @@ Không — các nhóm đó độc quyền. Storybook là ngoại lệ.
 
 **Hỗ trợ monorepo chưa?**  
 Chưa. Mỗi lần chạy tạo một project độc lập.
-
----
-
-## Metadata cho tooling
-
-```bash
-npx zealakit@latest info --json   # alias: zealakit --info --json
-```
-
-In ra stdout đúng một tài liệu JSON (không kèm gì khác): tên/version CLI, template (kèm flow prompt và recipe mặc định), category, recipe (template tương thích, xung đột, package) và các quy tắc tương thích. Key là id cố định; `schemaVersion` chỉ đổi khi có thay đổi phá vỡ tương thích. Không có `--json` thì in bản tóm tắt dễ đọc.
-
----
-
-## Cấu trúc repository
-
-Repo này là monorepo pnpm. Package npm publish vẫn là **`zealakit`** (root); các workspace package là private và được bundle vào `dist/`.
-
-```text
-apps/cli/                   # Entry CLI (prompts, flags, UX, doctor)
-packages/core/              # Engine scaffold độc lập ecosystem
-packages/ecosystem-node/    # Registry Node + adapter package.json npm
-packages/ecosystem-go/      # Phát hiện toolchain Go (tùy chọn)
-templates/node/<id>/        # Template gốc Node
-templates/go/stdlib-api/    # Template Go HTTP API (stdlib)
-templates/go/gin-api/       # Template Go HTTP API (Gin)
-templates/go/stdlib-worker/ # Worker nền Go (stdlib)
-recipes/node/<id>/          # Recipe Node
-recipes/go/                 # Dự trữ (chưa có recipe Go)
-```
-
-Kiểm tra môi trường (Go tùy chọn; workflow TypeScript chạy được khi không có Go):
-
-```bash
-npx zealakit@latest doctor
-npx zealakit@latest doctor --json
-```
 
 ---
 

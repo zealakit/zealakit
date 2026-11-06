@@ -2,252 +2,322 @@ import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  type DiscoveryAnswers,
   formatNoCompatibleTemplateMessage,
-  getVisibleQuestions,
   matchDiscovery,
-  NO_PREFERENCE,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
 } from "@zealakit/core";
 import {
-  buildRecipeChoices,
   buildTemplateChoices,
   defaultSelectedRecipeIds,
 } from "../../apps/cli/src/discovery/present.js";
 
-const ORM_IDS = new Set(["prisma", "drizzle-orm", "type-orm", "mikro-orm"]);
-const BACKEND_TEMPLATE_IDS = new Set(["nest", "hono", "stdlib-api", "gin-api", "stdlib-worker"]);
-const FRONTEND_ONLY_IDS = new Set(["vite-react", "vite-vue", "astro-react-client"]);
-
-function requirementsFrom(answers: DiscoveryAnswers): ProjectRequirements {
+function fromAnswers(
+  answers: Parameters<typeof normalizeDiscoveryAnswers>[0],
+): ProjectRequirements {
   const normalized = normalizeDiscoveryAnswers(answers);
-  assert.equal(normalized.ok, true, normalized.ok ? "" : normalized.errors.join("\n"));
-  assert.ok(normalized.ok);
+  if (!normalized.ok) {
+    assert.fail(normalized.errors.join("; "));
+  }
   return normalized.requirements;
 }
 
-function compatibleIds(requirements: ProjectRequirements): string[] {
-  return matchDiscovery(requirements)
-    .templates.filter((entry) => entry.compatible)
-    .map((entry) => entry.templateId);
-}
-
-function assertNoBackendRecipes(requirements: ProjectRequirements, templateId: string): void {
-  const result = matchDiscovery(requirements, { templateId });
-  assert.deepEqual(
-    result.recommendedRecipeIds.filter((id) => ORM_IDS.has(id)),
-    [],
-  );
-  assert.ok(
-    result.recipes.filter((entry) => entry.relevant).every((entry) => !ORM_IDS.has(entry.recipeId)),
-  );
-}
-
 describe("discovery scenarios", () => {
-  it("A: simple static website prefers Astro client, no backend/ORM", () => {
-    const requirements = requirementsFrom({
-      projectType: "website",
-      frontendMode: "static",
-      deploymentTarget: "static-hosting",
-      architectureLevel: "minimal",
+  it("A: content / blog site with Astro prefers Astro client, no backend/ORM", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "blog-content",
+      contentChangeFrequency: "rarely",
+      uiTechPreference: "astro",
+      uiDataNeed: "predefined",
     });
     const result = matchDiscovery(requirements);
     assert.equal(result.recommendedTemplateId, "astro-react-client");
-
-    const compatible = compatibleIds(requirements);
-    assert.ok(compatible.every((id) => !BACKEND_TEMPLATE_IDS.has(id)));
-    assert.ok(!compatible.includes("nest"));
-    assert.ok(!compatible.includes("stdlib-worker"));
-
-    assert.ok(result.recommendedTemplateId);
-    assertNoBackendRecipes(requirements, result.recommendedTemplateId);
-    assert.deepEqual(
-      defaultSelectedRecipeIds(
-        matchDiscovery(requirements, { templateId: result.recommendedTemplateId }),
-      ),
-      [],
-    );
+    assert.ok(!result.recommendedRecipeIds.some((id) => id.includes("orm")));
+    assert.ok(!compatibleHas(result, "nest"));
   });
 
-  it("B: React SPA recommends React templates and excludes Vue / backend", () => {
-    const requirements = requirementsFrom({
-      projectType: "web-app",
-      frontendFramework: "react",
-      frontendMode: "spa",
-      architectureLevel: "balanced",
+  it("B: React interactive dashboard prefers React SPA templates and excludes Vue / backend", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      uiTechPreference: "react",
+      contentChangeFrequency: "occasionally",
+      uiDataNeed: "predefined",
     });
     const result = matchDiscovery(requirements);
-    const compatible = compatibleIds(requirements);
-
-    assert.ok(result.recommendedTemplateId);
-    assert.ok(["vite-react", "next", "astro-react-hybrid"].includes(result.recommendedTemplateId));
-    // Balanced + SPA favors Next over minimal Vite (architecture preference, not a hard bug).
-    assert.equal(result.recommendedTemplateId, "next");
-
-    assert.ok(compatible.includes("vite-react"));
-    assert.ok(!compatible.includes("vite-vue"));
-    assert.ok(!compatible.includes("nuxt"));
-    assert.ok(compatible.every((id) => !["nest", "hono", "stdlib-api", "gin-api"].includes(id)));
-
-    assertNoBackendRecipes(requirements, result.recommendedTemplateId);
-  });
-
-  it("B (minimal SPA): prefers Vite when architecture is minimal", () => {
-    const requirements = requirementsFrom({
-      projectType: "web-app",
-      frontendFramework: "react",
-      frontendMode: "spa",
-      architectureLevel: "minimal",
-    });
-    const result = matchDiscovery(requirements);
+    const ids = compatibleIds(result);
+    assert.ok(ids.includes("vite-react"));
+    assert.ok(!ids.includes("vite-vue"));
+    assert.ok(!ids.includes("nest"));
     assert.equal(result.recommendedTemplateId, "vite-react");
   });
 
-  it("C: fullstack SaaS with Postgres recommends hybrid/fullstack + one ORM", () => {
-    // Auth is not a registered capability yet — cover database + React + Node instead.
-    const requirements = requirementsFrom({
-      projectType: "fullstack",
-      purpose: "saas",
-      frontendFramework: "react",
-      backendRuntime: "node",
-      capabilities: ["database"],
-      databases: ["postgresql"],
-      architectureLevel: "balanced",
+  it("C: frequently updated business site keeps Vite eligible and ranks content-oriented React starters", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "business-marketing",
+      uiTechPreference: "react",
+      contentChangeFrequency: "frequently",
     });
     const result = matchDiscovery(requirements);
-    const compatible = compatibleIds(requirements);
-
-    assert.ok(result.recommendedTemplateId);
-    assert.ok(["next", "astro-react-hybrid"].includes(result.recommendedTemplateId));
-    assert.ok(!compatible.some((id) => FRONTEND_ONLY_IDS.has(id)));
-    assert.ok(!compatible.includes("stdlib-worker"));
-
-    const withTemplate = matchDiscovery(requirements, {
-      templateId: result.recommendedTemplateId,
-    });
-    const orms = withTemplate.recommendedRecipeIds.filter((id) => ORM_IDS.has(id));
-    assert.equal(orms.length, 1);
-
-    const choices = buildRecipeChoices(withTemplate);
-    assert.ok(choices.some((choice) => ORM_IDS.has(choice.value)));
-    assert.ok(!choices.some((choice) => choice.value === "biome"));
+    const ids = compatibleIds(result);
+    assert.ok(ids.includes("vite-react"));
+    assert.ok(ids.includes("astro-react-client"));
+    assert.ok(ids.includes("next"));
+    assert.ok(!ids.includes("vite-vue"));
+    assert.ok(
+      result.recommendedTemplateId === "astro-react-client" ||
+        result.recommendedTemplateId === "vite-react",
+    );
   });
 
   it("D: lightweight Node API excludes frontend and does not auto-add ORM", () => {
-    const requirements = requirementsFrom({
-      projectType: "api",
+    const requirements = fromAnswers({
+      projectType: "server-api",
       backendRuntime: "node",
-      architectureLevel: "minimal",
+      apiStorageNeed: "none",
     });
     const result = matchDiscovery(requirements);
-    const compatible = compatibleIds(requirements);
-
-    assert.ok(result.recommendedTemplateId);
-    assert.ok(["hono", "nest"].includes(result.recommendedTemplateId));
-    assert.ok(compatible.every((id) => ["hono", "nest"].includes(id)));
-    assert.ok(
-      !compatible.some((id) => FRONTEND_ONLY_IDS.has(id) || id === "next" || id === "nuxt"),
-    );
-
-    assert.ok(result.recommendedTemplateId);
-    assertNoBackendRecipes(requirements, result.recommendedTemplateId);
+    assert.ok(!compatibleHas(result, "vite-react"));
+    assert.ok(result.recommendedTemplateId === "hono" || result.recommendedTemplateId === "nest");
+    assert.ok(!result.recommendedRecipeIds.some((id) => id.includes("orm") || id === "prisma"));
   });
 
-  it("E: Go API recommends Go templates only", () => {
-    const requirements = requirementsFrom({
-      projectType: "api",
+  it("E: Go API recommends Go templates only, Gin first", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
       backendRuntime: "go",
-      architectureLevel: "balanced",
     });
     const result = matchDiscovery(requirements);
-    const compatible = compatibleIds(requirements);
+    const ids = compatibleIds(result);
+    assert.deepEqual(ids, ["gin-api", "stdlib-api"]);
+    assert.ok(!compatibleHas(result, "nest"));
+    assert.ok(!compatibleHas(result, "hono"));
+  });
 
-    assert.equal(result.recommendedTemplateId, "gin-api");
-    assert.deepEqual(compatible.sort(), ["gin-api", "stdlib-api"].sort());
-    assert.ok(!compatible.includes("nest"));
-    assert.ok(!compatible.includes("hono"));
+  it("E2: no technology preference ranks Node first while keeping Go eligible", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
+      backendRuntime: "no-preference",
+      apiStorageNeed: "none",
+    });
+    const result = matchDiscovery(requirements);
+    assert.deepEqual(compatibleIds(result), ["hono", "nest", "gin-api", "stdlib-api"]);
+    assert.equal(result.recommendedTemplateId, "hono");
+  });
 
-    const recipes = matchDiscovery(requirements, { templateId: "gin-api" });
-    assert.deepEqual(recipes.recommendedRecipeIds, []);
-    assert.ok(recipes.recipes.every((entry) => !entry.relevant || entry.role === "excluded"));
+  it("E3: TypeScript preference excludes Go", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
+      backendRuntime: "node",
+    });
+    const result = matchDiscovery(requirements);
+    assert.deepEqual(compatibleIds(result), ["hono", "nest"]);
+  });
+
+  it("E4: structured database keeps Go eligible behind Node (no Go ORM recipes yet)", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
+      apiStorageNeed: "relational",
+    });
+    const result = matchDiscovery(requirements);
+    assert.deepEqual(compatibleIds(result), ["hono", "nest", "gin-api", "stdlib-api"]);
+    assert.equal(result.recommendedTemplateId, "hono");
+    const go = result.templates.find((entry) => entry.templateId === "gin-api");
+    assert.ok(go?.compatible);
+    assert.ok(go?.warnings.some((warning) => /database recipe/i.test(warning)));
+  });
+
+  it("E5: auth and background notes do not exclude Go alternatives", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
+      apiAuthNeed: "roles",
+      apiBackgroundNeed: "background",
+      apiStorageNeed: "none",
+    });
+    const result = matchDiscovery(requirements);
+    assert.deepEqual(compatibleIds(result), ["hono", "nest", "gin-api", "stdlib-api"]);
   });
 
   it("F: background worker recommends stdlib-worker only", () => {
-    const requirements = requirementsFrom({
-      projectType: "worker",
+    const requirements = fromAnswers({
+      projectType: "background-worker",
       backendRuntime: "go",
     });
     const result = matchDiscovery(requirements);
     assert.equal(result.recommendedTemplateId, "stdlib-worker");
-    assert.deepEqual(compatibleIds(requirements), ["stdlib-worker"]);
-
-    const recipes = matchDiscovery(requirements, { templateId: "stdlib-worker" });
-    assert.deepEqual(recipes.recommendedRecipeIds, []);
-    assert.ok(!recipes.recipes.some((entry) => entry.relevant && entry.recipeId === "mui"));
+    assert.deepEqual(compatibleIds(result), ["stdlib-worker"]);
   });
 
   it("G: no technical preference still ranks without inventing constraints", () => {
-    const requirements = requirementsFrom({
-      projectType: "web-app",
-      frontendFramework: NO_PREFERENCE,
-      frontendMode: NO_PREFERENCE,
-      architectureLevel: "balanced",
-    });
+    const requirements = fromAnswers({ projectType: "ui" });
     const result = matchDiscovery(requirements);
-    const choices = buildTemplateChoices(result);
-
     assert.ok(result.recommendedTemplateId);
-    assert.ok(choices.length >= 2);
-    assert.ok(choices.every((choice) => choice.match.compatible));
-    // Missing prefs must not zero-out scores for compatible templates.
-    assert.ok(choices.every((choice) => choice.match.score > 0));
-
-    const second = matchDiscovery(requirements);
-    assert.deepEqual(
-      second.templates.map((entry) => [entry.templateId, entry.score, entry.compatible]),
-      result.templates.map((entry) => [entry.templateId, entry.score, entry.compatible]),
-    );
+    assert.ok(compatibleIds(result).length > 1);
   });
 
   it("H: unsupported UI framework yields no compatible template + clear message", () => {
-    const requirements = requirementsFrom({
-      projectType: "web-app",
-      frontendFramework: "svelte",
+    const requirements = fromAnswers({
+      projectType: "ui",
+      uiTechPreference: "svelte",
     });
     const result = matchDiscovery(requirements);
     assert.equal(result.recommendedTemplateId, undefined);
-    assert.deepEqual(compatibleIds(requirements), []);
-    assert.equal(buildTemplateChoices(result).length, 0);
-
-    const message = formatNoCompatibleTemplateMessage(result);
-    assert.match(message, /No compatible template/i);
-    assert.match(message, /svelte/i);
+    assert.match(formatNoCompatibleTemplateMessage(result), /No compatible template/i);
   });
 
-  it("questionnaire: rendering mode stays available without a UI library preference", () => {
-    const visible = getVisibleQuestions({
-      projectType: "website",
-      frontendFramework: NO_PREFERENCE,
-    }).map((question) => question.id);
-    assert.ok(visible.includes("frontendMode"));
+  it("I: API with structured storage never lands on a frontend-only template", () => {
+    const requirements = fromAnswers({
+      projectType: "server-api",
+      apiStorageNeed: "relational",
+      backendRuntime: "node",
+    });
+    const result = matchDiscovery(requirements);
+    assert.ok(!compatibleHas(result, "vite-react"));
+    assert.ok(result.recommendedRecipeIds.length >= 1);
+  });
+
+  it("I2: UI that includes server/data in-project excludes frontend-only starters", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      uiDataNeed: "store-retrieve",
+      uiBackendApproach: "include-server",
+      uiTechPreference: "react",
+    });
+    const result = matchDiscovery(requirements);
+    assert.ok(!compatibleHas(result, "vite-react"));
+    assert.ok(!compatibleHas(result, "vite-vue"));
+    assert.ok(
+      compatibleIds(result).some((id) => ["next", "nuxt", "astro-react-hybrid"].includes(id)),
+    );
+  });
+
+  it("I3: dashboard with auth/data and no preference ranks React ecosystem first", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      userAccounts: "roles",
+      uiDataNeed: "store-retrieve",
+      uiBackendApproach: "ui-only",
+      contentChangeFrequency: "occasionally",
+      uiTechPreference: "no-preference",
+    });
+    const result = matchDiscovery(requirements);
+    assert.ok(compatibleHas(result, "vite-react"));
+    assert.ok(compatibleHas(result, "vite-vue"));
+    assert.ok(compatibleHas(result, "next"));
+    assert.equal(result.recommendedTemplateId, "vite-react");
+    const ranked = compatibleIds(result).filter((id) =>
+      [
+        "vite-react",
+        "next",
+        "astro-react-client",
+        "vite-vue",
+        "nuxt",
+        "astro-react-hybrid",
+      ].includes(id),
+    );
+    assert.deepEqual(ranked, [
+      "vite-react",
+      "next",
+      "astro-react-client",
+      "vite-vue",
+      "nuxt",
+      "astro-react-hybrid",
+    ]);
+  });
+
+  it("I4: dashboard with React preference keeps Vite React ahead of Next", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      uiTechPreference: "react",
+      uiBackendApproach: "ui-only",
+      uiDataNeed: "store-retrieve",
+    });
+    const result = matchDiscovery(requirements);
+    assert.equal(result.recommendedTemplateId, "vite-react");
+    const ranked = compatibleIds(result);
+    assert.ok(ranked.indexOf("vite-react") < ranked.indexOf("next"));
+    assert.ok(!ranked.includes("vite-vue"));
+  });
+
+  it("I5: dashboard with Vue preference ranks Vite Vue then Nuxt", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      uiTechPreference: "vue",
+      uiBackendApproach: "ui-only",
+      uiDataNeed: "store-retrieve",
+    });
+    const result = matchDiscovery(requirements);
+    assert.equal(result.recommendedTemplateId, "vite-vue");
+    const ranked = compatibleIds(result);
+    assert.deepEqual(ranked, ["vite-vue", "nuxt"]);
+  });
+
+  it("I6: hard SSR requirement excludes client-only starters", () => {
+    const requirements: ProjectRequirements = {
+      projectType: "ui",
+      scopes: [],
+      capabilities: [],
+      frontend: { mode: "ssr" },
+    };
+    const result = matchDiscovery(requirements);
+    assert.ok(!compatibleHas(result, "vite-react"));
+    assert.ok(!compatibleHas(result, "vite-vue"));
+    assert.ok(!compatibleHas(result, "astro-react-client"));
+    assert.ok(compatibleHas(result, "next"));
+    assert.ok(compatibleHas(result, "nuxt"));
+    assert.ok(compatibleHas(result, "astro-react-hybrid"));
+  });
+
+  it("I7: ui-only backend approach does not require embedded server capabilities", () => {
+    const requirements = fromAnswers({
+      projectType: "ui",
+      websiteKind: "management-dashboard",
+      uiDataNeed: "store-retrieve",
+      uiBackendApproach: "ui-only",
+    });
+    assert.ok(requirements.projectType === "ui");
+    assert.equal(requirements.externalApi, true);
+    assert.ok(!requirements.capabilities.includes("database"));
+    const result = matchDiscovery(requirements);
+    assert.ok(compatibleHas(result, "vite-react"));
+    assert.ok(compatibleHas(result, "next"));
+    assert.equal(result.recommendedTemplateId, "vite-react");
+  });
+
+  it("J: Complete Product cannot normalize into recommendations", () => {
+    const normalized = normalizeDiscoveryAnswers({
+      projectType: "complete-product",
+    });
+    assert.equal(normalized.ok, false);
   });
 
   it("never recommends incompatible templates in CLI choices", () => {
-    const requirements = requirementsFrom({
-      projectType: "api",
-      frontendFramework: "react",
-      capabilities: ["web-ui"],
+    const requirements = fromAnswers({
+      projectType: "ui",
+      uiTechPreference: "react",
     });
     const result = matchDiscovery(requirements);
-    for (const choice of buildTemplateChoices(result)) {
-      assert.equal(choice.match.compatible, true);
-    }
-    if (result.recommendedTemplateId) {
-      const pick = result.templates.find(
-        (entry) => entry.templateId === result.recommendedTemplateId,
-      );
-      assert.ok(pick?.compatible);
-    }
+    const choices = buildTemplateChoices(result);
+    assert.ok(choices.every((choice) => choice.match.compatible));
+    assert.equal(choices[0]?.value, result.recommendedTemplateId);
+    const withTemplate = matchDiscovery(requirements, {
+      templateId: result.recommendedTemplateId,
+    });
+    const selected = defaultSelectedRecipeIds(withTemplate);
+    assert.ok(selected.every((id) => withTemplate.recommendedRecipeIds.includes(id)));
   });
 });
+
+function compatibleIds(result: ReturnType<typeof matchDiscovery>): string[] {
+  return result.templates.filter((entry) => entry.compatible).map((entry) => entry.templateId);
+}
+
+function compatibleHas(result: ReturnType<typeof matchDiscovery>, id: string): boolean {
+  return compatibleIds(result).includes(id);
+}

@@ -1,7 +1,11 @@
 import { checkRecipeCompatibility } from "../../../compat.js";
 import type { ResolvedRecipeProfile } from "../../../profiles/types.js";
 import { getRecipe, getTemplate } from "../../../registry/index.js";
-import { type ProjectRequirements, requiredCapabilities } from "../../requirements.js";
+import {
+  getRequirementsFrontend,
+  type ProjectRequirements,
+  requiredCapabilities,
+} from "../../requirements.js";
 import { REASON_CODES, reason } from "../reasons.js";
 import type { MatchReason } from "../types.js";
 
@@ -37,10 +41,7 @@ export function evaluateRecipeConstraints(
   const selected = new Set(context.selectedRecipeIds ?? []);
 
   if (profile.projectTypes && profile.projectTypes.length > 0) {
-    if (
-      requirements.projectType !== "unknown" &&
-      !profile.projectTypes.includes(requirements.projectType)
-    ) {
+    if (!profile.projectTypes.includes(requirements.projectType)) {
       failures.push(
         reason(
           REASON_CODES.projectTypeMismatch,
@@ -91,7 +92,7 @@ export function evaluateRecipeConstraints(
     }
   }
 
-  const uiFramework = requirements.frontend?.framework;
+  const uiFramework = getRequirementsFrontend(requirements)?.framework;
   if (uiFramework && profile.uiFrameworks?.length) {
     if (!profile.uiFrameworks.includes(uiFramework)) {
       failures.push(
@@ -137,8 +138,11 @@ export function evaluateRecipeConstraints(
   const overlapping = provided.filter((capability) => needed.includes(capability));
   const databaseRelevant =
     Boolean(requirements.databases?.length) && Boolean(profile.databases?.length);
+  const interestRelevant = Boolean(
+    requirements.recipeInterests?.some((interest) => profile.categories.includes(interest)),
+  );
 
-  let relevant = overlapping.length > 0 || databaseRelevant;
+  let relevant = overlapping.length > 0 || databaseRelevant || interestRelevant;
 
   if (relevant && context.templateCapabilities?.length) {
     const novel = overlapping.filter(

@@ -7,6 +7,7 @@ import {
   compareRecipeMatches,
   compareTemplateMatches,
   selectNonConflictingRecipes,
+  templateFrameworkPopularityRank,
   templateSimplicityRank,
 } from "./ranking.js";
 import { REASON_CODES, reason } from "./reasons.js";
@@ -19,6 +20,7 @@ import type {
   RecipeMatchResult,
   TemplateMatchResult,
 } from "./types.js";
+import { templateArchitectureSuitabilityRank } from "./ui-intent.js";
 
 function matchTemplates(requirements: ProjectRequirements): {
   results: TemplateMatchResult[];
@@ -26,6 +28,8 @@ function matchTemplates(requirements: ProjectRequirements): {
   simplicity: Map<string, number>;
 } {
   const simplicity = new Map<string, number>();
+  const popularity = new Map<string, number>();
+  const architecture = new Map<string, number>();
   const results: TemplateMatchResult[] = [];
 
   for (const templateId of getAllTemplateIds()) {
@@ -44,6 +48,8 @@ function matchTemplates(requirements: ProjectRequirements): {
     }
 
     simplicity.set(templateId, templateSimplicityRank(profile));
+    popularity.set(templateId, templateFrameworkPopularityRank(profile, requirements));
+    architecture.set(templateId, templateArchitectureSuitabilityRank(profile, requirements));
     const constraints = evaluateTemplateConstraints(profile, requirements);
     if (!constraints.compatible) {
       results.push({
@@ -66,7 +72,7 @@ function matchTemplates(requirements: ProjectRequirements): {
     });
   }
 
-  results.sort((a, b) => compareTemplateMatches(a, b, simplicity));
+  results.sort((a, b) => compareTemplateMatches(a, b, simplicity, popularity, architecture));
   const recommendedTemplateId = results.find((entry) => entry.compatible)?.templateId;
 
   return { results, recommendedTemplateId, simplicity };

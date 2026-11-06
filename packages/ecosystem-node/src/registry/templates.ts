@@ -60,18 +60,18 @@ export const templateList: TemplateConfig[] = [
   {
     id: "nest",
     name: "NestJS",
-    label: "NestJS + TypeScript (DDD / hexagonal)",
+    label: "NestJS + TypeScript",
     scope: "server",
-    description: "NestJS + TypeScript hexagonal / DDD starter",
+    description: "Structured NestJS + TypeScript hexagonal / DDD starter",
     path: "node/nest",
     devCommand: "npm run start:dev",
   },
   {
     id: "hono",
     name: "Hono",
-    label: "Hono + TypeScript (DDD / hexagonal)",
+    label: "Hono + TypeScript",
     scope: "server",
-    description: "Hono + TypeScript hexagonal / DDD starter",
+    description: "Lightweight Hono + TypeScript hexagonal / DDD starter",
     path: "node/hono",
   },
 ];

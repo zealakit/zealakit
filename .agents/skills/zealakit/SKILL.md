@@ -46,17 +46,17 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 
 ### `@zealakit/core`
 
-| Area                        | Role                                                         |
-| --------------------------- | ------------------------------------------------------------ |
+| Area                      | Role                                                             |
+| ------------------------- | ---------------------------------------------------------------- |
 | `constants/` / `types.ts` | Scopes, UI frameworks, categories, discovery enums, config types |
-| `profiles/`                 | Discovery Template/Recipe profiles + validation              |
-| `discovery/`                | Questionnaire + matching/scoring engine                      |
-| `compat.ts`                 | Can recipe X go on template Y?                               |
-| `resolve-recipes.ts`        | Expand `dependsOn`, cycles, order                            |
-| `registry/`                 | Mutable catalog (`registerTemplate` / `registerRecipe`)      |
-| `scaffold/`                 | plan → stage → validate → commit; paths; transforms          |
-| `scaffold/manifest.ts`      | `ManifestAdapter` contract (plan/apply merges, project name) |
-| `validation/`               | Recipe/template/target checks (project name via adapter)     |
+| `profiles/`               | Discovery Template/Recipe profiles + validation                  |
+| `discovery/`              | Questionnaire + matching/scoring engine                          |
+| `compat.ts`               | Can recipe X go on template Y?                                   |
+| `resolve-recipes.ts`      | Expand `dependsOn`, cycles, order                                |
+| `registry/`               | Mutable catalog (`registerTemplate` / `registerRecipe`)          |
+| `scaffold/`               | plan → stage → validate → commit; paths; transforms              |
+| `scaffold/manifest.ts`    | `ManifestAdapter` contract (plan/apply merges, project name)     |
+| `validation/`             | Recipe/template/target checks (project name via adapter)         |
 
 ### `@zealakit/ecosystem-node`
 
@@ -78,13 +78,13 @@ Published package (root `zealakit`): `dist` + `templates` + `recipes`. Workspace
 
 ### `@zealakit/cli`
 
-| File                                                  | Role                                                      |
-| ----------------------------------------------------- | --------------------------------------------------------- |
-| `index.ts`                                            | Commander entry; registers Node + Go ecosystems then runs |
-| `doctor.ts`                                           | `zealakit doctor` — Node + optional Go environment check  |
-| `create.ts` / `prompts.ts` / `prompt-steps.ts`        | `zealakit create` (+ root backward-compat scaffold)       |
-| `discovery/`                                          | Project Discovery UI (`create --discover`)                |
-| `info.ts` / `preview.ts` / `manifest.ts`              | Metadata, dry-run, kit package.json                       |
+| File                                           | Role                                                      |
+| ---------------------------------------------- | --------------------------------------------------------- |
+| `index.ts`                                     | Commander entry; registers Node + Go ecosystems then runs |
+| `doctor.ts`                                    | `zealakit doctor` — Node + optional Go environment check  |
+| `create.ts` / `prompts.ts` / `prompt-steps.ts` | `zealakit create` (+ root backward-compat scaffold)       |
+| `discovery/`                                   | Project Discovery UI (`create --discover`)                |
+| `info.ts` / `preview.ts` / `manifest.ts`       | Metadata, dry-run, kit package.json                       |
 
 Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 

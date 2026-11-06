@@ -27,8 +27,8 @@ function runCli(args: string[]): { status: number | null; stderr: string; stdout
 describe("discovery CLI presentation", () => {
   it("only lists compatible templates from the engine", () => {
     const normalized = normalizeDiscoveryAnswers({
-      projectType: "website",
-      frontendFramework: "react",
+      projectType: "ui",
+      uiTechPreference: "react",
     });
     assert.ok(normalized.ok);
     if (!normalized.ok) return;
@@ -45,10 +45,9 @@ describe("discovery CLI presentation", () => {
 
   it("preselects recommended recipes and omits irrelevant ones", () => {
     const normalized = normalizeDiscoveryAnswers({
-      projectType: "api",
+      projectType: "server-api",
       backendRuntime: "node",
-      capabilities: ["database"],
-      databases: ["postgresql"],
+      apiStorageNeed: "relational",
     });
     assert.ok(normalized.ok);
     if (!normalized.ok) return;
@@ -69,8 +68,10 @@ describe("discovery CLI presentation", () => {
 
   it("does not auto-select recipes for a simple website", () => {
     const normalized = normalizeDiscoveryAnswers({
-      projectType: "website",
-      frontendFramework: "react",
+      projectType: "ui",
+      uiTechPreference: "react",
+      websiteKind: "landing-page",
+      contentChangeFrequency: "rarely",
     });
     assert.ok(normalized.ok);
     if (!normalized.ok) return;

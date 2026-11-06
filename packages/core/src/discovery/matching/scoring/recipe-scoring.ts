@@ -1,5 +1,9 @@
 import type { ResolvedRecipeProfile } from "../../../profiles/types.js";
-import { type ProjectRequirements, requiredCapabilities } from "../../requirements.js";
+import {
+  getRequirementsFrontend,
+  type ProjectRequirements,
+  requiredCapabilities,
+} from "../../requirements.js";
 import { REASON_CODES, reason } from "../reasons.js";
 import type { MatchReason } from "../types.js";
 import { normalizeScore, RECIPE_SCORE_WEIGHTS } from "../weights.js";
@@ -83,15 +87,14 @@ export function scoreRecipe(
     );
   }
 
+  const preferredUi = getRequirementsFrontend(requirements)?.framework;
+
   // Framework
-  if (requirements.frontend?.framework || profile.uiFrameworks?.length) {
+  if (preferredUi || profile.uiFrameworks?.length) {
     applicable += RECIPE_SCORE_WEIGHTS.framework;
     if (!profile.uiFrameworks?.length) {
-      // UI-agnostic recipe: full credit when no UI constraint, partial when UI is set
-      if (!requirements.frontend?.framework) {
-        earned += RECIPE_SCORE_WEIGHTS.framework;
-      } else {
-        earned += RECIPE_SCORE_WEIGHTS.framework;
+      earned += RECIPE_SCORE_WEIGHTS.framework;
+      if (preferredUi) {
         reasons.push(
           reason(
             REASON_CODES.frontendFrameworkMatch,
@@ -100,25 +103,22 @@ export function scoreRecipe(
           ),
         );
       }
-    } else if (
-      requirements.frontend?.framework &&
-      profile.uiFrameworks.includes(requirements.frontend.framework)
-    ) {
+    } else if (preferredUi && profile.uiFrameworks.includes(preferredUi)) {
       earned += RECIPE_SCORE_WEIGHTS.framework;
       reasons.push(
         reason(
           REASON_CODES.frontendFrameworkMatch,
-          `Supports the required ${requirements.frontend.framework} frontend.`,
+          `Supports the required ${preferredUi} frontend.`,
           RECIPE_SCORE_WEIGHTS.framework,
         ),
       );
-    } else if (!requirements.frontend?.framework) {
+    } else if (!preferredUi) {
       earned += RECIPE_SCORE_WEIGHTS.framework * 0.5;
     }
   }
 
   // Project type
-  if (profile.projectTypes?.length && requirements.projectType !== "unknown") {
+  if (profile.projectTypes?.length) {
     applicable += RECIPE_SCORE_WEIGHTS.projectType;
     if (profile.projectTypes.includes(requirements.projectType)) {
       earned += RECIPE_SCORE_WEIGHTS.projectType;
@@ -128,6 +128,18 @@ export function scoreRecipe(
           "Matches your selected project type.",
           RECIPE_SCORE_WEIGHTS.projectType,
         ),
+      );
+    }
+  }
+
+  // Soft recipe interests (category preferences)
+  if (requirements.recipeInterests && requirements.recipeInterests.length > 0) {
+    const hit = requirements.recipeInterests.some((interest) =>
+      profile.categories.includes(interest),
+    );
+    if (hit) {
+      reasons.push(
+        reason(REASON_CODES.capabilityMatch, "Matches an optional piece you asked to include."),
       );
     }
   }
