@@ -51,6 +51,9 @@ jobs:
       - name: Run pack smoke tests
         run: pnpm test:pack
 
+      - name: Run external consumer integration tests
+        run: pnpm test:integration
+
       - name: Build CLI
         run: pnpm build
 

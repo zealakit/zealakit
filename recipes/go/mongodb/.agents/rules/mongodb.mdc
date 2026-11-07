@@ -1,0 +1,17 @@
+---
+description: MongoDB Go Driver v2 conventions for this Go service
+alwaysApply: true
+---
+
+# MongoDB
+
+The `mongodb` recipe adds `internal/infrastructure/database` using the official
+MongoDB Go Driver v2.
+
+- Read configuration with `database.ConfigFromEnv()`
+  (`MONGODB_URI` and `MONGODB_DATABASE` required).
+- Open the client with `database.Open(ctx)` from the composition root.
+- Use `client.OperationContext(ctx)` for database operations.
+- Disconnect during graceful shutdown.
+- Keep documents/queries in feature infrastructure adapters; do not add an ODM.
+- See `.agents/skills/mongodb/SKILL.md` for the full pattern.

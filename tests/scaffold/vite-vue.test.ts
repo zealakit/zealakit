@@ -17,7 +17,7 @@ templateSuite("vite-vue", {
       absent: ["src/hooks"],
       deps: ["vue", "vue-router", "nanostores", "@nanostores/vue", "vee-validate", "ky"],
       noDeps: ["@nanostores/react", "react"],
-      devDeps: ["@storybook/vue3-vite"],
+      devDeps: ["@storybook/vue3-vite", "@types/node"],
       contains: {
         "src/main.ts": ['import { installI18n } from "./configs/i18n";', "installI18n(app)"],
       },

@@ -12,6 +12,7 @@ templateSuite("next", {
         "components.json",
         "postcss.config.mjs",
         "src/lib/utils/index.ts",
+        "src/general.d.ts",
       ],
       deps: ["shadcn", "@tailwindcss/postcss"],
       noDeps: ["@tailwindcss/vite"],

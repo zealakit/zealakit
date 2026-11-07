@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PACKED_DOTFILES } from "../src/scaffold/copy.js";
+import { PACKED_DOTFILES } from "@zealakit/core";
 
 /**
  * Release smoke test for the published artifact: build → pack → tarball contents
@@ -21,6 +21,10 @@ type CommandResult = { exitCode: number; output: string };
 type SmokeCase = {
   name: string;
   args: string[];
+  /** Optional JSON request written to stdin (Discovery JSON mode). */
+  input?: string;
+  /** Expected project directory for JSON scaffold cases. */
+  appDirName?: string;
   check: (result: CommandResult, appDir: string | undefined) => string[];
 };
 
@@ -29,13 +33,14 @@ const green = color(32);
 const red = color(31);
 const dim = color(2);
 
-function run(command: string, args: string[], cwd: string): Promise<CommandResult> {
+function run(command: string, args: string[], cwd: string, input = ""): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
       env: process.env,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ["pipe", "pipe", "pipe"],
     });
+    child.stdin.end(input);
     let output = "";
     child.stdout.on("data", (chunk: Buffer) => {
       output += chunk.toString();
@@ -80,6 +85,9 @@ const NEVER_PACKED_SEGMENTS = new Set([
   "node_modules",
   "dist",
   ".next",
+  ".svelte-kit",
+  "build",
+  "storybook-static",
   "coverage",
   ".turbo",
   ".vite",
@@ -98,6 +106,7 @@ function shouldBePacked(file: string): boolean {
   return (
     file !== "recipes/tsconfig.json" &&
     file !== "recipes/shims.d.ts" &&
+    file !== "templates/go/README.md" &&
     !segments.includes(".cursor") &&
     !segments.some((segment) => NEVER_PACKED_SEGMENTS.has(segment)) &&
     !NEVER_PACKED_FILES.has(base) &&
@@ -122,6 +131,10 @@ function verifyTarballContents(tarballPath: string): string[] {
 
   const errors: string[] = [];
   if (!packed.has("dist/index.js")) errors.push("tarball is missing dist/index.js");
+  for (const readme of ["README.md", "README_VI.md", "README_CN.md"]) {
+    if (!packed.has(readme)) errors.push(`tarball is missing ${readme}`);
+  }
+  if (packed.has("README_DEV.md")) errors.push("tarball must not include README_DEV.md");
   for (const file of tracked) {
     const base = path.posix.basename(file);
     const expected = PACKED_DOTFILES[base]
@@ -173,13 +186,72 @@ const SMOKE_CASES: SmokeCase[] = [
     args: ["info", "--json"],
     check: (result) => {
       try {
-        const info = JSON.parse(result.output) as { templates: unknown[]; recipes: unknown[] };
+        const info = JSON.parse(result.output) as {
+          schemaVersion: number;
+          command: string;
+          data: { templates: unknown[]; recipes: unknown[] };
+        };
         return [
           ...expectExit(result, true),
-          ...(info.templates.length > 0 && info.recipes.length > 0 ? [] : ["empty metadata"]),
+          ...(info.schemaVersion === 4 && info.command === "info"
+            ? []
+            : ["unexpected info envelope"]),
+          ...(info.data.templates.length > 0 && info.data.recipes.length > 0
+            ? []
+            : ["empty metadata"]),
         ];
       } catch (error) {
         return [`stdout/stderr is not pure JSON: ${(error as Error).message}`];
+      }
+    },
+  },
+  {
+    name: "create --discover --json questions",
+    args: ["create", "--discover", "--json"],
+    input: JSON.stringify({ schemaVersion: 1, operation: "questions", answers: {} }),
+    check: (result) => {
+      try {
+        const response = JSON.parse(result.output) as {
+          schemaVersion: number;
+          ok: boolean;
+          operation: string;
+        };
+        return [
+          ...expectExit(result, true),
+          ...(response.schemaVersion === 1 &&
+          response.ok === true &&
+          response.operation === "questions"
+            ? []
+            : ["unexpected Discovery response"]),
+        ];
+      } catch (error) {
+        return [`stdout is not pure JSON: ${(error as Error).message}`];
+      }
+    },
+  },
+  {
+    name: "create --discover --json scaffold",
+    args: ["create", "--discover", "--json"],
+    appDirName: "smoke-json",
+    input: JSON.stringify({
+      schemaVersion: 1,
+      operation: "scaffold",
+      selection: { templateId: "vite-react", recipeIds: [] },
+      project: { name: "smoke-json" },
+      confirmation: { confirmed: true },
+    }),
+    check: (result, appDir) => {
+      try {
+        const response = JSON.parse(result.output) as { ok: boolean; operation: string };
+        return [
+          ...expectExit(result, true),
+          ...(response.ok === true && response.operation === "scaffold"
+            ? []
+            : ["unexpected scaffold response"]),
+          ...expectFiles(appDir, ["package.json", "AGENTS.md"]),
+        ];
+      } catch (error) {
+        return [`stdout is not pure JSON: ${(error as Error).message}`];
       }
     },
   },
@@ -212,6 +284,53 @@ const SMOKE_CASES: SmokeCase[] = [
     },
   },
   {
+    name: "stdlib-api + postgres",
+    args: ["smoke-go-postgres", "-t", "stdlib-api", "-w", "postgres", "-y"],
+    check: (result, appDir) => {
+      const errors = [
+        ...expectExit(result, true),
+        ...expectFiles(appDir, [
+          "go.mod",
+          "internal/infrastructure/database/postgres.go",
+          "internal/infrastructure/database/postgres_test.go",
+        ]),
+      ];
+      if (appDir) {
+        const goModPath = path.join(appDir, "go.mod");
+        if (fs.existsSync(goModPath)) {
+          const goMod = fs.readFileSync(goModPath, "utf-8");
+          if (!goMod.includes("github.com/jackc/pgx/v5 v5.7.4")) {
+            errors.push("go.mod should require pgx");
+          }
+        }
+        if (fs.existsSync(path.join(appDir, "package.json"))) {
+          errors.push("Go project must not contain package.json");
+        }
+      }
+      return errors;
+    },
+  },
+  {
+    name: "vite-svelte + biome,storybook",
+    args: ["smoke-svelte", "-t", "vite-svelte", "-w", "biome,storybook", "-y"],
+    check: (result, appDir) => [
+      ...expectExit(result, true),
+      ...expectFiles(appDir, [
+        ".gitignore",
+        "svelte.config.js",
+        "src/app.html",
+        "src/routes/+layout.svelte",
+        "src/configs/i18n.svelte.ts",
+        "src/assets/locales/en/common.json",
+        "src/assets/locales/vi/common.json",
+        "src/features/feature-a/list.svelte",
+        "biome.json",
+        ".storybook/main.ts",
+        "AGENTS.md",
+      ]),
+    ],
+  },
+  {
     name: "nuxt + shadcn-vue,pinia",
     args: ["smoke-nuxt", "-t", "nuxt", "-w", "shadcn-vue,pinia", "-y"],
     check: (result, appDir) => [
@@ -237,8 +356,8 @@ const SMOKE_CASES: SmokeCase[] = [
     ],
   },
   {
-    name: "server-only recipe on next is rejected before writing files",
-    args: ["smoke-next-orm", "-t", "next", "-w", "type-orm", "-y"],
+    name: "vue-only recipe on next is rejected before writing files",
+    args: ["smoke-next-pinia", "-t", "next", "-w", "pinia", "-y"],
     check: (result, appDir) => [...expectExit(result, false), ...expectNoApp(appDir)],
   },
 ];
@@ -267,8 +386,12 @@ async function main(): Promise<void> {
     results.push(
       ...(await Promise.all(
         SMOKE_CASES.map(async (smoke) => {
-          const appName = smoke.args[0]?.startsWith("-") ? undefined : smoke.args[0];
-          const result = await run(bin, smoke.args, APPS_DIR);
+          const appName =
+            smoke.appDirName ??
+            (smoke.args.includes("--json") || smoke.args[0]?.startsWith("-")
+              ? undefined
+              : smoke.args[0]);
+          const result = await run(bin, smoke.args, APPS_DIR, smoke.input);
           const appDir = appName ? path.join(APPS_DIR, appName) : undefined;
           return { name: smoke.name, errors: smoke.check(result, appDir) };
         }),

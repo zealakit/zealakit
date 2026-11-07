@@ -4,10 +4,17 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { RECIPE_CATEGORIES, SCOPES } from "../src/constants.js";
-import { getRecipeCategories, recipes } from "../src/registry/recipes/index.js";
-import { templates } from "../src/registry/templates.js";
-import type { RecipeConfig } from "../src/types.js";
+import {
+  getRecipeCategories,
+  RECIPE_CATEGORIES,
+  type RecipeConfig,
+  recipes,
+  SCOPES,
+  templates,
+} from "@zealakit/core";
+import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
+
+registerNodeEcosystem();
 
 const execFileAsync = promisify(execFile);
 
@@ -16,7 +23,7 @@ const ROOT = path.resolve(__dirname, "..");
 const HOST = "127.0.0.1";
 const PREFERRED_PORT = 4000;
 const SKIP_DIRS = new Set(["node_modules", "dist", ".git"]);
-const RECIPES_REGISTRY_DIR = "src/registry/recipes";
+const RECIPES_REGISTRY_DIR = "packages/ecosystem-node/src/registry/recipes";
 
 function recipeRegistryFile(recipeId: string): string {
   return `${RECIPES_REGISTRY_DIR}/${recipeId}.ts`;
@@ -91,14 +98,23 @@ function toPosix(relativePath: string): string {
   return relativePath.split(path.sep).join("/");
 }
 
+function assetIdFromPath(parts: string[]): string | undefined {
+  // templates/<ecosystem>/<id>/... or recipes/<ecosystem>/<id>/...
+  if (parts.length >= 3 && (parts[0] === "templates" || parts[0] === "recipes")) {
+    return parts[2];
+  }
+  return undefined;
+}
+
 function groupLabel(relativePath: string): string {
   if (relativePath === "package.json") return "Root";
   const parts = relativePath.split("/");
-  if (parts[0] === "templates" && parts.length >= 2) {
-    return `template/${parts[1]}`;
+  const id = assetIdFromPath(parts);
+  if (parts[0] === "templates" && id) {
+    return `template/${id}`;
   }
-  if (parts[0] === "recipes" && parts.length >= 2) {
-    return `recipe/${parts[1]}`;
+  if (parts[0] === "recipes" && id) {
+    return `recipe/${id}`;
   }
   return relativePath;
 }
@@ -315,7 +331,7 @@ async function buildPackagesResponse(): Promise<PackageGroup[]> {
     ];
 
     const templateId = relativePath.startsWith("templates/")
-      ? relativePath.split("/")[1]
+      ? assetIdFromPath(relativePath.split("/"))
       : undefined;
     const template = templateId ? templates[templateId] : undefined;
 

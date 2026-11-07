@@ -7,6 +7,7 @@ templateSuite("nuxt", {
       recipes: ["biome", "pinia", "vee-validate-zod", "kyjs", "storybook"],
       exists: [
         "app/pages/index.vue",
+        "app/general.d.ts",
         "app/layouts/default.vue",
         "app/layouts/entry.vue",
         "app/layouts/console.vue",

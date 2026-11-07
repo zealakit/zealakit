@@ -1,13 +1,14 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { getRecipe, getTemplate } from "@zealakit/core";
 import {
   defaultRecipeIdsForScope,
   formatSelectionSummary,
   recipeOptionHint,
   templateOptionHint,
   templateOptionLabel,
-} from "../../src/prompt-labels.js";
-import { getRecipe, getTemplate } from "../../src/registry/index.js";
+} from "../../apps/cli/src/prompt-labels.js";
 
 describe("prompt labels", () => {
   it("shows scope, framework, and default on templates", () => {

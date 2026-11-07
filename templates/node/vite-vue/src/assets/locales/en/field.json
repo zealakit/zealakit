@@ -1,0 +1,14 @@
+{
+  "NAME": {
+    "LABEL": "Name",
+    "PLACEHOLDER_INPUT": "Enter name"
+  },
+  "DESCRIPTION": {
+    "LABEL": "Description",
+    "PLACEHOLDER_INPUT": "Enter description"
+  },
+  "SOME_SELECT": {
+    "LABEL": "Some select",
+    "PLACEHOLDER_SELECT": "Select some select"
+  }
+}

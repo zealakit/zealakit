@@ -1,0 +1,21 @@
+{
+  "name": "@zealakit/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "@zealakit/core": "workspace:*",
+    "@zealakit/ecosystem-go": "workspace:*",
+    "@zealakit/ecosystem-node": "workspace:*",
+    "commander": "^15.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

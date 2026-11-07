@@ -1,0 +1,16 @@
+---
+description: Go stdlib HTTP conventions for this API
+alwaysApply: true
+---
+
+# Go Standard Library
+
+Follow `.agents/skills/go-stdlib/SKILL.md` for HTTP, middleware, config, and testing.
+
+Hard rules:
+
+- Use `net/http` and `log/slog` — no third-party web frameworks by default
+- Set server timeouts; shut down with `context`
+- Reuse `respond.JSON` / `respond.ErrorJSON` helpers
+- Prefer `httptest` tests; run `go test ./...` before claiming done
+- Inspect existing packages before adding duplicates

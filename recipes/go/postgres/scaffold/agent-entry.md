@@ -1,0 +1,1 @@
+- **Database:** `.agents/skills/postgres/SKILL.md` — PostgreSQL pool via `database/sql` + pgx; no ORM. Run `go mod tidy` once after scaffolding.

@@ -1,12 +1,11 @@
+import "../register.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { withDefaultRecipes } from "../../src/registry/index.js";
-import { PACKAGE_ROOT } from "../../src/scaffold/paths.js";
-import { buildScaffoldPlan, planIsReady } from "../../src/scaffold/plan.js";
+import { buildScaffoldPlan, PACKAGE_ROOT, planIsReady, withDefaultRecipes } from "@zealakit/core";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-plan-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));
@@ -39,6 +38,19 @@ describe("buildScaffoldPlan", () => {
     );
     assert.equal(planIsReady(plan), false);
     assert.ok(plan.blockers.some((b) => /conflict/i.test(b)));
+  });
+
+  it("applies default recipes even when callers do not pass them", () => {
+    const plan = buildScaffoldPlan(
+      {
+        projectName: "implicit-defaults",
+        templateId: "vite-vue",
+        recipeIds: ["biome", "pinia"],
+      },
+      workRoot,
+    );
+    assert.ok(plan.config.recipeIds.includes("client-shared-pieces"));
+    assert.equal(planIsReady(plan), true, plan.blockers.join("\n"));
   });
 
   it("marks default recipes as auto-injected when already applied via withDefaultRecipes", () => {
@@ -74,7 +86,7 @@ describe("zealakit --dry-run", () => {
     const { NO_COLOR: _, ...env } = process.env;
     return spawnSync(
       process.execPath,
-      ["--import", "tsx", path.join(PACKAGE_ROOT, "src/index.ts"), ...args],
+      ["--import", "tsx", path.join(PACKAGE_ROOT, "apps/cli/src/index.ts"), ...args],
       {
         cwd: PACKAGE_ROOT,
         encoding: "utf-8",

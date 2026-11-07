@@ -4,14 +4,14 @@
   <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
 </p>
 
-**Recipe-based scaffolding for TypeScript projects.**
+**Recipe-based scaffolding for multi-ecosystem projects.**
 
 Pick a template, add only the recipes you need, and get a ready-to-install project — dependencies, scripts, and AI-agent docs included. No global install required.
 
 [English](https://github.com/zealakit/zealakit/blob/main/README.md) · [Tiếng Việt](https://github.com/zealakit/zealakit/blob/main/README_VI.md) · [中文](https://github.com/zealakit/zealakit/blob/main/README_CN.md)
 
 ```bash
-npx zealakit@latest my-app
+npx zealakit@latest create
 ```
 
 ---
@@ -20,7 +20,7 @@ npx zealakit@latest my-app
 
 Most starters are either empty or overloaded. Zealakit lets you compose:
 
-1. **Template** — Vite + React, Vite + Vue, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, or Hono
+1. **Template** — Vite + React, Vite + Vue, SvelteKit, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, Hono, or Go API/worker starters
 2. **Recipes** — optional layers (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Each recipe brings files, packages, scripts, and agent guidance when relevant. The result is a normal standalone project — use `npm`, `pnpm`, `yarn`, or `bun`.
@@ -29,17 +29,25 @@ Each recipe brings files, packages, scripts, and agent guidance when relevant. T
 
 ## Requirements
 
-- **Node.js 18+**
+- **Node.js 22.12+** for the CLI. The Nuxt template requires Node.js 22.22+.
+- **Go 1.22+** for Go templates (optional; TypeScript workflows work without it).
 
 ---
 
 ## Quick start
 
 ```bash
-npx zealakit@latest my-app
+# Interactive (manual template pick, or Project Discovery)
+npx zealakit@latest create
+
+# Discover a suitable setup from your requirements
+npx zealakit@latest create --discover
+
+# Create from a specific template
+npx zealakit@latest create --template next
 ```
 
-Answer the prompts (template → recipes → confirm), then:
+After generation:
 
 ```bash
 cd my-app
@@ -50,38 +58,121 @@ npm run dev
 ### Non-interactive
 
 ```bash
-npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
 ```
 
 ### Preview without writing
 
 ```bash
-npx zealakit@latest my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
 ```
 
-- Without `-w`, the CLI is interactive.
+- Without `-w` / `-y`, the CLI is interactive.
 - `-y` needs a project name and skips confirmation prompts.
+- Root `npx zealakit@latest my-app …` still works for backward compatibility.
+
+---
+
+## Project Discovery
+
+**Project Discovery** is designed for product intent first — including non-technical builders using AI-assisted development. Questions ask what you want the product to do (kind of website, visitor actions, whether data is saved, who uses a service), not SPA/SSR jargon, ORM choice, or architecture levels.
+
+Zealakit converts those answers into technical requirements internally, then recommends a template and only the recipes that fit. You review and can change anything before files are written.
+
+Use Discovery when you are unsure which starter matches your needs. Prefer `--template` when you already know the stack.
+
+```bash
+npx zealakit@latest create --discover
+```
+
+### Project types
+
+| Type                      | Status      | Typical follow-ups (plain language)                                                                                     |
+| ------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **UI / Website**          | Supported   | Kind of website, what visitors can do, accounts/data when relevant, how often content changes, optional tech preference |
+| **Backend / API Service** | Supported   | What the service does, who uses it, storage needs, sign-in when relevant, optional TypeScript or Go                     |
+| **Background / Worker**   | Supported   | What runs in the background, when it runs, data needs, optional TypeScript or Go                                        |
+| **Complete Product**      | Coming soon | Entire product (simple site through multi-service systems) — **not** recommendable or generatable yet                   |
+
+Questions from other branches are never shown. Changing the root project type clears incompatible answers. Progress counts only the active branch.
+
+**Not sure** / **Recommend for me** / **No preference** means “skip this preference” — it does not invent hard constraints.
+
+**External API vs generated backend:** saying your website talks to an API you already have marks _external API consumption_. That does **not** make Zealakit generate a backend. Saving data in a new UI project can require a data-capable (hybrid) starter instead of a frontend-only one.
+
+Unsupported combinations (for example TypeScript workers, NoSQL) yield **no compatible template** with a clear explanation, rather than a misleading fallback.
+
+How it works:
+
+1. Choose what to create (UI / Website, Backend / API Service, or Background / Worker).
+2. Answer branch-specific intent questions (only what applies).
+3. Zealakit resolves technical requirements, then ranks **compatible** templates with short explanations (incompatible starters are hidden).
+4. Review suggested recipes — nothing unnecessary is pre-selected.
+5. Confirm the recommended setup (or go back to adjust answers / template / recipes).
+6. **Name the project** only after you accept a setup (naming does not re-run matching).
+7. Generation uses the same scaffolding pipeline as manual create.
+
+You always keep control: Discovery never installs a template or recipe you did not accept at the confirmation step.
+
+### Local Discovery feedback
+
+Completed Discovery sessions can write a **local-only** summary so you can spot recommendation gaps over time. Nothing is uploaded; there is no cloud analytics.
+
+**Recorded (IDs and flags only):** session status, recommended/selected template and recipe IDs, whether you changed the initial recommendations, generation success/failure, and duration when available.
+
+**Never recorded:** project source, file contents, environment variables, credentials, personal data, absolute project paths, or raw questionnaire answers.
+
+| Command                               | Purpose                                                             |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `zealakit discovery stats`            | Offline summary (counts, top templates/recipes, diagnostic signals) |
+| `zealakit discovery feedback status`  | Whether collection is on and where data is stored                   |
+| `zealakit discovery feedback disable` | Stop collecting new sessions (existing stats stay readable)         |
+| `zealakit discovery feedback enable`  | Re-enable collection                                                |
+| `zealakit discovery feedback clear`   | Delete retained session records                                     |
+
+Storage: `~/.config/zealakit/discovery-feedback.json` (or `%APPDATA%\zealakit\` on Windows; override with `ZEALAKIT_CONFIG_DIR`). At most 100 sessions are kept. You can also disable via `ZEALAKIT_DISCOVERY_FEEDBACK=0`. Feedback write failures never block project generation.
+
+Diagnostic signals from `discovery stats` are hints only — they do **not** auto-tune matching weights.
 
 ---
 
 ## CLI
 
 ```text
-npx zealakit@latest [project-name] [options]
+npx zealakit@latest create [project-name] [options]
 ```
 
-| Option                 | Description                                       |
-| ---------------------- | ------------------------------------------------- |
-| `-t, --template <id>`  | Base template (default: `vite-react`)             |
-| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`) |
-| `-y, --yes`            | Non-interactive mode (requires a project name)    |
-| `--dry-run`            | Preview the plan without writing files            |
-| `-h, --help`           | Show help                                         |
-| `-V, --version`        | Show version                                      |
+| Option                 | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `--discover`           | Project Discovery — recommend a template/recipes from your requirements |
+| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                 |
+| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                       |
+| `-y, --yes`            | Non-interactive mode (requires a project name)                          |
+| `--dry-run`            | Preview the plan without writing files                                  |
+| `-h, --help`           | Show help                                                               |
+| `-V, --version`        | Show version                                                            |
+
+Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+
+### Metadata queries (`zealakit info`)
+
+`zealakit info` prints templates, recipes, ecosystems, categories, and the compatibility rules from the registry. `--json` returns one versioned envelope (`schemaVersion: 4`, `command: "info"`, `filters`, `data`) for external UIs and integrations.
+
+```bash
+zealakit info --json --ecosystem node
+zealakit info --json --scope server
+zealakit info --json --template nest
+zealakit info --json --recipe biome
+zealakit info --json --category orm
+zealakit info --json --discover --scope server
+```
+
+Filters combine with AND semantics; unknown values exit `2` with diagnostics on stderr and no JSON on stdout. The same filters also narrow the human-readable summary. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
 
 **Rules**
 
+- `--discover` cannot be combined with `--template`, `-w`, `-y`, or `--dry-run` (Discovery is interactive).
 - Project names follow npm naming (lowercase, no spaces).
 - Existing non-empty folders ask before overwrite; with `-y` they are rejected.
 - Invalid or conflicting recipes are rejected **before** any files are written.
@@ -97,14 +188,18 @@ npx zealakit@latest [project-name] [options]
 | -------------------- | ---------- | ---------------------------------- | ------------------- |
 | `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
 | `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`       |
 | `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
 | `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
 | `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
 | `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
 | `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
 | `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
+| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`          |
+| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`          |
+| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
 
-Every project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`).
+Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles; Go recipes include PostgreSQL (`database/sql` + pgx), MySQL (`database/sql` + go-sql-driver/mysql), and MongoDB (official Go Driver v2).
 
 ---
 
@@ -138,6 +233,9 @@ Exceptions:
 | `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM wiring + agent skill   |
 | `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + drizzle-kit scripts   |
 | `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate scripts |
+| `postgres`         | Database       | Go templates                         | `database/sql` + pgx driver     |
+| `mysql`            | Database       | Go templates                         | `database/sql` + MySQL driver   |
+| `mongodb`          | Database       | Go templates                         | Official MongoDB Go Driver v2   |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 
@@ -214,18 +312,8 @@ Not yet. Each run creates one standalone project.
 
 ---
 
-## Metadata for tooling
-
-```bash
-npx zealakit@latest info --json   # alias: zealakit --info --json
-```
-
-Prints a single JSON document on stdout (nothing else): CLI name/version, templates (with their prompt flow and default recipes), categories, recipes (compatible templates, conflicts, packages), and compatibility rules. Keys are stable ids; `schemaVersion` changes only on breaking changes. Without `--json`, prints a human-readable summary.
-
----
-
 ## License
 
 [MIT](LICENSE)
 
-Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit)
+Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

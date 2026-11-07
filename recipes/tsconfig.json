@@ -18,5 +18,8 @@
     "./**/.storybook/**/*.ts",
     "./**/.storybook/**/*.tsx"
   ],
-  "exclude": ["./antd/overlays/vite-react/**/app/**", "./mui/overlays/vite-react/**/app/**"]
+  "exclude": [
+    "./typescript/antd/overlays/vite-react/**/app/**",
+    "./typescript/mui/overlays/vite-react/**/app/**"
+  ]
 }

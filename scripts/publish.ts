@@ -128,6 +128,8 @@ async function main(): Promise<void> {
     step("Typecheck", "pnpm", ["typecheck"]);
     step("Tests", "pnpm", ["test"]);
     step("Pack smoke tests", "pnpm", ["test:pack"]);
+    step("External consumer integration", "pnpm", ["test:integration"]);
+    step("Generated Go validation", "pnpm", ["test:go"]);
   }
 
   if (!options.dryRun && !options.yes) {

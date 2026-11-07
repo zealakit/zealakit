@@ -1,0 +1,105 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { ScaffoldValidationError } from "../diagnostics.js";
+import { fse } from "../fs-extra.js";
+import { getRecipe, getTemplate } from "../registry/index.js";
+import type { RecipeConfig, ScaffoldConfig } from "../types.js";
+import { applyAgentEntry, ensureCursorAgentsSymlink } from "./agent-docs.js";
+import { commitStagedDirectory } from "./commit.js";
+import { copyRecipe, copyTemplate, foldIntoSrcDir } from "./copy.js";
+import { getManifestAdapterForConfig } from "./manifest.js";
+import { assertStagingSymlinksSafe } from "./paths.js";
+import { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
+import { applyFileTransforms } from "./transforms.js";
+import { validateGeneratedOutput } from "./validate-output.js";
+
+export {
+  emptyPackagePlan,
+  getManifestAdapter,
+  getManifestAdapterForConfig,
+  type ManifestAdapter,
+  type ManifestFieldConflict,
+  type PackagePlan,
+  resolveTemplateEcosystem,
+  setManifestAdapter,
+} from "./manifest.js";
+export { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
+export { validateGeneratedOutput } from "./validate-output.js";
+
+function runFinalizers(recipes: RecipeConfig[], targetDir: string): void {
+  for (const recipe of recipes) {
+    recipe.finalize?.(targetDir);
+  }
+}
+
+/** Materialize a plan into `targetDir` (must be empty or non-existent). */
+function materialize(plan: ScaffoldPlan, targetDir: string): void {
+  const template = getTemplate(plan.config.templateId);
+  if (!template) {
+    throw new Error(`Base template does not exist: ${plan.config.templateId}`);
+  }
+
+  const recipes = plan.config.recipeIds.map((id) => {
+    const recipe = getRecipe(id);
+    if (!recipe) {
+      throw new Error(`Unknown recipe: ${id}`);
+    }
+    return recipe;
+  });
+
+  fse.ensureDirSync(targetDir);
+  copyTemplate(template.id, targetDir);
+  // Any later write must not follow a staged symlink that escapes the staging root.
+  assertStagingSymlinksSafe(targetDir);
+
+  for (const recipe of recipes) {
+    copyRecipe(recipe.id, template.id, targetDir);
+    assertStagingSymlinksSafe(targetDir);
+    foldIntoSrcDir(template, targetDir);
+    applyAgentEntry(recipe.id, targetDir);
+    applyFileTransforms(recipe, template.id, targetDir);
+  }
+
+  runFinalizers(recipes, targetDir);
+  getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
+  ensureCursorAgentsSymlink(targetDir);
+}
+
+/**
+ * Pipeline: preflight plan → stage → validate → commit.
+ * Callers must still confirm destination overwrite (`validateTargetDirectory`).
+ */
+export async function scaffoldProject(
+  config: ScaffoldConfig,
+  cwd: string = process.cwd(),
+): Promise<string> {
+  const plan = buildScaffoldPlan(config, cwd);
+  if (!planIsReady(plan)) {
+    throw new ScaffoldValidationError(plan.blockers.join("\n"), plan.blockers);
+  }
+
+  const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-stage-"));
+  try {
+    materialize(plan, stageDir);
+
+    const output = validateGeneratedOutput(stageDir, plan.config);
+    if (!output.ok) {
+      throw new ScaffoldValidationError(
+        `Post-generation validation failed:\n${output.errors.join("\n")}`,
+        output.errors,
+      );
+    }
+
+    commitStagedDirectory(stageDir, plan.targetDir);
+    return plan.targetDir;
+  } catch (error) {
+    // Staging cleanup is best-effort: never mask the original failure.
+    try {
+      fse.removeSync(stageDir);
+    } catch {
+      // Leave the staging dir for diagnostics; the original error is rethrown.
+    }
+    throw error;
+  }
+}

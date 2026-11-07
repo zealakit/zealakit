@@ -10,6 +10,7 @@ templateSuite("astro-react-hybrid", {
       recipes: [],
       exists: [
         "astro.config.mjs",
+        "src/general.d.ts",
         "src/middleware.ts",
         "src/actions/index.ts",
         "src/pages/api/health.ts",
@@ -31,7 +32,13 @@ templateSuite("astro-react-hybrid", {
         ".agents/skills/astro/SKILL.md",
       ],
       deps: ["astro", "@astrojs/react", "@astrojs/node", "react", "react-dom"],
-      scripts: { dev: "astro dev", build: "astro build" },
+      devDeps: ["typescript"],
+      scripts: {
+        dev: "astro dev",
+        build: "astro build",
+        check: "astro sync && tsc --noEmit",
+        typecheck: "astro sync && tsc --noEmit",
+      },
       contains: {
         "astro.config.mjs": [
           "@astrojs/node",

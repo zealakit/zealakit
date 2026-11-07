@@ -1,5 +1,5 @@
 {
   "biome.lsp.bin": "./node_modules/@biomejs/biome/bin/biome",
-  "cSpell.words": ["pico", "scaffolder", "Zealakit"],
+  "cSpell.words": ["pico", "scaffolder", "Zealakit", "httpapi", "stdlib"],
   "json.schemaDownload.enable": true
 }

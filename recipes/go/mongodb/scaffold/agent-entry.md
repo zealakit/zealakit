@@ -1,0 +1,1 @@
+- **Database:** `.agents/skills/mongodb/SKILL.md` — MongoDB via official Go Driver v2; no ODM. Run `go mod tidy` once after scaffolding.

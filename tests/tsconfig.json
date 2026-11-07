@@ -1,9 +1,14 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "rootDir": "..",
-    "types": ["node"]
+    "rootDir": ".."
   },
-  "include": ["./**/*.ts", "../src/**/*.ts"]
+  "include": [
+    "./**/*.ts",
+    "../packages/core/src/**/*.ts",
+    "../packages/ecosystem-node/src/**/*.ts",
+    "../packages/ecosystem-go/src/**/*.ts",
+    "../apps/cli/src/**/*.ts"
+  ]
 }

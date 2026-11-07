@@ -1,0 +1,14 @@
+{
+  "TEST": "Test",
+  "APP": {
+    "TITLE": "Vite + Svelte",
+    "DESCRIPTION": "A minimal Svelte 5 starter with internationalization.",
+    "OPEN_FEATURE_A": "Open Feature A",
+    "FALLBACK_ONLY": "English fallback"
+  },
+  "LANGUAGE": {
+    "LABEL": "Language",
+    "EN": "English",
+    "VI": "Vietnamese"
+  }
+}
