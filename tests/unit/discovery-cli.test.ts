@@ -9,13 +9,14 @@ import {
   buildTemplateChoices,
   defaultSelectedRecipeIds,
 } from "../../apps/cli/src/discovery/present.js";
+import { noColorEnv } from "../helpers/env.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");
 
 function runCli(args: string[]): { status: number | null; stderr: string; stdout: string } {
   const result = spawnSync(process.execPath, ["--import", "tsx", CLI_ENTRY, ...args], {
     encoding: "utf8",
-    env: { ...process.env, NO_COLOR: "1" },
+    env: noColorEnv(),
   });
   return {
     status: result.status,

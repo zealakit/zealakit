@@ -7,6 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { DISCOVERY_API_SCHEMA_VERSION, PACKAGE_ROOT } from "@zealakit/core";
+import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));
 const TSX_LOADER = require.resolve("tsx");
@@ -38,7 +39,7 @@ function runJson(cwd: string, request: unknown): CliResult {
     {
       cwd,
       encoding: "utf-8",
-      env: { ...process.env, NO_COLOR: "1" },
+      env: noColorEnv(),
       input,
       timeout: 60_000,
     },

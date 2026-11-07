@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  push:
-  pull_request:
+  # Manual only: automatic push/PR CI builds are disabled.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}

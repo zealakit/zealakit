@@ -13,6 +13,11 @@ import { fileURLToPath } from "node:url";
  */
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function noColorEnv(): NodeJS.ProcessEnv {
+  const { FORCE_COLOR: _forceColor, NO_COLOR: _noColor, ...env } = process.env;
+  return { ...env, NO_COLOR: "1" };
+}
 const FIXTURE_DIR = path.join(PROJECT_ROOT, "tests/integration/external-consumer");
 const WORK_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-integration-"));
 const CONSUMER_DIR = path.join(WORK_DIR, "consumer");
@@ -24,7 +29,7 @@ function run(command: string, args: string[], cwd: string, quiet = false): Promi
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
-      env: { ...process.env, NO_COLOR: "1" },
+      env: noColorEnv(),
       stdio: ["ignore", "pipe", "pipe"],
       shell: process.platform === "win32",
     });

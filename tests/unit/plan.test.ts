@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { buildScaffoldPlan, PACKAGE_ROOT, planIsReady, withDefaultRecipes } from "@zealakit/core";
+import { noColorEnv } from "../helpers/env.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-plan-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));
@@ -83,14 +84,13 @@ describe("buildScaffoldPlan", () => {
 
 describe("zealakit --dry-run", () => {
   function runDryRun(args: string[]) {
-    const { NO_COLOR: _, ...env } = process.env;
     return spawnSync(
       process.execPath,
       ["--import", "tsx", path.join(PACKAGE_ROOT, "apps/cli/src/index.ts"), ...args],
       {
         cwd: PACKAGE_ROOT,
         encoding: "utf-8",
-        env: { ...env, FORCE_COLOR: "0", NO_COLOR: "1" },
+        env: noColorEnv(),
       },
     );
   }

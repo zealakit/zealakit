@@ -7,6 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { PACKAGE_ROOT } from "@zealakit/core";
+import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));
 const TSX_LOADER = require.resolve("tsx");
@@ -34,7 +35,7 @@ function runCreateJson(
     {
       cwd,
       encoding: "utf-8",
-      env: { ...process.env, NO_COLOR: "1" },
+      env: noColorEnv(),
       input,
       timeout: 60_000,
     },
@@ -177,7 +178,7 @@ describe("zealakit create --discover --json", () => {
       {
         cwd: caseDir(),
         encoding: "utf-8",
-        env: { ...process.env, NO_COLOR: "1" },
+        env: noColorEnv(),
         input: "{}",
         timeout: 60_000,
       },
@@ -194,7 +195,7 @@ describe("zealakit create --discover --json", () => {
       {
         cwd: caseDir(),
         encoding: "utf-8",
-        env: { ...process.env, NO_COLOR: "1" },
+        env: noColorEnv(),
         stdio: ["ignore", "pipe", "pipe"],
         timeout: 60_000,
       },

@@ -26,7 +26,10 @@ function run(args, cwd = ROOT) {
     const child = spawn(BIN, args, {
       cwd,
       env: {
-        ...process.env,
+        ...(() => {
+          const { FORCE_COLOR: _forceColor, NO_COLOR: _noColor, ...env } = process.env;
+          return env;
+        })(),
         NO_COLOR: "1",
         ZEALAKIT_CONFIG_DIR: CONFIG_DIR,
       },

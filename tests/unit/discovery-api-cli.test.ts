@@ -13,6 +13,7 @@ import {
   PACKAGE_ROOT,
 } from "@zealakit/core";
 import { exitCodeForDiscoveryResponse } from "../../apps/cli/src/discovery/query.js";
+import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));
 const TSX_LOADER = require.resolve("tsx");
@@ -32,7 +33,7 @@ function runQuery(
     {
       cwd,
       encoding: "utf-8",
-      env: { ...process.env, NO_COLOR: "1" },
+      env: noColorEnv(),
       input,
       timeout: 60_000,
     },

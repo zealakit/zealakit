@@ -24,6 +24,7 @@ import {
   setDiscoveryFeedbackEnabled,
   trimDiscoverySessions,
 } from "@zealakit/core";
+import { noColorEnv } from "../helpers/env.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");
 
@@ -293,7 +294,7 @@ describe("discovery CLI commands", () => {
   function runCli(args: string[], configDir: string, env: NodeJS.ProcessEnv = {}) {
     const result = spawnSync(process.execPath, ["--import", "tsx", CLI_ENTRY, ...args], {
       encoding: "utf8",
-      env: { ...process.env, NO_COLOR: "1", ZEALAKIT_CONFIG_DIR: configDir, ...env },
+      env: noColorEnv({ ZEALAKIT_CONFIG_DIR: configDir, ...env }),
     });
     return {
       status: result.status,

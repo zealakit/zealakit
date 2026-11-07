@@ -9,6 +9,7 @@ import { after, describe, it } from "node:test";
 import { ExitCode, PACKAGE_ROOT, ScaffoldValidationError, scaffoldProject } from "@zealakit/core";
 import { exitCodeForError } from "../../apps/cli/src/create.js";
 import { ScaffoldCommitError } from "../../packages/core/src/scaffold/commit.js";
+import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));
 const TSX_LOADER = require.resolve("tsx");
@@ -28,11 +29,10 @@ function caseDir(): string {
 type RunOptions = { stdinMode?: "pipe" | "ignore" };
 
 function runCli(args: string[], cwd: string, options: RunOptions = {}) {
-  const { NO_COLOR: _, ...env } = process.env;
   const result = spawnSync(process.execPath, ["--import", TSX_LOADER, CLI_ENTRY, ...args], {
     cwd,
     encoding: "utf-8",
-    env: { ...env, NO_COLOR: "1" },
+    env: noColorEnv(),
     stdio: [options.stdinMode ?? "pipe", "pipe", "pipe"],
     timeout: 60_000,
   });

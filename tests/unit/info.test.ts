@@ -13,16 +13,16 @@ import {
 } from "@zealakit/core";
 import { buildInfoResponse, type InfoResponse } from "../../apps/cli/src/info.js";
 import { readKitManifest } from "../../apps/cli/src/manifest.js";
+import { forceColorEnv, noColorEnv } from "../helpers/env.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");
 
 /** Colors are forced on to prove the JSON path never emits them. */
 function runCli(args: string[]) {
-  const { NO_COLOR: _, ...env } = process.env;
   return spawnSync(process.execPath, ["--import", "tsx", CLI_ENTRY, ...args], {
     cwd: PACKAGE_ROOT,
     encoding: "utf-8",
-    env: { ...env, FORCE_COLOR: "1" },
+    env: forceColorEnv(),
   });
 }
 
@@ -337,7 +337,7 @@ describe("info --json without a TTY", () => {
     const result = spawnSync(process.execPath, ["--import", "tsx", CLI_ENTRY, "info", "--json"], {
       cwd: PACKAGE_ROOT,
       encoding: "utf-8",
-      env: { ...process.env, NO_COLOR: "1" },
+      env: noColorEnv(),
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 60_000,
     });
@@ -374,7 +374,7 @@ describe("info --json without a TTY", () => {
       {
         cwd: PACKAGE_ROOT,
         encoding: "utf-8",
-        env: { ...process.env, NO_COLOR: "1" },
+        env: noColorEnv(),
         stdio: ["ignore", "pipe", "pipe"],
         timeout: 60_000,
       },
