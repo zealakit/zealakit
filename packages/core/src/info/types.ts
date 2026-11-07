@@ -1,5 +1,12 @@
 import type { IncompatibilityCode } from "../compat.js";
-import type { EcosystemId, ProjectType, RecipeCategory, Scope, UiFramework } from "../constants.js";
+import type {
+  Capability,
+  EcosystemId,
+  ProjectType,
+  RecipeCategory,
+  Scope,
+  UiFramework,
+} from "../constants.js";
 import type { ResolvedRecipeProfile, ResolvedTemplateProfile } from "../profiles/types.js";
 
 /**
@@ -12,6 +19,7 @@ import type { ResolvedRecipeProfile, ResolvedTemplateProfile } from "../profiles
  * - 3: flat `KitInfo` (`templates`, `recipes`, `categories`, `rules`, `cli`, `defaults`).
  * - 4: `{ schemaVersion, command, filters, data }` envelope; adds ecosystems,
  *      project types, typed discovery profiles, and query filters.
+ *      Additive within v4: `data.capabilities` and the `capability` filter.
  */
 export const INFO_SCHEMA_VERSION = 4 as const;
 
@@ -68,6 +76,14 @@ export type UiFrameworkMetadata = {
   id: UiFramework;
   templates: string[];
   /** Recipes that explicitly target this framework (agnostic recipes are omitted). */
+  recipes: string[];
+};
+
+export type CapabilityMetadata = {
+  id: Capability;
+  /** Templates whose Discovery profile declares this capability. */
+  templates: string[];
+  /** Recipes whose Discovery profile declares they add this capability. */
   recipes: string[];
 };
 
@@ -158,6 +174,8 @@ export type RecipeMetadata = {
   /** Recipes that cannot be selected together with this one (visible only). */
   conflictsWith: string[];
   packages: Record<string, string>;
+  /** Go module requirements (module path → version); empty for Node recipes. */
+  goModules: Record<string, string>;
   devDependencies: Record<string, string>;
   /** Keyed by overlay id; keys and package names are sorted for stable output. */
   overlayPackages: Record<string, Record<string, string>>;
@@ -194,6 +212,8 @@ export type InfoFilter = {
   scope?: Scope;
   projectType?: ProjectType;
   uiFramework?: UiFramework;
+  /** Discovery capability a template or recipe must provide. */
+  capability?: Capability;
   templateId?: string;
   recipeId?: string;
   category?: RecipeCategory;
@@ -207,6 +227,7 @@ export type InfoFilterInput = {
   scope?: string;
   projectType?: string;
   uiFramework?: string;
+  capability?: string;
   templateId?: string;
   recipeId?: string;
   category?: string;
@@ -225,6 +246,7 @@ export type InfoData = {
   scopes: ScopeMetadata[];
   projectTypes: ProjectTypeMetadata[];
   uiFrameworks: UiFrameworkMetadata[];
+  capabilities: CapabilityMetadata[];
   categories: RecipeCategoryMetadata[];
   templates: TemplateMetadata[];
   recipes: RecipeMetadata[];

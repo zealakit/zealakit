@@ -16,8 +16,12 @@ import {
   UI_FRAMEWORKS,
 } from "@zealakit/core";
 
-const RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-node/src/registry/recipes");
-const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts"]);
+const NODE_RECIPE_MODULES_DIR = path.join(
+  PACKAGE_ROOT,
+  "packages/ecosystem-node/src/registry/recipes",
+);
+const GO_RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-go/src/registry/recipes");
+const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts", "shared.ts"]);
 
 const familyKeys = new Set([
   ...Object.keys(templates),
@@ -32,6 +36,15 @@ function assertAgentsSymlink(dir: string): void {
 }
 
 describe("template registry", () => {
+  it("advertises only UI frameworks backed by a registered template", () => {
+    for (const framework of UI_FRAMEWORKS) {
+      assert.ok(
+        Object.values(templates).some((template) => template.uiFramework === framework),
+        `no registered template uses UI framework '${framework}'`,
+      );
+    }
+  });
+
   for (const template of Object.values(templates)) {
     it(`template ${template.id} is well-formed`, () => {
       assert.ok((SCOPES as readonly string[]).includes(template.scope));
@@ -58,13 +71,21 @@ describe("template registry", () => {
 });
 
 describe("recipe registry", () => {
-  it("has exactly one module per recipe named <id>.ts (monitor edits these files)", () => {
-    const modules = fs
-      .readdirSync(RECIPE_MODULES_DIR)
-      .filter((file) => file.endsWith(".ts") && !NON_RECIPE_MODULES.has(file))
-      .map((file) => file.replace(/\.ts$/, ""))
-      .sort();
-    assert.deepEqual(modules, Object.keys(recipes).sort());
+  it("has exactly one module per recipe in each ecosystem registry", () => {
+    const modulesIn = (dir: string): string[] =>
+      fs
+        .readdirSync(dir)
+        .filter((file) => file.endsWith(".ts") && !NON_RECIPE_MODULES.has(file))
+        .map((file) => file.replace(/\.ts$/, ""))
+        .sort();
+    const recipeIdsIn = (ecosystem: string): string[] =>
+      Object.values(recipes)
+        .filter((recipe) => (recipe.ecosystem ?? "node") === ecosystem)
+        .map((recipe) => recipe.id)
+        .sort();
+
+    assert.deepEqual(modulesIn(NODE_RECIPE_MODULES_DIR), recipeIdsIn("node"));
+    assert.deepEqual(modulesIn(GO_RECIPE_MODULES_DIR), recipeIdsIn("go"));
   });
 
   for (const recipe of Object.values(recipes)) {

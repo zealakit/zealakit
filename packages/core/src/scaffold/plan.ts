@@ -1,6 +1,6 @@
 import path from "node:path";
 import { HYBRID_ORM_WARNING, hybridOrmSelections } from "../orm-warnings.js";
-import { getRecipe, getTemplate } from "../registry/index.js";
+import { getRecipe, getTemplate, withDefaultRecipes } from "../registry/index.js";
 import { formatRecipeResolveError, resolveRecipeDependencies } from "../resolve-recipes.js";
 import type { ScaffoldConfig, ValidationResult } from "../types.js";
 import { validateScaffoldConfig } from "../validation/index.js";
@@ -66,7 +66,11 @@ export function buildScaffoldPlan(
   const warnings: string[] = [];
   const targetDir = path.resolve(cwd, config.projectName);
 
-  const resolved = resolveRecipeDependencies(config.recipeIds);
+  const template = getTemplate(config.templateId);
+  const selectedRecipeIds = template
+    ? withDefaultRecipes(template.scope, config.recipeIds)
+    : config.recipeIds;
+  const resolved = resolveRecipeDependencies(selectedRecipeIds);
   if (!resolved.ok) {
     const message = formatRecipeResolveError(resolved.error);
     blockers.push(message);
@@ -124,7 +128,6 @@ export function buildScaffoldPlan(
   const files: PlannedFile[] = [];
   const owners = new Map<string, OwnedFile>();
   let fileConflictCount = 0;
-  const template = getTemplate(effective.templateId);
 
   if (template) {
     const ormIds = hybridOrmSelections(template, effective.recipeIds);

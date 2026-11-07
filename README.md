@@ -20,7 +20,7 @@ npx zealakit@latest create
 
 Most starters are either empty or overloaded. Zealakit lets you compose:
 
-1. **Template** — Vite + React, Vite + Vue, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, Hono, or Go API/worker starters
+1. **Template** — Vite + React, Vite + Vue, SvelteKit, Astro + React (client or hybrid), Next.js, Nuxt, NestJS, Hono, or Go API/worker starters
 2. **Recipes** — optional layers (Biome, Zustand, shadcn/ui, Drizzle, Storybook, …)
 
 Each recipe brings files, packages, scripts, and agent guidance when relevant. The result is a normal standalone project — use `npm`, `pnpm`, `yarn`, or `bun`.
@@ -29,7 +29,8 @@ Each recipe brings files, packages, scripts, and agent guidance when relevant. T
 
 ## Requirements
 
-- **Node.js 18+**
+- **Node.js 22.12+** for the CLI. The Nuxt template requires Node.js 22.22+.
+- **Go 1.22+** for Go templates (optional; TypeScript workflows work without it).
 
 ---
 
@@ -100,7 +101,7 @@ Questions from other branches are never shown. Changing the root project type cl
 
 **External API vs generated backend:** saying your website talks to an API you already have marks _external API consumption_. That does **not** make Zealakit generate a backend. Saving data in a new UI project can require a data-capable (hybrid) starter instead of a frontend-only one.
 
-Unsupported combinations (for example Svelte UI, TypeScript workers, NoSQL) yield **no compatible template** with a clear explanation, rather than a misleading fallback.
+Unsupported combinations (for example TypeScript workers, NoSQL) yield **no compatible template** with a clear explanation, rather than a misleading fallback.
 
 How it works:
 
@@ -187,6 +188,7 @@ Filters combine with AND semantics; unknown values exit `2` with diagnostics on 
 | -------------------- | ---------- | ---------------------------------- | ------------------- |
 | `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
 | `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`       |
 | `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
 | `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
 | `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
@@ -197,7 +199,7 @@ Filters combine with AND semantics; unknown values exit `2` with diagnostics on 
 | `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`          |
 | `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
 
-Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles.
+Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles; Go recipes include PostgreSQL (`database/sql` + pgx), MySQL (`database/sql` + go-sql-driver/mysql), and MongoDB (official Go Driver v2).
 
 ---
 
@@ -231,6 +233,9 @@ Exceptions:
 | `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM wiring + agent skill   |
 | `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + drizzle-kit scripts   |
 | `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate scripts |
+| `postgres`         | Database       | Go templates                         | `database/sql` + pgx driver     |
+| `mysql`            | Database       | Go templates                         | `database/sql` + MySQL driver   |
+| `mongodb`          | Database       | Go templates                         | Official MongoDB Go Driver v2   |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 
@@ -311,4 +316,4 @@ Not yet. Each run creates one standalone project.
 
 [MIT](LICENSE)
 
-Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit)
+Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

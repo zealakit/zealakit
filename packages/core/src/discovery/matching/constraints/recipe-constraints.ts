@@ -138,15 +138,20 @@ export function evaluateRecipeConstraints(
   const overlapping = provided.filter((capability) => needed.includes(capability));
   const databaseRelevant =
     Boolean(requirements.databases?.length) && Boolean(profile.databases?.length);
+  const databaseMismatch =
+    Boolean(requirements.databases?.length) &&
+    Boolean(profile.databases?.length) &&
+    !requirements.databases?.some((db) => profile.databases?.includes(db));
   const interestRelevant = Boolean(
     requirements.recipeInterests?.some((interest) => profile.categories.includes(interest)),
   );
 
   let relevant =
-    overlapping.length > 0 ||
-    databaseRelevant ||
-    interestRelevant ||
-    profile.alwaysRelevant === true;
+    !databaseMismatch &&
+    (overlapping.length > 0 ||
+      databaseRelevant ||
+      interestRelevant ||
+      profile.alwaysRelevant === true);
 
   // Redundancy only applies when the recipe contributes a capability that the
   // template already provides. Interest/tooling relevance is not "covered" by

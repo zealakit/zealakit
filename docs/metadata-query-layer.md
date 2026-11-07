@@ -12,14 +12,14 @@ Source of truth is unchanged: **constants** in `packages/core/src/constants/`,
 
 ## Ownership
 
-| Data                                                              | Owner                          |
-| ----------------------------------------------------------------- | ------------------------------ |
-| Scopes, UI frameworks, project types, categories, ecosystems      | `packages/core/src/constants/` |
-| Templates + recipes (packages, overlays, transforms, agent entry) | ecosystem registries           |
-| Discovery evaluation metadata (capabilities, modes, traffic fit)  | `packages/core/src/profiles/`  |
-| Retrieval, normalization, filtering                               | `packages/core/src/info/`      |
-| Terminal formatting, CLI flags, package.json metadata             | `apps/cli/src/info.ts`         |
-| Hard constraints, scoring, ranking                                | `packages/core/src/discovery/` |
+| Data                                                                       | Owner                          |
+| -------------------------------------------------------------------------- | ------------------------------ |
+| Scopes, UI frameworks, project types, capabilities, categories, ecosystems | `packages/core/src/constants/` |
+| Templates + recipes (packages, overlays, transforms, agent entry)          | ecosystem registries           |
+| Discovery evaluation metadata (capabilities, modes, traffic fit)           | `packages/core/src/profiles/`  |
+| Retrieval, normalization, filtering                                        | `packages/core/src/info/`      |
+| Terminal formatting, CLI flags, package.json metadata                      | `apps/cli/src/info.ts`         |
+| Hard constraints, scoring, ranking                                         | `packages/core/src/discovery/` |
 
 Core never reads the host `package.json`: the CLI passes its manifest through
 `InfoOptions.cli`.
@@ -39,16 +39,16 @@ if (!query.ok) {
 }
 ```
 
-| Function                                                                                                                        | Result                                            |
-| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `getInfo(filter?, options?)`                                                                                                    | `InfoResponse` envelope (see below)               |
-| `queryMetadata(input?, options?)`                                                                                               | `{ ok, filter, data }` or `{ ok: false, errors }` |
-| `getTemplateMetadata(filter?)`                                                                                                  | `TemplateMetadata[]`                              |
-| `getRecipeMetadata(filter?)`                                                                                                    | `RecipeMetadata[]`                                |
-| `getTemplateIds(filter?)` / `getRecipeIds(filter?)`                                                                             | ids in registry order (used by Discovery)         |
-| `getEcosystemMetadata` / `getScopeMetadata` / `getProjectTypeMetadata` / `getUiFrameworkMetadata` / `getRecipeCategoryMetadata` | vocabulary + membership                           |
-| `getInfoRules(filter?)` / `getRuleMetadata(ids)`                                                                                | compatibility rules                               |
-| `normalizeInfoFilter(raw)`                                                                                                      | validate string filters → typed filter or errors  |
+| Function                                                                                                                                                  | Result                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `getInfo(filter?, options?)`                                                                                                                              | `InfoResponse` envelope (see below)               |
+| `queryMetadata(input?, options?)`                                                                                                                         | `{ ok, filter, data }` or `{ ok: false, errors }` |
+| `getTemplateMetadata(filter?)`                                                                                                                            | `TemplateMetadata[]`                              |
+| `getRecipeMetadata(filter?)`                                                                                                                              | `RecipeMetadata[]`                                |
+| `getTemplateIds(filter?)` / `getRecipeIds(filter?)`                                                                                                       | ids in registry order (used by Discovery)         |
+| `getEcosystemMetadata` / `getScopeMetadata` / `getProjectTypeMetadata` / `getUiFrameworkMetadata` / `getCapabilityMetadata` / `getRecipeCategoryMetadata` | vocabulary + membership                           |
+| `getInfoRules(filter?)` / `getRuleMetadata(ids)`                                                                                                          | compatibility rules                               |
+| `normalizeInfoFilter(raw)`                                                                                                                                | validate string filters → typed filter or errors  |
 
 `queryMetadata` is the shared entry point when consumers hold raw string
 filters (CLI flags, a future JSON interface); it validates them and returns the
@@ -67,6 +67,7 @@ mutates the registry.
 | `scope`       | exact `scope`                                | `supportedScopes` includes or `"all"`                        |
 | `projectType` | Discovery profile includes it                | profile includes it (omitted `projectTypes` = all supported) |
 | `uiFramework` | exact `uiFramework`                          | `uiFrameworks` includes it, or recipe is agnostic            |
+| `capability`  | Discovery profile provides it                | Discovery profile provides it                                |
 | `templateId`  | exact id                                     | compatible with that template (`compat.ts`)                  |
 | `recipeId`    | compatible with that recipe                  | exact id                                                     |
 | `category`    | has a compatible recipe in that category     | `category` (or one of its categories)                        |
@@ -91,6 +92,7 @@ zealakit info --json --scope server
 zealakit info --json --template nest
 zealakit info --json --recipe biome
 zealakit info --json --project-type server-api --category orm
+zealakit info --json --capability database
 zealakit info --json --discover            # profiles included, no questionnaire
 zealakit info --json --discover --scope server
 ```
@@ -114,6 +116,7 @@ queries.
     "scopes": [{ "id": "server", "templates": [], "recipes": [] }],
     "projectTypes": [{ "id": "server-api", "supported": true, "templates": [], "recipes": [] }],
     "uiFrameworks": [{ "id": "react", "templates": [], "recipes": [] }],
+    "capabilities": [{ "id": "database", "templates": [], "recipes": [] }],
     "categories": [{ "id": "orm", "exclusive": true, "required": false, "auto": false, "recipes": [], "exclusiveRecipes": [], "nonExclusiveRecipes": [], "defaultRecipes": [] }],
     "templates": [{ "id": "nest", "discovery": { /* ResolvedTemplateProfile */ } }],
     "recipes": [{ "id": "prisma", "discovery": { /* ResolvedRecipeProfile */ } }],
@@ -128,6 +131,9 @@ Notes:
 - Ordering is deterministic: registry order for entities, constant order for
   vocabulary, ASCII comparison for map keys.
 - `discovery` appears only when `discovery: true` / `--discover`.
+- `data.capabilities` and the `capability` filter are additive within schema v4;
+  the filter is echoed only when used.
+- Go recipes expose `goModules` (module path → version); Node recipes return `{}`.
 - JSON mode never prints ANSI, prompts, or Clack output. Invalid filters exit `2`
   with diagnostics on stderr and empty stdout, so no partial/error JSON is emitted.
 - The same filters also narrow the human-readable summary (`zealakit info --scope server`);

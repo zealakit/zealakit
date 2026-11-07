@@ -19,6 +19,7 @@ import {
   type ScaffoldConfig,
 } from "@zealakit/core";
 import { goManifestAdapter } from "@zealakit/ecosystem-go";
+import { walkFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-staging-test-"));
@@ -76,6 +77,18 @@ function snapshotTree(root: string): Record<string, string> {
   visit(root, "");
   return entries;
 }
+
+describe("template inventory", () => {
+  it("skips local build artifacts that must never ship", () => {
+    const template = tempDir("inventory");
+    writeFile(template, "src/main.ts", "export {};");
+    for (const artifact of [".svelte-kit", "build", "storybook-static", "node_modules"]) {
+      writeFile(template, `${artifact}/generated.ts`, "export {};");
+    }
+
+    assert.deepEqual([...walkFiles(template).keys()], ["src/main.ts"]);
+  });
+});
 
 describe("staging path boundary", () => {
   it("accepts relative, nested, normalized, and in-root absolute paths", () => {

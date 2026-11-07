@@ -1,0 +1,18 @@
+{
+  "NO_DATA": "No data",
+  "CONFIRM": {
+    "SOME_MESSAGE": ""
+  },
+  "INFO": {
+    "SOME_MESSAGE": "Some message"
+  },
+  "WARNING": {
+    "SOME_MESSAGE": "Some message"
+  },
+  "SUCCESS": {
+    "SOME_MESSAGE": "Some message"
+  },
+  "ERROR": {
+    "SOME_MESSAGE": "Some message"
+  }
+}

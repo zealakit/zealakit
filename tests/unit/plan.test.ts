@@ -40,6 +40,19 @@ describe("buildScaffoldPlan", () => {
     assert.ok(plan.blockers.some((b) => /conflict/i.test(b)));
   });
 
+  it("applies default recipes even when callers do not pass them", () => {
+    const plan = buildScaffoldPlan(
+      {
+        projectName: "implicit-defaults",
+        templateId: "vite-vue",
+        recipeIds: ["biome", "pinia"],
+      },
+      workRoot,
+    );
+    assert.ok(plan.config.recipeIds.includes("client-shared-pieces"));
+    assert.equal(planIsReady(plan), true, plan.blockers.join("\n"));
+  });
+
   it("marks default recipes as auto-injected when already applied via withDefaultRecipes", () => {
     const plan = buildScaffoldPlan(
       {

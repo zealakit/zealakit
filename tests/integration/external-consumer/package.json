@@ -1,0 +1,12 @@
+{
+  "name": "zealakit-external-consumer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node consumer.mjs"
+  },
+  "dependencies": {
+    "zealakit": "file:zealakit.tgz"
+  }
+}

@@ -30,7 +30,9 @@ describe("programmatic API — combined registration", () => {
     const goTemplates = zealakit.metadata.getTemplates({ ecosystem: "go" });
     assert.ok(goTemplates.length > 0);
     assert.ok(goTemplates.every((template) => template.ecosystem === "go"));
-    assert.deepEqual(zealakit.metadata.getRecipes({ ecosystem: "go" }), []);
+    const goRecipes = zealakit.metadata.getRecipes({ ecosystem: "go" });
+    assert.ok(goRecipes.length > 0);
+    assert.ok(goRecipes.every((recipe) => recipe.ecosystem === "go"));
   });
 
   it("rejects duplicate or unknown ecosystem registrations", () => {

@@ -1,0 +1,1 @@
+- **Database:** `.agents/skills/mysql/SKILL.md` — MySQL pool via `database/sql` + go-sql-driver/mysql; no ORM. Run `go mod tidy` once after scaffolding.

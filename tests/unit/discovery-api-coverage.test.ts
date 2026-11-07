@@ -141,7 +141,7 @@ describe("Backend/API Discovery coverage", () => {
     assert.ok(!compatibleIds(result).includes("stdlib-worker"));
   });
 
-  it("Go + database remains eligible with a database-recipe warning", () => {
+  it("Go + database uses the postgres recipe", () => {
     const result = matchDiscovery(
       fromAnswers({
         projectType: "server-api",
@@ -151,8 +151,9 @@ describe("Backend/API Discovery coverage", () => {
     );
     assert.deepEqual(compatibleIds(result), ["gin-api", "stdlib-api"]);
     assert.equal(result.recommendedTemplateId, "gin-api");
+    assert.ok(result.recommendedRecipeIds.includes("postgres"));
     const gin = result.templates.find((entry) => entry.templateId === "gin-api");
-    assert.ok(gin?.warnings.some((warning) => /database recipe/i.test(warning)));
+    assert.ok(!gin?.warnings.some((warning) => /database recipe/i.test(warning)));
   });
 
   it("full business API scenario discovers and ranks all four Backend/API templates", () => {
@@ -188,6 +189,6 @@ describe("Backend/API Discovery coverage", () => {
     }
     const gin = diagnostics.find((entry) => entry.templateId === "gin-api");
     assert.equal(gin?.ecosystem, "go");
-    assert.ok(gin?.warnings.some((warning) => /database recipe/i.test(warning)));
+    assert.ok(!gin?.warnings.some((warning) => /database recipe/i.test(warning)));
   });
 });

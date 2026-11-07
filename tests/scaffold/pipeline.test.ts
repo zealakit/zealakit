@@ -336,7 +336,7 @@ describe("existing target directories and repeated generation", () => {
     };
     const plan = buildScaffoldPlan(config, cwd);
     assert.deepEqual(plan.blockers, []);
-    assert.deepEqual(plan.config.recipeIds, ["biome"]);
+    assert.deepEqual(plan.config.recipeIds, ["client-shared-pieces", "biome"]);
     assert.equal(fs.existsSync(path.join(cwd, "app-duplicates")), false);
   });
 });

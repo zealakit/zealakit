@@ -20,6 +20,15 @@ export const templateList: TemplateConfig[] = [
     path: "node/vite-vue",
   },
   {
+    id: "vite-svelte",
+    name: "Vite + Svelte",
+    label: "Vite + Svelte + TypeScript",
+    scope: "client",
+    uiFramework: "svelte",
+    description: "Vite + SvelteKit SPA with file-based routing, Svelte 5, and TypeScript",
+    path: "node/vite-svelte",
+  },
+  {
     id: "astro-react-client",
     name: "Astro + React",
     label: "Astro + React + TypeScript",

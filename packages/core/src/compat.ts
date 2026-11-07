@@ -7,7 +7,7 @@ import {
 import { resolveRecipeOverlay } from "./scaffold/paths.js";
 import type { RecipeCategory, RecipeConfig, TemplateConfig } from "./types.js";
 
-export type IncompatibilityCode = "scope" | "ui-framework" | "overlay";
+export type IncompatibilityCode = "ecosystem" | "scope" | "ui-framework" | "overlay";
 
 export type Incompatibility = { code: IncompatibilityCode; message: string };
 
@@ -19,6 +19,15 @@ export function checkRecipeCompatibility(
   recipe: RecipeConfig,
   template: TemplateConfig,
 ): Incompatibility | undefined {
+  const recipeEcosystem = recipe.ecosystem ?? "node";
+  const templateEcosystem = template.ecosystem ?? "node";
+  if (recipeEcosystem !== templateEcosystem) {
+    return {
+      code: "ecosystem",
+      message: `Recipe '${recipe.id}' targets the ${recipeEcosystem} ecosystem, but template '${template.id}' is ${templateEcosystem}.`,
+    };
+  }
+
   if (!recipeSupportsScope(recipe, template.scope)) {
     return {
       code: "scope",

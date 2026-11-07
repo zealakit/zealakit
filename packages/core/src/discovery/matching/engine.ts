@@ -211,9 +211,6 @@ function matchRecipes(
         ),
         ...depEntry.reasons.filter((item) => item.code !== REASON_CODES.notRelevant),
       ];
-      if (!recommendedRecipeIds.includes(dep)) {
-        // dependencies are tracked via role; keep recommendedRecipeIds as direct picks only
-      }
       chosen.add(dep);
     }
   }

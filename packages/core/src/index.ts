@@ -211,11 +211,13 @@ export {
   type WorkerRequirements,
 } from "./discovery/index.js";
 export {
+  type CapabilityMetadata,
   type CliMetadata,
   type CliUsageMetadata,
   type ConfirmPromptStepMetadata,
   compareStrings,
   type EcosystemMetadata,
+  getCapabilityMetadata,
   getEcosystemMetadata,
   getInfo,
   getInfoRules,

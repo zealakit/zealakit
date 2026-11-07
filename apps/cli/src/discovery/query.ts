@@ -108,7 +108,7 @@ export function exitCodeForDiscoveryResponse(response: DiscoveryApiResponse): Ex
 /**
  * `zealakit discovery query` — stateless JSON operations.
  * Reads one request from stdin (or `--input`), writes one response to stdout.
- * It never scaffolds, prompts, or persists state.
+ * It never prompts or persists state; scaffold only runs with explicit confirmation.
  */
 export async function runDiscoveryQuery(options: DiscoveryQueryOptions = {}): Promise<ExitCode> {
   const read = await readRequest(options);

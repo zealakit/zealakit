@@ -19,7 +19,16 @@ export type PlannedFileSource = {
   digest: string;
 };
 
-const TEMPLATE_SKIP_NAMES = new Set(["node_modules", "dist", "coverage", ".turbo", ".vite"]);
+export const TEMPLATE_SKIP_NAMES = new Set([
+  "node_modules",
+  "dist",
+  "coverage",
+  ".turbo",
+  ".vite",
+  ".svelte-kit",
+  "build",
+  "storybook-static",
+]);
 
 function shouldSkipName(base: string): boolean {
   return TEMPLATE_SKIP_NAMES.has(base) || base.endsWith(".tsbuildinfo");

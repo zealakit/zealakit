@@ -26,6 +26,16 @@ export const TEMPLATE_PROFILES: readonly TemplateProfile[] = [
     architectureLevels: ["minimal"],
   },
   {
+    id: "vite-svelte",
+    projectTypes: ["ui"],
+    purposes: ["saas", "business", "internal-tool", "prototype", "learning"],
+    frontendModes: ["spa"],
+    delivery: "vite",
+    capabilities: ["web-ui"],
+    deploymentTargets: ["static-hosting"],
+    architectureLevels: ["minimal"],
+  },
+  {
     id: "astro-react-client",
     projectTypes: ["ui"],
     purposes: ["content-platform", "business", "prototype", "learning"],

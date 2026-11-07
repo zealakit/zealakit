@@ -13,7 +13,9 @@ export function createFeatureAHttpRoutes(deps: FeatureADeps): Hono {
   routes.post("/items", async (c) => {
     const body = (await c.req.json()) as { name?: string };
     const name = typeof body.name === "string" ? body.name : "";
-    const result = await deps.createItemHandler.execute(new CreateItemCommand(name));
+    const result = await deps.createItemHandler.execute(
+      new CreateItemCommand(name),
+    );
     return c.json(new ItemResponseDto(result.id, result.name), 201);
   });
 

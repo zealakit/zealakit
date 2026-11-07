@@ -24,7 +24,9 @@ describe("programmatic API — Go-only consumer", () => {
     const templates = zealakit.metadata.getTemplates();
     assert.ok(templates.length >= 3);
     assert.ok(templates.every((template) => template.ecosystem === "go"));
-    assert.deepEqual(zealakit.metadata.getRecipes(), []);
+    const recipes = zealakit.metadata.getRecipes();
+    assert.ok(recipes.length > 0);
+    assert.ok(recipes.every((recipe) => recipe.ecosystem === "go"));
   });
 
   it("supports Discovery for Go backends", async () => {

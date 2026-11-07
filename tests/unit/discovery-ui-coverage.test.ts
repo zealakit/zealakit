@@ -12,6 +12,7 @@ import { buildTemplateChoices } from "../../apps/cli/src/discovery/present.js";
 const UI_TEMPLATES = [
   "vite-react",
   "vite-vue",
+  "vite-svelte",
   "astro-react-client",
   "astro-react-hybrid",
   "next",
@@ -85,7 +86,7 @@ describe("UI Discovery candidate coverage", () => {
       contentChangeFrequency: "rarely",
     });
     const pool = eligibleUiIds(requirements);
-    assertIncludes(pool, ["vite-react", "astro-react-client"]);
+    assertIncludes(pool, ["vite-react", "vite-svelte", "astro-react-client"]);
     assert.equal(matchDiscovery(requirements).recommendedTemplateId, "astro-react-client");
   });
 
@@ -120,7 +121,7 @@ describe("UI Discovery candidate coverage", () => {
         visitorActions: ["browse-catalog"],
       }),
     );
-    assertIncludes(ids, ["vite-react", "vite-vue", "next", "nuxt"]);
+    assertIncludes(ids, ["vite-react", "vite-vue", "vite-svelte", "next", "nuxt"]);
   });
 
   it("7. interactive web tool keeps Vite eligible", () => {
@@ -154,7 +155,7 @@ describe("UI Discovery candidate coverage", () => {
       uiDataNeed: "store-retrieve",
     });
     const ids = eligibleUiIds(requirements);
-    assertIncludes(ids, ["vite-react", "vite-vue", "next", "nuxt"]);
+    assertIncludes(ids, ["vite-react", "vite-vue", "vite-svelte", "next", "nuxt"]);
     assert.equal(matchDiscovery(requirements).recommendedTemplateId, "vite-react");
   });
 
@@ -166,7 +167,7 @@ describe("UI Discovery candidate coverage", () => {
       uiBackendApproach: "include-server",
     });
     const ids = eligibleUiIds(requirements);
-    assertExcludes(ids, ["vite-react", "vite-vue", "astro-react-client"]);
+    assertExcludes(ids, ["vite-react", "vite-vue", "vite-svelte", "astro-react-client"]);
     assertIncludes(ids, ["next", "nuxt", "astro-react-hybrid"]);
   });
 
@@ -178,7 +179,7 @@ describe("UI Discovery candidate coverage", () => {
       }),
     );
     assertIncludes(ids, ["vite-react", "astro-react-client", "astro-react-hybrid", "next"]);
-    assertExcludes(ids, ["vite-vue", "nuxt"]);
+    assertExcludes(ids, ["vite-vue", "vite-svelte", "nuxt"]);
   });
 
   it("11. explicit Vue preference keeps Vue starters only", () => {
@@ -209,7 +210,7 @@ describe("UI Discovery candidate coverage", () => {
       frontend: { mode: "ssr" },
     };
     const ids = eligibleUiIds(requirements);
-    assertExcludes(ids, ["vite-react", "vite-vue", "astro-react-client"]);
+    assertExcludes(ids, ["vite-react", "vite-vue", "vite-svelte", "astro-react-client"]);
     assertIncludes(ids, ["next", "nuxt", "astro-react-hybrid"]);
   });
 

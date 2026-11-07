@@ -30,11 +30,11 @@ template → recipes (shared + overlay) → merge package.json → fileTransform
 | `apps/cli/`                | Commander CLI entry, prompts, info, preview                                  |
 | `packages/core/`           | Ecosystem-independent engine (scaffold, compat, registry catalog, contracts) |
 | `packages/ecosystem-node/` | Node (TS/JS) templates+recipes registry, npm manifest adapter                |
-| `packages/ecosystem-go/`   | Go templates registry + toolchain detection                                  |
+| `packages/ecosystem-go/`   | Go templates + recipes registry + toolchain detection                        |
 | `templates/node/<id>/`     | Base apps shipped with the kit                                               |
 | `templates/go/<id>/`       | Go base templates (`stdlib-api`, `gin-api`, `stdlib-worker`)                 |
 | `recipes/node/<id>/`       | Optional layers applied on top of a template                                 |
-| `recipes/go/`              | Reserved (no Go recipes yet)                                                 |
+| `recipes/go/`              | Go recipes (`postgres`, `mysql`, `mongodb`)                                  |
 | `scripts/`                 | Kit tooling (test runner, pack smoke, pack dotfiles)                         |
 | `tests/`                   | `unit/` + in-process `scaffold/` tests (`pnpm test`)                         |
 | `monitor/`                 | Internal dependency dashboard (`pnpm monitor`)                               |
@@ -95,7 +95,7 @@ Imports use ESM `.js` extensions in TypeScript source (`from "./types.js"`).
 - Registered in `packages/ecosystem-node/src/registry/templates.ts`.
 - Folder: `templates/<path>/` where `path` is `node/<id>`.
 - `overlay` defaults to `id` via `getTemplateOverlayId()` — recipe overlay folder under `recipes/node/*/overlays/<overlay>/`.
-- Current templates: `vite-react` / `vite-vue` / `astro-react-client` (`client`), `astro-react-hybrid` / `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
+- Current templates: `vite-react` / `vite-vue` / `vite-svelte` / `astro-react-client` (`client`), `astro-react-hybrid` / `next` / `nuxt` (`hybrid`), `nest` / `hono` (`server`).
 - Template-owned agent docs live under that template (`.agents/`, `AGENTS.md`) and ship into generated apps — **do not confuse with this kit’s root skills**.
 - Everywhere agent skills/rules live in **`.agents/`**. **`.cursor`** is always a **symlink → `.agents`** (Cursor IDE compatibility).
 

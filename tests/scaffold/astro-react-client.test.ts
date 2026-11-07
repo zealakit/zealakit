@@ -10,6 +10,7 @@ templateSuite("astro-react-client", {
       recipes: [],
       exists: [
         "astro.config.mjs",
+        "src/general.d.ts",
         "src/pages/index.astro",
         "src/pages/404.astro",
         "src/pages/en/articles/[slug].astro",
@@ -43,7 +44,13 @@ templateSuite("astro-react-client", {
         ".agents/skills/project-structure/SKILL.md",
       ],
       deps: ["astro", "@astrojs/react", "@astrojs/node", "react", "react-dom"],
-      scripts: { dev: "astro dev", build: "astro build" },
+      devDeps: ["typescript"],
+      scripts: {
+        dev: "astro dev",
+        build: "astro build",
+        check: "astro sync && tsc --noEmit",
+        typecheck: "astro sync && tsc --noEmit",
+      },
       contains: {
         "astro.config.mjs": [
           "@astrojs/react",

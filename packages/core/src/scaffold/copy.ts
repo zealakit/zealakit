@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fse } from "../fs-extra.js";
 import type { TemplateConfig } from "../types.js";
+import { TEMPLATE_SKIP_NAMES } from "./inventory.js";
 import {
   assertStagingRealPath,
   getRecipeDir,
@@ -12,19 +13,12 @@ import {
   resolveStagingPath,
 } from "./paths.js";
 
-/** Local install/build junk that must never ship into a scaffolded app. */
-const TEMPLATE_SKIP_NAMES = new Set([
-  "node_modules",
-  "dist",
-  "coverage",
-  ".turbo",
-  ".vite",
-  "vendor",
-]);
+/** `vendor` is a copy-time exclusion in addition to the shared inventory names. */
+const COPY_ONLY_SKIP_NAMES = new Set([...TEMPLATE_SKIP_NAMES, "vendor"]);
 
 function shouldCopyTemplatePath(src: string): boolean {
   const base = path.basename(src);
-  return !TEMPLATE_SKIP_NAMES.has(base) && !base.endsWith(".tsbuildinfo");
+  return !COPY_ONLY_SKIP_NAMES.has(base) && !base.endsWith(".tsbuildinfo");
 }
 
 function copyDirectory(source: string, destination: string, filter?: (src: string) => boolean) {

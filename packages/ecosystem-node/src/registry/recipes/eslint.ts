@@ -34,6 +34,10 @@ export default defineRecipe({
     "vite-vue": {
       "eslint-plugin-vue": "^10.12.0",
     },
+    "vite-svelte": {
+      "eslint-plugin-svelte": "^3.24.0",
+      "svelte-eslint-parser": "^1.10.1",
+    },
     nuxt: {
       "eslint-plugin-vue": "^10.12.0",
     },

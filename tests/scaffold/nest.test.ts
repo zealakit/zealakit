@@ -15,6 +15,8 @@ templateSuite("nest", {
       exists: [
         "biome.json",
         "src/bootstrap/main.ts",
+        "test/app.e2e-spec.ts",
+        "vitest.config.ts",
         ".agents/skills/structure-ddd/SKILL.md",
         ".agents/skills/nestjs/SKILL.md",
         "AGENTS.md",
@@ -22,7 +24,11 @@ templateSuite("nest", {
       absent: ["src/lib/apis/example.ts"],
       deps: ["@nestjs/common"],
       noDevDeps: ["eslint-plugin-react-hooks"],
-      contains: { "AGENTS.md": [".agents/skills/structure-ddd/SKILL.md"] },
+      contains: {
+        "AGENTS.md": [".agents/skills/structure-ddd/SKILL.md"],
+        "test/app.e2e-spec.ts": ["NodeAdapter", "NestNodeApplication"],
+        "vitest.config.ts": ["**/*.e2e-spec.ts"],
+      },
       check: (app) => {
         const biome = app.json<BiomeConfig>("biome.json");
         assert.equal(biome.root, undefined);

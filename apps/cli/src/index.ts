@@ -1,4 +1,5 @@
 import {
+  CAPABILITIES,
   type CliOptions,
   ECOSYSTEMS,
   ExitCode,
@@ -9,6 +10,7 @@ import {
   RECIPE_CATEGORIES,
   SCOPES,
   UI_FRAMEWORKS,
+  validateProfiles,
 } from "@zealakit/core";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
@@ -21,6 +23,20 @@ import { readKitManifest } from "./manifest.js";
 
 registerNodeEcosystem();
 registerGoEcosystem();
+
+// Fail fast on authored Discovery metadata drift at application startup.
+const profiles = validateProfiles();
+if (!profiles.valid) {
+  failDiagnostic(
+    {
+      title: "Invalid Discovery profiles",
+      reason: profiles.errors.join("\n"),
+      resolution:
+        "Fix the profile registry in packages/core/src/profiles/ or the ecosystem registration.",
+    },
+    ExitCode.INTERNAL,
+  );
+}
 
 const program = new Command();
 
@@ -83,6 +99,7 @@ program
     `Filter by Discovery project type: ${PROJECT_TYPES.join(", ")}`,
   )
   .option("--ui-framework <uiFramework>", `Filter by UI framework: ${UI_FRAMEWORKS.join(", ")}`)
+  .option("--capability <capability>", `Filter by Discovery capability: ${CAPABILITIES.join(", ")}`)
   .option("--template <templateId>", `Filter by template id: ${getTemplateIds().join(", ")}`)
   .option("--recipe <recipeId>", `Filter by recipe id: ${getRecipeIds().join(", ")}`)
   .option("--category <category>", `Filter by recipe category: ${RECIPE_CATEGORIES.join(", ")}`)

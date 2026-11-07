@@ -23,6 +23,7 @@ export type InfoCommandOptions = {
   scope?: string;
   projectType?: string;
   uiFramework?: string;
+  capability?: string;
   template?: string;
   recipe?: string;
   category?: string;
@@ -55,6 +56,7 @@ function toFilterInput(options: InfoCommandOptions): InfoFilterInput {
     ...(options.scope !== undefined ? { scope: options.scope } : {}),
     ...(options.projectType !== undefined ? { projectType: options.projectType } : {}),
     ...(options.uiFramework !== undefined ? { uiFramework: options.uiFramework } : {}),
+    ...(options.capability !== undefined ? { capability: options.capability } : {}),
     ...(options.template !== undefined ? { templateId: options.template } : {}),
     ...(options.recipe !== undefined ? { recipeId: options.recipe } : {}),
     ...(options.category !== undefined ? { category: options.category } : {}),

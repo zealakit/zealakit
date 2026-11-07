@@ -2,7 +2,10 @@ import type { Item } from "@/domain/feature-a/aggregates/item.aggregate.js";
 import type { ItemRepository } from "@/domain/feature-a/repositories/item.repository.js";
 import type { ItemId } from "@/domain/feature-a/value-objects/item-id.vo.js";
 import type { ItemOrmEntity } from "./entities/item.orm-entity.js";
-import { toItemDomain, toItemOrmEntity } from "./mappers/item.persistence.mapper.js";
+import {
+  toItemDomain,
+  toItemOrmEntity,
+} from "./mappers/item.persistence.mapper.js";
 
 /**
  * Persistence adapter for ItemRepository.

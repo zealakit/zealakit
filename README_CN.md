@@ -20,7 +20,7 @@ npx zealakit@latest create
 
 常见 starter 要么太空，要么塞满用不到的东西。Zealakit 让你自由组合：
 
-1. **模板（Template）** — Vite + React、Vite + Vue、Astro + React（client 或 hybrid）、Next.js、Nuxt、NestJS、Hono，或 Go API/worker starter
+1. **模板（Template）** — Vite + React、Vite + Vue、SvelteKit、Astro + React（client 或 hybrid）、Next.js、Nuxt、NestJS、Hono，或 Go API/worker starter
 2. **配方（Recipe）** — 可选层（Biome、Zustand、shadcn/ui、Drizzle、Storybook 等）
 
 每个 Recipe 会带上对应的文件、包、脚本，以及（如有）Agent 指引。结果是一个普通的独立项目——可用 `npm`、`pnpm`、`yarn` 或 `bun`。
@@ -29,7 +29,8 @@ npx zealakit@latest create
 
 ## 环境要求
 
-- **Node.js 18+**
+- **Node.js 22.12+**（CLI）。Nuxt 模板需要 Node.js 22.22+。
+- Go 模板需要 **Go 1.22+**（可选；TypeScript 工作流无需 Go）。
 
 ---
 
@@ -100,7 +101,7 @@ npx zealakit@latest create --discover
 
 **已有 API vs 由 Zealakit 生成后端：** 若网站对接你已有的 API，这表示*消费外部 API*，**不会**让 Zealakit 生成后端。新 UI 需要持久化数据时，可能需要具备数据能力的 hybrid starter，而不是纯前端模板。
 
-尚不支持的组合（如 Svelte UI、TypeScript worker、NoSQL）会得到**无兼容模板**及清晰说明，而不是误导性回退。
+尚不支持的组合（如 TypeScript worker、NoSQL）会得到**无兼容模板**及清晰说明，而不是误导性回退。
 
 流程：
 
@@ -154,6 +155,19 @@ npx zealakit@latest create [项目名] [选项]
 
 其他命令：`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
 
+### 元数据查询（`zealakit info`）
+
+`zealakit info` 输出 registry 中的模板、Recipe、生态、分类和兼容规则。加上 `--json` 会返回带 `schemaVersion: 4` 的 envelope。
+
+```bash
+zealakit info --json --ecosystem node
+zealakit info --json --scope server
+zealakit info --json --template nest
+zealakit info --json --recipe biome
+```
+
+过滤器使用 AND 组合；非法值会以退出码 `2` 结束，并且不会向 stdout 输出 JSON。
+
 **规则**
 
 - `--discover` 不能与 `--template`、`-w`、`-y` 或 `--dry-run` 同时使用（Discovery 为交互式）。
@@ -172,6 +186,7 @@ npx zealakit@latest create [项目名] [选项]
 | -------------------- | ---------- | ---------------------------------- | ------------------- |
 | `vite-react`         | 客户端     | Vite + React + TypeScript          | `npm run dev`       |
 | `vite-vue`           | 客户端     | Vite + Vue + TypeScript            | `npm run dev`       |
+| `vite-svelte`        | 客户端     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`       |
 | `astro-react-client` | 客户端/SSG | Astro + React islands + TypeScript | `npm run dev`       |
 | `astro-react-hybrid` | 混合       | Astro + React SSR / Actions / ORM  | `npm run dev`       |
 | `next`               | 混合       | Next.js App Router + TypeScript    | `npm run dev`       |
@@ -182,7 +197,7 @@ npx zealakit@latest create [项目名] [选项]
 | `gin-api`            | 服务端     | Go HTTP API（Gin）                 | `make run`          |
 | `stdlib-worker`      | 基础设施   | Go 后台 worker（stdlib）           | `make run`          |
 
-每个 Node 项目都包含 TypeScript、路径别名和 Agent 文档（`.agents/`、`AGENTS.md`）。Go 模板附带 Agent 文档与 Makefile。
+每个 Node 项目都包含 TypeScript、路径别名和 Agent 文档（`.agents/`、`AGENTS.md`）。Go 模板附带 Agent 文档与 Makefile；Go Recipe 包括 PostgreSQL（`database/sql` + pgx）、MySQL（`database/sql` + go-sql-driver/mysql）和 MongoDB（官方 Go Driver v2）。
 
 ---
 
@@ -195,27 +210,30 @@ npx zealakit@latest create [项目名] [选项]
 - **`storybook`** — 可与 UI 套件同时使用
 - **`client-shared-pieces`** — 在 Vite / Astro / Next / Nuxt 上自动添加
 
-| Recipe             | 分类        | 适用模板                             | 内容                       |
-| ------------------ | ----------- | ------------------------------------ | -------------------------- |
-| `biome`            | Linter      | 全部                                 | Lint + Format 脚本         |
-| `eslint`           | Linter      | 全部                                 | ESLint flat config         |
-| `zustand`          | State       | Vite React、Astro、Next              | Zustand 示例               |
-| `pinia`            | State       | Vite Vue、Nuxt                       | Pinia 示例                 |
-| `nanostores`       | State       | Vite、Astro、Next、Nuxt              | Nanostores 示例            |
-| `hookform-zod`     | Forms       | Vite React、Astro、Next              | React Hook Form + Zod      |
-| `vee-validate-zod` | Forms       | Vite Vue、Nuxt                       | VeeValidate + Zod          |
-| `kyjs`             | HTTP        | Vite、Astro、Next、Nuxt              | Ky 客户端                  |
-| `axios`            | HTTP        | Vite、Astro、Next、Nuxt              | Axios 客户端               |
-| `antd`             | UI          | Vite React、Astro、Next              | Ant Design                 |
-| `mui`              | UI          | Vite React、Astro、Next              | MUI                        |
-| `shadcn-ui`        | UI          | Vite React、Astro、Next              | Tailwind + shadcn/ui       |
-| `shadcn-vue`       | UI          | Vite Vue、Nuxt                       | Tailwind + shadcn-vue      |
-| `nuxt-ui`          | UI          | Vite Vue、Nuxt                       | Tailwind + Nuxt UI         |
-| `storybook`        | 文档 / 测试 | Vite、Astro、Next、Nuxt              | Storybook 配置与脚本       |
-| `type-orm`         | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | TypeORM + Agent skill      |
-| `mikro-orm`        | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | MikroORM + Agent skill     |
-| `drizzle-orm`      | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Drizzle + drizzle-kit 脚本 |
-| `prisma`           | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Prisma schema + migrate    |
+| Recipe             | 分类        | 适用模板                             | 内容                        |
+| ------------------ | ----------- | ------------------------------------ | --------------------------- |
+| `biome`            | Linter      | 全部                                 | Lint + Format 脚本          |
+| `eslint`           | Linter      | 全部                                 | ESLint flat config          |
+| `zustand`          | State       | Vite React、Astro、Next              | Zustand 示例                |
+| `pinia`            | State       | Vite Vue、Nuxt                       | Pinia 示例                  |
+| `nanostores`       | State       | Vite、Astro、Next、Nuxt              | Nanostores 示例             |
+| `hookform-zod`     | Forms       | Vite React、Astro、Next              | React Hook Form + Zod       |
+| `vee-validate-zod` | Forms       | Vite Vue、Nuxt                       | VeeValidate + Zod           |
+| `kyjs`             | HTTP        | Vite、Astro、Next、Nuxt              | Ky 客户端                   |
+| `axios`            | HTTP        | Vite、Astro、Next、Nuxt              | Axios 客户端                |
+| `antd`             | UI          | Vite React、Astro、Next              | Ant Design                  |
+| `mui`              | UI          | Vite React、Astro、Next              | MUI                         |
+| `shadcn-ui`        | UI          | Vite React、Astro、Next              | Tailwind + shadcn/ui        |
+| `shadcn-vue`       | UI          | Vite Vue、Nuxt                       | Tailwind + shadcn-vue       |
+| `nuxt-ui`          | UI          | Vite Vue、Nuxt                       | Tailwind + Nuxt UI          |
+| `storybook`        | 文档 / 测试 | Vite、Astro、Next、Nuxt              | Storybook 配置与脚本        |
+| `type-orm`         | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | TypeORM + Agent skill       |
+| `mikro-orm`        | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | MikroORM + Agent skill      |
+| `drizzle-orm`      | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Drizzle + drizzle-kit 脚本  |
+| `prisma`           | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Prisma schema + migrate     |
+| `postgres`         | Database    | Go 模板                              | `database/sql` + pgx 驱动   |
+| `mysql`            | Database    | Go 模板                              | `database/sql` + MySQL 驱动 |
+| `mongodb`          | Database    | Go 模板                              | 官方 MongoDB Go Driver v2   |
 
 ORM Recipe 不绑定具体数据库驱动。脚手架完成后自行安装驱动（`pg`、`mysql2` 等），并参考 `.agents/skills/<orm>/` 中的说明。
 
@@ -296,4 +314,4 @@ npm install && npm run dev
 
 [MIT](LICENSE)
 
-源码：[github.com/zealakit/zealakit](https://github.com/zealakit/zealakit)
+源码：[github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

@@ -12,7 +12,7 @@ subpath is not part of this release.
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 22.12+
 - Import from the workspace/source TypeScript packages; no terminal, TTY, or
   `@clack/prompts` is involved.
 

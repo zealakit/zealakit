@@ -86,6 +86,28 @@ export const RECIPE_PROFILES: readonly RecipeProfile[] = [
     projectTypes: ["ui"],
   },
   {
+    id: "postgres",
+    capabilities: ["database"],
+    projectTypes: ["server-api", "background-worker"],
+    databases: ["postgresql"],
+  },
+  {
+    id: "mysql",
+    // Discovery's generic "database" need maps to the existing PostgreSQL
+    // recommendation; MySQL remains available for explicit selection and for
+    // future MySQL-specific requirements.
+    capabilities: [],
+    projectTypes: ["server-api", "background-worker"],
+    databases: ["mysql"],
+  },
+  {
+    id: "mongodb",
+    // Discovery currently models relational databases only; MongoDB stays
+    // manually selectable rather than being advertised for a SQL requirement.
+    capabilities: [],
+    projectTypes: ["server-api", "background-worker"],
+  },
+  {
     id: "type-orm",
     capabilities: ["database"],
     // `ui` covers hybrid templates (Next, Nuxt, Astro hybrid); compat still

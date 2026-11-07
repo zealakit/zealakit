@@ -204,11 +204,33 @@ describe("zealakit info filters", () => {
       response.data.templates.map((template) => template.ecosystem),
       ["go", "go", "go"],
     );
-    assert.deepEqual(response.data.recipes, []);
+    assert.ok(response.data.recipes.length > 0);
+    assert.ok(response.data.recipes.every((recipe) => recipe.ecosystem === "go"));
     assert.deepEqual(
       response.data.ecosystems.map((ecosystem) => ecosystem.id),
       ["go"],
     );
+  });
+
+  it("filters by Discovery capability", () => {
+    const result = runCli(["info", "--json", "--capability", "database"]);
+    assert.equal(result.status, 0, result.stderr);
+    const response = parseJson(result.stdout);
+    assert.deepEqual(response.filters, { capability: "database" });
+    assert.deepEqual(response.data.templates, []);
+    assert.ok(response.data.recipes.length > 0);
+    assert.ok(response.data.recipes.some((recipe) => recipe.id === "postgres"));
+    assert.ok(
+      response.data.recipes.every(
+        (recipe) =>
+          recipe.categories.includes("orm") || recipe.id === "postgres" || recipe.id === "mysql",
+      ),
+    );
+    assert.deepEqual(
+      response.data.capabilities.map((capability) => capability.id),
+      ["database"],
+    );
+    assert.equal(response.schemaVersion, INFO_SCHEMA_VERSION);
   });
 
   it("filters by template id", () => {
@@ -275,6 +297,7 @@ describe("zealakit info filters", () => {
       ["info", "--json", "--ecosystem", "deno"],
       ["info", "--json", "--template", "nope"],
       ["info", "--json", "--recipe", "nope"],
+      ["info", "--json", "--capability", "magic"],
     ]) {
       const result = runCli(args);
       assert.equal(result.status, 2, args.join(" "));

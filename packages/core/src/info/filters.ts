@@ -1,6 +1,7 @@
 import { checkRecipeCompatibility } from "../compat.js";
-import type { ProjectType } from "../constants.js";
+import type { Capability, ProjectType } from "../constants.js";
 import {
+  CAPABILITIES,
   ECOSYSTEMS,
   isSupportedProjectType,
   PROJECT_TYPES,
@@ -80,6 +81,14 @@ export function normalizeInfoFilter(input: InfoFilterInput = {}): NormalizeInfoF
     }
   }
 
+  if (input.capability !== undefined) {
+    if (isMember(CAPABILITIES, input.capability)) {
+      filter.capability = input.capability;
+    } else {
+      errors.push(describeAllowed("capability", input.capability, CAPABILITIES));
+    }
+  }
+
   if (input.category !== undefined) {
     if (isMember(RECIPE_CATEGORIES, input.category)) {
       filter.category = input.category;
@@ -126,6 +135,7 @@ export function orderInfoFilter(filter: InfoFilter): InfoFilter {
   if (filter.scope) ordered.scope = filter.scope;
   if (filter.projectType) ordered.projectType = filter.projectType;
   if (filter.uiFramework) ordered.uiFramework = filter.uiFramework;
+  if (filter.capability) ordered.capability = filter.capability;
   if (filter.templateId) ordered.templateId = filter.templateId;
   if (filter.recipeId) ordered.recipeId = filter.recipeId;
   if (filter.category) ordered.category = filter.category;
@@ -139,6 +149,17 @@ export function compareStrings(a: string, b: string): number {
 }
 
 /** Whether a template's Discovery profile covers `projectType` (unsupported → false). */
+export function templateProvidesCapability(
+  template: TemplateConfig,
+  capability: Capability,
+): boolean {
+  return Boolean(getTemplateProfile(template.id)?.capabilities.includes(capability));
+}
+
+export function recipeProvidesCapability(recipe: RecipeConfig, capability: Capability): boolean {
+  return Boolean(getRecipeProfile(recipe.id)?.capabilities.includes(capability));
+}
+
 export function templateSupportsProjectType(
   template: TemplateConfig,
   projectType: ProjectType,
@@ -180,6 +201,9 @@ export function matchesTemplateFilter(template: TemplateConfig, filter: InfoFilt
     return false;
   }
   if (filter.uiFramework && template.uiFramework !== filter.uiFramework) {
+    return false;
+  }
+  if (filter.capability && !templateProvidesCapability(template, filter.capability)) {
     return false;
   }
 
@@ -229,6 +253,9 @@ export function matchesRecipeFilter(recipe: RecipeConfig, filter: InfoFilter): b
     recipe.uiFrameworks &&
     !recipe.uiFrameworks.includes(filter.uiFramework)
   ) {
+    return false;
+  }
+  if (filter.capability && !recipeProvidesCapability(recipe, filter.capability)) {
     return false;
   }
 

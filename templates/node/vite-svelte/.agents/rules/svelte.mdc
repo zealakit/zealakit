@@ -1,0 +1,11 @@
+---
+description: Svelte 5 + SvelteKit UI generation and refactoring
+globs: "**/*.svelte"
+alwaysApply: false
+---
+
+# Svelte UI
+
+When generating or refactoring UI, follow `.agents/skills/svelte/SKILL.md`.
+
+Place files using `.agents/skills/project-structure/SKILL.md` (kebab-case files, PascalCase imports). Do not use this skill to pick a UI kit, HTTP client, or store library.

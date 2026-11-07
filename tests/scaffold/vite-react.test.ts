@@ -30,6 +30,7 @@ templateSuite("vite-react", {
         "eslint.config.js",
       ],
       noDeps: ["axios", "antd", "@mui/material", "shadcn"],
+      devDeps: ["@types/node"],
       noDevDeps: ["vitest"],
       scripts: { check: "biome check ." },
       noScripts: ["test", "lint"],

@@ -27,6 +27,7 @@ versioned envelope, and stdout contains nothing else — no ANSI, no prompts:
     "scopes": [{ "id": "server", "templates": [], "recipes": [] }],
     "projectTypes": [{ "id": "server-api", "supported": true, "templates": [], "recipes": [] }],
     "uiFrameworks": [{ "id": "react", "templates": [], "recipes": [] }],
+    "capabilities": [{ "id": "database", "templates": [], "recipes": [] }],
     "categories": [{ "id": "orm", "exclusive": true, "recipes": [], "…": "…" }],
     "templates": [{ "id": "nest", "promptSteps": [], "discovery": { "…": "…" } }],
     "recipes": [{ "id": "prisma", "templates": [], "discovery": { "…": "…" } }],
@@ -36,7 +37,7 @@ versioned envelope, and stdout contains nothing else — no ANSI, no prompts:
 ```
 
 - Filters: `--ecosystem`, `--scope`, `--project-type`, `--ui-framework`,
-  `--template`, `--recipe`, `--category`, `--discover`. They combine with AND
+  `--capability`, `--template`, `--recipe`, `--category`, `--discover`. They combine with AND
   semantics; unknown values exit `2` with diagnostics on stderr (stdout stays
   empty) instead of being ignored.
 - `--discover` only attaches Discovery profiles (`templates[].discovery`,
@@ -82,13 +83,13 @@ packages/core/
   src/prompts/                    # interactive create step metadata
   src/discovery/                  # questionnaire + matching/scoring
 packages/ecosystem-node/          # Node registry + npm package.json adapter
-packages/ecosystem-go/            # Go templates + toolchain detection
+packages/ecosystem-go/            # Go templates + recipes + toolchain detection
 templates/node/<id>/              # Node base templates
 templates/go/stdlib-api/          # Go stdlib HTTP API template
 templates/go/gin-api/             # Go Gin HTTP API template
 templates/go/stdlib-worker/       # Go stdlib background worker
 recipes/node/<id>/                # Node recipes
-recipes/go/                       # Reserved (no Go recipes yet)
+recipes/go/                       # Go recipes (postgres, mysql, mongodb)
 docs/                             # maintainer contracts (metadata query layer)
 ```
 
@@ -107,6 +108,37 @@ Adding a template or recipe does not require touching `info`: register it in the
 ecosystem package and add its Discovery profile — the query layer, prompts, and
 `info --json` pick it up automatically. New enums still belong in
 `packages/core/src/constants/`, never in a query or CLI file.
+
+## Documentation and packaging
+
+Public documentation lives at the repository root:
+
+- `README.md` — default npm README (English).
+- `README_VI.md` — Vietnamese.
+- `README_CN.md` — Chinese.
+- `README_DEV.md` — this maintainer document; never shipped.
+
+The root `package.json` `files` allowlist includes the three public READMEs,
+`dist/`, `templates/`, `recipes/`, and excludes `README_DEV.md`. `npm` uses
+`README.md` as the package README. Do not copy docs into `dist/`; `tsup` owns
+that directory.
+
+Release artifact flow:
+
+```bash
+pnpm build
+npm pack
+```
+
+Inspect the tarball before publishing:
+
+```bash
+tar -tzf zealakit-*.tgz | grep -E 'package/(README|LICENSE|dist)/'
+tar -tzf zealakit-*.tgz | grep README_DEV # must be empty
+```
+
+The package is assembled from the repository root, not from `apps/cli/dist`.
+Build output is generated; do not edit it by hand.
 
 ## Working on the metadata layer
 
@@ -131,6 +163,10 @@ Discovery, plan, scaffold) without the CLI; register ecosystems explicitly with
 `nodeEcosystem` / `goEcosystem`. See [docs/programmatic-api.md](docs/programmatic-api.md).
 The published `zealakit` package remains CLI-only in this release.
 
+## Release
+
+See [docs/release.md](docs/release.md) for the repeatable release checklist.
+
 ## Verification
 
 ```bash
@@ -138,6 +174,8 @@ pnpm check        # Biome (includes markdown table formatting)
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
 pnpm test         # unit + in-process scaffold tests
 pnpm test:pack    # build → pack → tarball smoke test (release gate)
+pnpm test:integration  # install the packed CLI in an independent fixture
+pnpm test:go           # generated Go recipes: go mod tidy / test / vet
 ```
 
 Check the environment (Go is optional; TypeScript workflows work without it):

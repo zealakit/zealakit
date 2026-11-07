@@ -10,7 +10,9 @@ export class FeatureAController {
 
   @Post()
   async create(@Body() body: CreateItemRequestDto): Promise<ItemResponseDto> {
-    const result = await this.createItemHandler.execute(new CreateItemCommand(body.name));
+    const result = await this.createItemHandler.execute(
+      new CreateItemCommand(body.name),
+    );
     return new ItemResponseDto(result.id, result.name);
   }
 }

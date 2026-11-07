@@ -3,7 +3,7 @@ import {
   formatDiagnostic,
   missingDependencyDiagnostic,
 } from "./diagnostics.js";
-import { getAllRecipeIds, getRecipe } from "./registry/index.js";
+import { getRecipe } from "./registry/index.js";
 import type { RecipeConfig } from "./types.js";
 
 export type RecipeResolveError =
@@ -32,7 +32,6 @@ type Lookup = (id: string) => RecipeConfig | undefined;
 export function resolveRecipeDependencies(
   selectedIds: string[],
   lookup: Lookup = getRecipe,
-  _registryOrder: string[] = getAllRecipeIds(),
 ): RecipeResolveResult {
   const selected = [...new Set(selectedIds)];
   const visiting = new Set<string>();

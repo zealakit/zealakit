@@ -1,0 +1,17 @@
+---
+description: PostgreSQL database/sql conventions for this Go service
+alwaysApply: true
+---
+
+# PostgreSQL
+
+The `postgres` recipe adds `internal/infrastructure/database` using
+`database/sql` and the pgx stdlib driver.
+
+- Read configuration with `database.ConfigFromEnv()` (requires `DATABASE_URL`).
+- Open the pool with `database.Open(ctx)` from the composition root, not from handlers.
+- Close the pool during graceful shutdown.
+- Keep SQL in feature/infrastructure adapters; do not add an ORM.
+- Handle every `QueryRow`/`Query`/`Exec` error explicitly.
+- Use `context.Context` for all database calls.
+- See `.agents/skills/postgres/SKILL.md` for the full pattern.

@@ -10,6 +10,7 @@ export {
   templateSupportsProjectType,
 } from "./filters.js";
 export {
+  getCapabilityMetadata,
   getEcosystemMetadata,
   getInfo,
   getInfoRules,
@@ -25,6 +26,7 @@ export {
 } from "./queries.js";
 export { getRuleMetadata } from "./rules.js";
 export {
+  type CapabilityMetadata,
   type CliMetadata,
   type CliUsageMetadata,
   type ConfirmPromptStepMetadata,

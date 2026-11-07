@@ -2,7 +2,6 @@ import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  formatNoCompatibleTemplateMessage,
   matchDiscovery,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
@@ -116,7 +115,7 @@ describe("discovery scenarios", () => {
     assert.deepEqual(compatibleIds(result), ["hono", "nest"]);
   });
 
-  it("E4: structured database keeps Go eligible behind Node (no Go ORM recipes yet)", () => {
+  it("E4: structured database keeps Go eligible with its postgres recipe", () => {
     const requirements = fromAnswers({
       projectType: "server-api",
       apiStorageNeed: "relational",
@@ -126,7 +125,7 @@ describe("discovery scenarios", () => {
     assert.equal(result.recommendedTemplateId, "hono");
     const go = result.templates.find((entry) => entry.templateId === "gin-api");
     assert.ok(go?.compatible);
-    assert.ok(go?.warnings.some((warning) => /database recipe/i.test(warning)));
+    assert.ok(!go?.warnings.some((warning) => /database recipe/i.test(warning)));
   });
 
   it("E5: auth and background notes do not exclude Go alternatives", () => {
@@ -157,14 +156,14 @@ describe("discovery scenarios", () => {
     assert.ok(compatibleIds(result).length > 1);
   });
 
-  it("H: unsupported UI framework yields no compatible template + clear message", () => {
+  it("H: explicit Svelte preference recommends the Svelte starter", () => {
     const requirements = fromAnswers({
       projectType: "ui",
       uiTechPreference: "svelte",
     });
     const result = matchDiscovery(requirements);
-    assert.equal(result.recommendedTemplateId, undefined);
-    assert.match(formatNoCompatibleTemplateMessage(result), /No compatible template/i);
+    assert.equal(result.recommendedTemplateId, "vite-svelte");
+    assert.deepEqual(compatibleIds(result), ["vite-svelte"]);
   });
 
   it("I: API with structured storage never lands on a frontend-only template", () => {

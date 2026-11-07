@@ -17,13 +17,15 @@
       "!**/*.sass",
       "!**/*.less",
       "!**/public",
+      "!**/*.md",
       "!**/*.d.ts"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 2
+    "indentWidth": 2,
+    "lineWidth": 100
   },
   "javascript": {
     "formatter": {

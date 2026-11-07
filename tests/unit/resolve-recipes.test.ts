@@ -28,10 +28,8 @@ describe("resolveRecipeDependencies", () => {
     y: recipe({ id: "y" }),
   };
   const lookup = (id: string) => registry[id as keyof typeof registry];
-  const order = Object.keys(registry);
-
   it("resolves transitive dependencies in deterministic order", () => {
-    const result = resolveRecipeDependencies(["a"], lookup, order);
+    const result = resolveRecipeDependencies(["a"], lookup);
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.deepEqual(result.recipeIds, ["c", "b", "a"]);
@@ -40,7 +38,7 @@ describe("resolveRecipeDependencies", () => {
   });
 
   it("dedupes selected ids and already-listed deps", () => {
-    const result = resolveRecipeDependencies(["a", "b", "a"], lookup, order);
+    const result = resolveRecipeDependencies(["a", "b", "a"], lookup);
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.deepEqual(result.recipeIds, ["c", "b", "a"]);
@@ -48,14 +46,14 @@ describe("resolveRecipeDependencies", () => {
   });
 
   it("preserves selection order when there are no edges", () => {
-    const result = resolveRecipeDependencies(["y", "x"], lookup, order);
+    const result = resolveRecipeDependencies(["y", "x"], lookup);
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.deepEqual(result.recipeIds, ["y", "x"]);
   });
 
   it("detects missing dependencies", () => {
-    const result = resolveRecipeDependencies(["d"], lookup, order);
+    const result = resolveRecipeDependencies(["d"], lookup);
     assert.equal(result.ok, false);
     if (result.ok) return;
     assert.equal(result.error.code, "missing");
@@ -63,7 +61,7 @@ describe("resolveRecipeDependencies", () => {
   });
 
   it("detects circular dependencies", () => {
-    const result = resolveRecipeDependencies(["e"], lookup, order);
+    const result = resolveRecipeDependencies(["e"], lookup);
     assert.equal(result.ok, false);
     if (result.ok) return;
     assert.equal(result.error.code, "cycle");

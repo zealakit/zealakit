@@ -85,6 +85,9 @@ const NEVER_PACKED_SEGMENTS = new Set([
   "node_modules",
   "dist",
   ".next",
+  ".svelte-kit",
+  "build",
+  "storybook-static",
   "coverage",
   ".turbo",
   ".vite",
@@ -103,7 +106,6 @@ function shouldBePacked(file: string): boolean {
   return (
     file !== "recipes/tsconfig.json" &&
     file !== "recipes/shims.d.ts" &&
-    !file.startsWith("recipes/go/") &&
     file !== "templates/go/README.md" &&
     !segments.includes(".cursor") &&
     !segments.some((segment) => NEVER_PACKED_SEGMENTS.has(segment)) &&
@@ -129,6 +131,10 @@ function verifyTarballContents(tarballPath: string): string[] {
 
   const errors: string[] = [];
   if (!packed.has("dist/index.js")) errors.push("tarball is missing dist/index.js");
+  for (const readme of ["README.md", "README_VI.md", "README_CN.md"]) {
+    if (!packed.has(readme)) errors.push(`tarball is missing ${readme}`);
+  }
+  if (packed.has("README_DEV.md")) errors.push("tarball must not include README_DEV.md");
   for (const file of tracked) {
     const base = path.posix.basename(file);
     const expected = PACKED_DOTFILES[base]
@@ -276,6 +282,53 @@ const SMOKE_CASES: SmokeCase[] = [
       }
       return errors;
     },
+  },
+  {
+    name: "stdlib-api + postgres",
+    args: ["smoke-go-postgres", "-t", "stdlib-api", "-w", "postgres", "-y"],
+    check: (result, appDir) => {
+      const errors = [
+        ...expectExit(result, true),
+        ...expectFiles(appDir, [
+          "go.mod",
+          "internal/infrastructure/database/postgres.go",
+          "internal/infrastructure/database/postgres_test.go",
+        ]),
+      ];
+      if (appDir) {
+        const goModPath = path.join(appDir, "go.mod");
+        if (fs.existsSync(goModPath)) {
+          const goMod = fs.readFileSync(goModPath, "utf-8");
+          if (!goMod.includes("github.com/jackc/pgx/v5 v5.7.4")) {
+            errors.push("go.mod should require pgx");
+          }
+        }
+        if (fs.existsSync(path.join(appDir, "package.json"))) {
+          errors.push("Go project must not contain package.json");
+        }
+      }
+      return errors;
+    },
+  },
+  {
+    name: "vite-svelte + biome,storybook",
+    args: ["smoke-svelte", "-t", "vite-svelte", "-w", "biome,storybook", "-y"],
+    check: (result, appDir) => [
+      ...expectExit(result, true),
+      ...expectFiles(appDir, [
+        ".gitignore",
+        "svelte.config.js",
+        "src/app.html",
+        "src/routes/+layout.svelte",
+        "src/configs/i18n.svelte.ts",
+        "src/assets/locales/en/common.json",
+        "src/assets/locales/vi/common.json",
+        "src/features/feature-a/list.svelte",
+        "biome.json",
+        ".storybook/main.ts",
+        "AGENTS.md",
+      ]),
+    ],
   },
   {
     name: "nuxt + shadcn-vue,pinia",

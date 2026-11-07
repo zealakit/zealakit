@@ -109,11 +109,11 @@ describe("Discovery API — questions", () => {
     assert.ok(unknown.error.details.some((detail) => detail.includes("unknownKey")));
   });
 
-  it("reports unsupported project types in recommendations", async () => {
-    const data = questionsData(
+  it("reports unsupported project types consistently", async () => {
+    const questions = errorData(
       await call({ operation: "questions", answers: { projectType: "complete-product" } }),
     );
-    assert.equal(data.complete, true);
+    assert.equal(questions.error.code, DISCOVERY_API_ERROR_CODES.UNSUPPORTED_PROJECT_TYPE);
 
     const response = errorData(
       await call({

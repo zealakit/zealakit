@@ -1,6 +1,6 @@
 {
   "name": "zealakit",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Recipe-based scaffolding CLI for multi-ecosystem project templates",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,15 +9,21 @@
   },
   "files": [
     "dist",
+    "README.md",
+    "README_VI.md",
+    "README_CN.md",
     "templates",
     "recipes",
+    "!README_DEV.md",
     "!recipes/tsconfig.json",
     "!recipes/shims.d.ts",
     "!templates/**/.cursor",
     "!recipes/**/.cursor",
-    "!recipes/go/**",
     "!templates/**/dist",
     "!templates/**/.next",
+    "!templates/**/.svelte-kit",
+    "!templates/**/build",
+    "!templates/**/storybook-static",
     "!templates/**/node_modules",
     "!templates/**/coverage",
     "!templates/**/*.tsbuildinfo",
@@ -34,6 +40,8 @@
     "test:unit": "tsx scripts/test.ts --unit",
     "test:scaffold": "tsx scripts/test.ts --scaffold",
     "test:pack": "tsx scripts/test-e2e-pack.ts",
+    "test:integration": "tsx scripts/test-integration.ts",
+    "test:go": "tsx scripts/test-go-recipes.ts",
     "monitor": "tsx monitor/server.ts",
     "prepack": "tsx scripts/pack-dotfiles.ts add",
     "postpack": "tsx scripts/pack-dotfiles.ts remove",
@@ -42,7 +50,7 @@
     "test:sandbox": "rm -rf .sandbox/*/ && mkdir -p .sandbox && cd .sandbox && tsx ../apps/cli/src/index.ts"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12.0"
   },
   "packageManager": "pnpm@12.14.0",
   "keywords": [

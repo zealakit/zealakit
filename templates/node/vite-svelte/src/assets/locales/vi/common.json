@@ -1,0 +1,13 @@
+{
+  "TEST": "Kiểm tra",
+  "APP": {
+    "TITLE": "Vite + Svelte",
+    "DESCRIPTION": "Starter Svelte 5 tối giản với i18n.",
+    "OPEN_FEATURE_A": "Mở Feature A"
+  },
+  "LANGUAGE": {
+    "LABEL": "Ngôn ngữ",
+    "EN": "Tiếng Anh",
+    "VI": "Tiếng Việt"
+  }
+}

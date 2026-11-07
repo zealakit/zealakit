@@ -99,7 +99,12 @@ describe("recipe dependency resolution in the real pipeline", () => {
     const cwd = caseDir();
     const plan = buildScaffoldPlan(baseConfig(["e2e-root"]), cwd);
     assert.deepEqual(plan.blockers, []);
-    assert.deepEqual(plan.config.recipeIds, ["e2e-base", "e2e-leaf", "e2e-root"]);
+    assert.deepEqual(plan.config.recipeIds, [
+      "client-shared-pieces",
+      "e2e-base",
+      "e2e-leaf",
+      "e2e-root",
+    ]);
     assert.deepEqual(plan.autoInjected, ["e2e-base", "e2e-leaf"]);
   });
 
@@ -124,7 +129,7 @@ describe("recipe dependency resolution in the real pipeline", () => {
   it("deduplicates repeated selections before materializing", () => {
     const plan = buildScaffoldPlan(baseConfig(["e2e-base", "e2e-base", "e2e-leaf"]), caseDir());
     assert.deepEqual(plan.blockers, []);
-    assert.deepEqual(plan.config.recipeIds, ["e2e-base", "e2e-leaf"]);
+    assert.deepEqual(plan.config.recipeIds, ["client-shared-pieces", "e2e-base", "e2e-leaf"]);
   });
 
   it("rejects conflicting manifest contributions before writing", async () => {

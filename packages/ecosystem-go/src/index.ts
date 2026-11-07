@@ -1,5 +1,11 @@
-import { type EcosystemRegistration, registerTemplate, setManifestAdapter } from "@zealakit/core";
+import {
+  type EcosystemRegistration,
+  registerRecipe,
+  registerTemplate,
+  setManifestAdapter,
+} from "@zealakit/core";
 import { goManifestAdapter } from "./manifest/adapter.js";
+import { RECIPE_LIST } from "./registry/recipes/index.js";
 import { templateList } from "./registry/templates.js";
 
 let registered = false;
@@ -10,6 +16,9 @@ export function registerGoEcosystem(): void {
   setManifestAdapter("go", goManifestAdapter);
   for (const template of templateList) {
     registerTemplate(template);
+  }
+  for (const recipe of RECIPE_LIST) {
+    registerRecipe(recipe);
   }
   registered = true;
 }
@@ -22,6 +31,8 @@ export const goEcosystem: EcosystemRegistration = {
 
 export { detectGoEnvironment } from "./detect.js";
 export { goManifestAdapter, readGoModulePath } from "./manifest/adapter.js";
+export { defineGoRecipe } from "./registry/recipes/define.js";
+export { RECIPE_LIST, recipes } from "./registry/recipes/index.js";
 export { templateList } from "./registry/templates.js";
 export { resolveGoExecutable } from "./resolve-executable.js";
 export { defaultRunCommand } from "./run-command.js";

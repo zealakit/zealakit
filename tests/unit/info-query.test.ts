@@ -4,7 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
+  CAPABILITIES,
   ECOSYSTEMS,
+  getCapabilityMetadata,
   getEcosystemMetadata,
   getInfo,
   getProjectTypeMetadata,
@@ -62,6 +64,10 @@ describe("metadata retrieval", () => {
     assert.deepEqual(
       getUiFrameworkMetadata().map((framework) => framework.id),
       [...UI_FRAMEWORKS],
+    );
+    assert.deepEqual(
+      getCapabilityMetadata().map((capability) => capability.id),
+      [...CAPABILITIES],
     );
     assert.deepEqual(
       getRecipeCategoryMetadata().map((category) => category.id),
@@ -141,7 +147,8 @@ describe("metadata filtering", () => {
     const info = getInfo({ ecosystem: "go" });
     assert.ok(info.data.templates.length > 0);
     assert.ok(info.data.templates.every((template) => template.ecosystem === "go"));
-    assert.deepEqual(info.data.recipes, []);
+    assert.ok(info.data.recipes.length > 0);
+    assert.ok(info.data.recipes.every((recipe) => recipe.ecosystem === "go"));
     assert.deepEqual(
       info.data.ecosystems.map((ecosystem) => ecosystem.id),
       ["go"],
@@ -232,6 +239,39 @@ describe("metadata filtering", () => {
     }
   });
 
+  it("filters by capability using Discovery profile metadata", () => {
+    const ui = getInfo({ capability: "web-ui" });
+    assert.ok(ui.data.templates.length > 0);
+    assert.ok(ui.data.templates.every((template) => template.discovery === undefined));
+    for (const template of ui.data.templates) {
+      assert.ok(resolveTemplateProfile(template.id)?.capabilities.includes("web-ui"));
+    }
+    for (const recipe of ui.data.recipes) {
+      assert.ok(resolveRecipeProfile(recipe.id)?.capabilities.includes("web-ui"));
+    }
+    assert.deepEqual(
+      ui.data.capabilities.map((capability) => capability.id),
+      ["web-ui"],
+    );
+
+    const database = getInfo({ capability: "database" });
+    assert.deepEqual(database.data.templates, []);
+    assert.ok(database.data.recipes.length > 0);
+    assert.ok(database.data.recipes.some((recipe) => recipe.id === "postgres"));
+    assert.ok(
+      database.data.recipes.every(
+        (recipe) =>
+          recipe.categories.includes("orm") || recipe.id === "postgres" || recipe.id === "mysql",
+      ),
+    );
+
+    const httpApi = getInfo({ capability: "http-api" });
+    const httpApiTemplateIds = httpApi.data.templates.map((template) => template.id);
+    assert.ok(httpApiTemplateIds.includes("stdlib-api"));
+    assert.ok(httpApiTemplateIds.includes("gin-api"));
+    assert.ok(httpApiTemplateIds.includes("nest"));
+  });
+
   it("combines filters with AND semantics", () => {
     const info = getInfo({
       ecosystem: "node",
@@ -274,6 +314,7 @@ describe("filter validation", () => {
       scope: "server",
       projectType: "server-api",
       uiFramework: "react",
+      capability: "http-api",
       templateId: "nest",
       recipeId: "biome",
       category: "linter",
@@ -286,6 +327,7 @@ describe("filter validation", () => {
       scope: "server",
       projectType: "server-api",
       uiFramework: "react",
+      capability: "http-api",
       templateId: "nest",
       recipeId: "biome",
       category: "linter",
@@ -299,13 +341,14 @@ describe("filter validation", () => {
       scope: "desktop",
       projectType: "complete",
       uiFramework: "sveltekit",
+      capability: "magic",
       templateId: "nope",
       recipeId: "nope",
       category: "magic",
     });
     assert.equal(result.ok, false);
     if (result.ok) return;
-    assert.equal(result.errors.length, 7);
+    assert.equal(result.errors.length, 8);
   });
 
   it("treats discovery=false as a no-op", () => {
@@ -316,8 +359,18 @@ describe("filter validation", () => {
   });
 
   it("orders echoed filters deterministically", () => {
-    const info = getInfo({ discovery: true, recipeId: "biome", ecosystem: "node" });
-    assert.deepEqual(Object.keys(info.filters), ["ecosystem", "recipeId", "discovery"]);
+    const info = getInfo({
+      discovery: true,
+      recipeId: "biome",
+      ecosystem: "node",
+      capability: "database",
+    });
+    assert.deepEqual(Object.keys(info.filters), [
+      "ecosystem",
+      "capability",
+      "recipeId",
+      "discovery",
+    ]);
     assert.equal(info.schemaVersion, INFO_SCHEMA_VERSION);
     assert.equal(info.command, "info");
   });
@@ -381,7 +434,9 @@ describe("Discovery metadata retrieval", () => {
     assert.ok(goTemplates.length > 0);
     assert.ok(goTemplates.every((template) => template.ecosystem === "go"));
     assert.ok(goTemplates.every((template) => template.discovery !== undefined));
-    assert.deepEqual(getRecipeMetadata({ ecosystem: "go" }), []);
+    const goRecipes = getRecipeMetadata({ ecosystem: "go" });
+    assert.ok(goRecipes.length > 0);
+    assert.ok(goRecipes.every((recipe) => recipe.ecosystem === "go"));
   });
 });
 

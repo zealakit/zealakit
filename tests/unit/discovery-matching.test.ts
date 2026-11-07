@@ -118,11 +118,15 @@ describe("template matching (branching project types)", () => {
     assert.equal(gin.recommendedTemplateId, "gin-api");
   });
 
-  it("unsupported requirements produce clear explanations", () => {
+  it("recommends the Svelte starter for an explicit Svelte preference", () => {
     const svelte = matchDiscovery(req({ projectType: "ui", frontend: { framework: "svelte" } }));
-    assert.equal(svelte.recommendedTemplateId, undefined);
-    assert.ok(svelte.templates.every((entry) => !entry.compatible));
+    assert.equal(svelte.recommendedTemplateId, "vite-svelte");
+    assert.deepEqual(compatibleIds(req({ projectType: "ui", frontend: { framework: "svelte" } })), [
+      "vite-svelte",
+    ]);
+  });
 
+  it("unsupported requirements produce clear explanations", () => {
     const graphql = matchDiscovery(req({ projectType: "server-api", serviceType: "graphql" }));
     assert.equal(graphql.recommendedTemplateId, undefined);
 

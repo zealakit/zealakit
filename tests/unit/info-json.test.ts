@@ -32,6 +32,14 @@ describe("info JSON structure", () => {
       assert.ok(Array.isArray(ecosystem.recipes));
     }
 
+    assert.ok(Array.isArray(response.data.capabilities));
+    assert.ok(response.data.capabilities.length > 0);
+    for (const capability of response.data.capabilities) {
+      assert.equal(typeof capability.id, "string");
+      assert.ok(Array.isArray(capability.templates));
+      assert.ok(Array.isArray(capability.recipes));
+    }
+
     assert.ok(response.data.templates.length > 0);
     for (const template of response.data.templates) {
       assert.equal(typeof template.id, "string");

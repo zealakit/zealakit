@@ -16,6 +16,8 @@ templateSuite("hono", {
         "biome.json",
         "src/bootstrap/main.ts",
         "src/bootstrap/create-app.ts",
+        "test/app.e2e-spec.ts",
+        "vitest.config.ts",
         ".agents/skills/structure-ddd/SKILL.md",
         ".agents/skills/hono/SKILL.md",
         "AGENTS.md",
@@ -24,7 +26,10 @@ templateSuite("hono", {
       deps: ["hono", "@hono/node-server"],
       noDeps: ["@nestjs/common"],
       scripts: { dev: "tsx watch src/bootstrap/main.ts" },
-      contains: { "AGENTS.md": [".agents/skills/hono/SKILL.md"] },
+      contains: {
+        "AGENTS.md": [".agents/skills/hono/SKILL.md"],
+        "vitest.config.ts": ["**/*.e2e-spec.ts"],
+      },
       check: (app) => {
         const biome = app.json<BiomeConfig>("biome.json");
         assert.equal(biome.root, undefined);

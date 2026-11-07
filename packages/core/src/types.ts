@@ -86,6 +86,11 @@ export type RecipeConfig = {
   overlayPackages?: Record<string, Record<string, string>>;
   /** Extra devDependencies merged for a specific overlay family */
   overlayDevDependencies?: Record<string, Record<string, string>>;
+  /**
+   * Go module requirements (module path → version) for Go recipes.
+   * Consumed by the recipe's own Go wiring and exposed through Info.
+   */
+  goModules?: Record<string, string>;
   devDependencies: Record<string, string>;
   scripts: Record<string, string>;
   /** Regex replacements applied per overlay (or template id) after the recipe overlay is copied */

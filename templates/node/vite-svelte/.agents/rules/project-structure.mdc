@@ -1,0 +1,18 @@
+---
+description: SvelteKit folder layout, thin routes, and kebab-case naming
+alwaysApply: true
+---
+
+# Project structure
+
+Follow `.agents/skills/project-structure/SKILL.md` when adding features or placing files.
+
+Hard rules:
+
+- kebab-case **files and folders**; PascalCase **component imports**
+- `src/routes/` is **only** for thin route files (`+page.svelte`, `+layout.svelte`, `+page.ts`)
+- Screens and business logic live in `src/features/<feature>/`
+- App chrome lives in `src/layouts/<name>-layout/`
+- Shared app UI lives in `src/components/`; pure logic in `src/lib/`
+- Route paths are composed in `src/configs/routes.ts` from `CONSTANTS.ROUTES`
+- Prefer `type` over `interface`; use Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`)

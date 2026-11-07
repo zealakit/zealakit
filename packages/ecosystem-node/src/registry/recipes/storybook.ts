@@ -28,6 +28,10 @@ export default defineRecipe({
       storybook: "^10.6.5",
       "@storybook/vue3-vite": "^10.6.5",
     },
+    "vite-svelte": {
+      storybook: "^10.6.5",
+      "@storybook/sveltekit": "^10.6.5",
+    },
     nuxt: {
       storybook: "^10.6.5",
       "@storybook/vue3-vite": "^10.6.5",

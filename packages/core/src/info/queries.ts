@@ -1,5 +1,6 @@
 import { checkRecipeCompatibility } from "../compat.js";
 import {
+  CAPABILITIES,
   ECOSYSTEM_LABELS,
   ECOSYSTEMS,
   PROJECT_TYPES,
@@ -40,6 +41,7 @@ import {
 } from "./filters.js";
 import { getRuleMetadata } from "./rules.js";
 import {
+  type CapabilityMetadata,
   type EcosystemMetadata,
   INFO_COMMAND,
   INFO_NONE_VALUE,
@@ -295,6 +297,7 @@ function buildRecipeMetadata(
     incompatibleTemplates,
     conflictsWith: conflictsFor(recipe, state.recipeIds),
     packages: sortRecord(recipe.packages),
+    goModules: sortRecord(recipe.goModules),
     devDependencies: sortRecord(recipe.devDependencies),
     overlayPackages: sortNestedRecord(recipe.overlayPackages),
     overlayDevDependencies: sortNestedRecord(recipe.overlayDevDependencies),
@@ -367,6 +370,19 @@ function buildUiFrameworkMetadata(
   }));
 }
 
+function buildCapabilityMetadata(state: SelectionState, filter: InfoFilter): CapabilityMetadata[] {
+  const capabilities = filter.capability ? [filter.capability] : [...CAPABILITIES];
+  return capabilities.map((id) => ({
+    id,
+    templates: state.templates
+      .filter((template) => resolveTemplateProfile(template.id)?.capabilities.includes(id))
+      .map((template) => template.id),
+    recipes: state.recipes
+      .filter((recipe) => resolveRecipeProfile(recipe.id)?.capabilities.includes(id))
+      .map((recipe) => recipe.id),
+  }));
+}
+
 function buildCategoryMetadata(
   state: SelectionState,
   filter: InfoFilter,
@@ -431,6 +447,10 @@ export function getUiFrameworkMetadata(filter: InfoFilter = {}): UiFrameworkMeta
   return buildUiFrameworkMetadata(createState(filter), filter);
 }
 
+export function getCapabilityMetadata(filter: InfoFilter = {}): CapabilityMetadata[] {
+  return buildCapabilityMetadata(createState(filter), filter);
+}
+
 export function getRecipeCategoryMetadata(filter: InfoFilter = {}): RecipeCategoryMetadata[] {
   return buildCategoryMetadata(createState(filter), filter);
 }
@@ -458,6 +478,7 @@ export function getInfo(filter: InfoFilter = {}, options: InfoOptions = {}): Inf
     scopes: buildScopeMetadata(state, effectiveFilter),
     projectTypes: buildProjectTypeMetadata(state, effectiveFilter),
     uiFrameworks: buildUiFrameworkMetadata(state, effectiveFilter),
+    capabilities: buildCapabilityMetadata(state, effectiveFilter),
     categories: buildCategoryMetadata(state, effectiveFilter),
     templates: state.templates.map((template) =>
       buildTemplateMetadata(template, state, effectiveFilter),
