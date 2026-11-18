@@ -1,3 +1,4 @@
+import type { PackageManager } from "../package-manager.js";
 import { getTemplate } from "../registry/index.js";
 import type { EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
 
@@ -26,14 +27,41 @@ export type NextSteps = {
   tip?: string;
 };
 
+export type PostGenerateOptions = {
+  packageManager: PackageManager;
+  /** Install dependencies (npm install, go mod tidy, …). */
+  install: boolean;
+};
+
+export type PostGenerateResult = {
+  install: "skipped" | "ok" | "failed";
+  /** Human-readable detail (failure reason, skipped reason). */
+  message?: string;
+};
+
+export type NextStepsOptions = {
+  packageManager: PackageManager;
+  /** Dependencies were already installed by `postGenerate`. */
+  installed: boolean;
+};
+
 export type ManifestAdapter = {
   planMerges(config: ScaffoldConfig): PackagePlan;
   applyMerges(targetDir: string, config: ScaffoldConfig): void;
   validateProjectName(name: string): ValidationResult;
   /** Ecosystem-specific structural checks on the generated project; returns error messages. */
   validateOutput(targetDir: string, config: ScaffoldConfig): string[];
+  /**
+   * Optional steps after the project is committed (set `packageManager`,
+   * install). Must not throw for expected failures: report `failed` instead.
+   */
+  postGenerate?(
+    targetDir: string,
+    config: ScaffoldConfig,
+    options: PostGenerateOptions,
+  ): Promise<PostGenerateResult>;
   /** Commands shown after a successful scaffold. */
-  nextSteps(config: ScaffoldConfig): NextSteps;
+  nextSteps(config: ScaffoldConfig, options: NextStepsOptions): NextSteps;
 };
 
 const adapters = new Map<EcosystemId, ManifestAdapter>();

@@ -1,6 +1,6 @@
 # Zealakit — Source Context (dùng để dán vào ChatGPT)
 
-> **Snapshot:** repo `zealakit` v1.0.0-beta.3 · pnpm monorepo · Node.js >= 22.12 · TypeScript ESM strict.
+> **Snapshot:** repo `zealakit` v1.0.0-beta.4 · pnpm monorepo · Node.js >= 22.12 · TypeScript ESM strict.
 > Tài liệu này mô tả **source code thực tế** trong `apps/`, `packages/`, `templates/`, `recipes/`.
 > Lưu ý: repo **không có thư mục `src/` ở root**. Source nằm trong `apps/cli/src`, `packages/*/src`.
 > `dist/` là output build của `tsup` — không sửa tay.
@@ -461,9 +461,12 @@ Flags của `create`:
 - `-w, --with <recipes>` — comma-separated
 - `-y, --yes` — không prompt; từ chối thư mục đích không rỗng
 - `--force` — ghi đè thư mục đích không rỗng không cần hỏi
+- `--pm <npm|pnpm|yarn|bun>`, `--install/--no-install`, `--git/--no-git` — bước sau khi tạo (mặc định hỏi khi interactive, tắt khi `-y`)
+- `--no-manifest` — không ghi `zealakit.json`
+- `--preset <name>`, `--save-preset <name>` — xem `zealakit preset list|save|remove`
 - `--dry-run`
 - `--discover`
-- `--json` (chỉ hợp lệ với `--discover`)
+- `--json` — với `--discover` đọc request từ stdin; không có `--discover` thì non-interactive (cần `-y`/`-w`/`--preset`/`--dry-run`) và in một kết quả JSON
 
 Ràng buộc:
 

@@ -48,5 +48,5 @@ export type RunCommandResult = {
 export type RunCommand = (
   file: string,
   args: readonly string[],
-  options?: { timeoutMs?: number },
+  options?: { timeoutMs?: number; cwd?: string },
 ) => Promise<RunCommandResult>;

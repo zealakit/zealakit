@@ -1,6 +1,6 @@
 {
   "name": "zealakit",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Recipe-based scaffolding CLI for multi-ecosystem project templates",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,7 @@
     "README_CN.md",
     "templates",
     "recipes",
+    "schema",
     "!README_DEV.md",
     "!recipes/tsconfig.json",
     "!recipes/shims.d.ts",

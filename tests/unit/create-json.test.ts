@@ -171,7 +171,7 @@ describe("zealakit create --discover --json", () => {
     }
   });
 
-  it("requires --discover for --json on create", () => {
+  it("requires a project name and non-interactive flags for --json on create", () => {
     const result = spawnSync(
       process.execPath,
       ["--import", TSX_LOADER, CLI_ENTRY, "create", "--json"],
@@ -185,7 +185,7 @@ describe("zealakit create --discover --json", () => {
     );
     assert.equal(result.status, 2);
     assert.equal(result.stdout, "");
-    assert.match(result.stderr ?? "", /requires --discover/i);
+    assert.match(result.stderr ?? "", /non-interactive/i);
   });
 
   it("leaves the interactive Discovery flow available without --json", () => {
@@ -201,5 +201,60 @@ describe("zealakit create --discover --json", () => {
       },
     );
     assert.equal(result.status, 0);
+  });
+
+  describe("non-discover create --json", () => {
+    function run(args: string[], cwd: string = caseDir()) {
+      const result = spawnSync(
+        process.execPath,
+        ["--import", TSX_LOADER, CLI_ENTRY, "create", ...args],
+        { cwd, encoding: "utf-8", env: noColorEnv(), timeout: 60_000 },
+      );
+      return {
+        cwd,
+        status: result.status,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+      };
+    }
+
+    it("prints one JSON result, writes zealakit.json, and keeps stdout clean", () => {
+      const result = run(["demo", "-t", "vite-react", "-w", "biome", "-y", "--json"]);
+      assert.equal(result.status, 0, result.stderr);
+      const out = parse(result.stdout);
+      assert.equal(out.ok, true);
+      assert.equal(out.template, "vite-react");
+      assert.deepEqual(out.requestedRecipes, ["biome"]);
+      assert.ok(Number(out.files) > 0);
+      assert.deepEqual((out.postGenerate as { install: string }).install, "skipped");
+      assert.ok(fs.existsSync(path.join(result.cwd, "demo", "zealakit.json")));
+    });
+
+    it("honors --no-manifest and --git", () => {
+      const result = run(["demo", "-y", "--no-manifest", "--git", "--json"]);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(fs.existsSync(path.join(result.cwd, "demo", "zealakit.json")), false);
+      const git = (parse(result.stdout).postGenerate as { git: string }).git;
+      if (git === "ok") {
+        assert.ok(fs.existsSync(path.join(result.cwd, "demo", ".git")));
+      }
+    });
+
+    it("reports validation failures as JSON with exit code 3", () => {
+      const result = run(["demo", "-t", "vite-react", "-w", "biome,eslint", "-y", "--json"]);
+      assert.equal(result.status, 3);
+      const out = parse(result.stdout);
+      assert.equal(out.ok, false);
+      assert.equal((out.error as { code: string }).code, "validation");
+    });
+
+    it("prints the plan for --dry-run --json without writing", () => {
+      const result = run(["demo", "-t", "vite-react", "--dry-run", "--json"]);
+      assert.equal(result.status, 0, result.stderr);
+      const out = parse(result.stdout);
+      assert.equal(out.ok, true);
+      assert.ok(Array.isArray(out.files));
+      assert.equal(fs.existsSync(path.join(result.cwd, "demo")), false);
+    });
   });
 });

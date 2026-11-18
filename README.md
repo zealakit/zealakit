@@ -143,18 +143,41 @@ Diagnostic signals from `discovery stats` are hints only — they do **not** aut
 npx zealakit@latest create [project-name] [options]
 ```
 
-| Option                 | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `--discover`           | Project Discovery — recommend a template/recipes from your requirements |
-| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                 |
-| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                       |
-| `-y, --yes`            | Non-interactive; refuses a non-empty target (needs a project name)      |
-| `--force`              | Overwrite a non-empty target directory without asking                   |
-| `--dry-run`            | Preview the plan without writing files                                  |
-| `-h, --help`           | Show help                                                               |
-| `-V, --version`        | Show version                                                            |
+| Option                       | Description                                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--discover`                 | Project Discovery — recommend a template/recipes from your requirements                                               |
+| `-t, --template <id>`        | Choose a base template yourself (default: `vite-react`)                                                               |
+| `-w, --with <recipes>`       | Comma-separated recipe IDs (e.g. `biome,zustand`)                                                                     |
+| `-y, --yes`                  | Non-interactive; refuses a non-empty target (needs a project name)                                                    |
+| `--force`                    | Overwrite a non-empty target directory without asking                                                                 |
+| `--pm <manager>`             | `npm`, `pnpm`, `yarn` or `bun` for install and next steps (default: detected)                                         |
+| `--install` / `--no-install` | Install dependencies after generating (`go mod tidy` for Go). Asked when interactive; off with `-y`                   |
+| `--git` / `--no-git`         | `git init` and an initial commit. Asked when interactive; off with `-y`                                               |
+| `--no-manifest`              | Do not write `zealakit.json` into the project                                                                         |
+| `--preset <name>`            | Apply a saved preset; explicit flags override it                                                                      |
+| `--save-preset <name>`       | Save the chosen template and recipes as a user preset                                                                 |
+| `--json`                     | Non-interactive only (needs `-y`, `-w`, `--preset` or `--dry-run`): one JSON result on stdout, human output on stderr |
+| `--dry-run`                  | Preview the plan without writing files                                                                                |
+| `-h, --help`                 | Show help                                                                                                             |
+| `-V, --version`              | Show version                                                                                                          |
 
-Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+### `zealakit.json`
+
+Every generated project records how it was made (`kitVersion`, `template`, resolved `recipes`, the `requestedRecipes`, `createdAt`). Its schema ships in the package (`schema/zealakit.schema.json`). Disable it with `--no-manifest`.
+
+An install or git failure never fails the scaffold: the project is already on disk, a warning is printed, and the exit code stays `0`.
+
+### Presets
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+zealakit preset list        # also reads ./zealakit.config.json: { "presets": { … } }
+```
+
+User presets live in `~/.config/zealakit/presets.json` (`$ZEALAKIT_CONFIG_DIR` overrides the folder); a project's `zealakit.config.json` wins on name clashes.
+
+Other commands: `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
 ### Metadata queries (`zealakit info`)
 

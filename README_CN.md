@@ -143,18 +143,36 @@ npx zealakit@latest create --discover
 npx zealakit@latest create [项目名] [选项]
 ```
 
-| 选项                   | 说明                                             |
-| ---------------------- | ------------------------------------------------ |
-| `--discover`           | Project Discovery — 根据需求推荐模板/Recipe      |
-| `-t, --template <id>`  | 自行选择基础模板（默认：`vite-react`）           |
-| `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`）       |
-| `-y, --yes`            | 非交互模式，目标目录非空时拒绝（必须提供项目名） |
-| `--force`              | 无需确认，直接覆盖非空目标目录                   |
-| `--dry-run`            | 预览生成计划，不写入文件                         |
-| `-h, --help`           | 显示帮助                                         |
-| `-V, --version`        | 显示版本                                         |
+| 选项                         | 说明                                                                                |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| `--discover`                 | Project Discovery — 根据需求推荐模板/Recipe                                         |
+| `-t, --template <id>`        | 自行选择基础模板（默认：`vite-react`）                                              |
+| `-w, --with <recipes>`       | 逗号分隔的 Recipe ID（如 `biome,zustand`）                                          |
+| `-y, --yes`                  | 非交互模式，目标目录非空时拒绝（必须提供项目名）                                    |
+| `--force`                    | 无需确认，直接覆盖非空目标目录                                                      |
+| `--pm <manager>`             | 安装与后续步骤使用的包管理器：`npm`、`pnpm`、`yarn`、`bun`（默认自动检测）          |
+| `--install` / `--no-install` | 生成后安装依赖（Go 为 `go mod tidy`）。交互模式会询问；`-y` 时默认关闭              |
+| `--git` / `--no-git`         | `git init` 并创建首个提交。交互模式会询问；`-y` 时默认关闭                          |
+| `--no-manifest`              | 不在项目中写入 `zealakit.json`                                                      |
+| `--preset <name>`            | 应用已保存的预设；显式参数优先                                                      |
+| `--save-preset <name>`       | 将所选模板与 Recipe 保存为用户预设                                                  |
+| `--json`                     | 仅限非交互（需要 `-y`、`-w`、`--preset` 或 `--dry-run`）：stdout 输出一个 JSON 结果 |
+| `--dry-run`                  | 预览生成计划，不写入文件                                                            |
+| `-h, --help`                 | 显示帮助                                                                            |
+| `-V, --version`              | 显示版本                                                                            |
 
-其他命令：`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
+### `zealakit.json` 与预设
+
+每个生成的项目都会写入 `zealakit.json`（`kitVersion`、`template`、解析后的 `recipes`、`requestedRecipes`、`createdAt`），其 schema 随包发布（`schema/zealakit.schema.json`），可用 `--no-manifest` 关闭。安装或 git 失败不会使生成失败（项目已写入，仅打印警告，退出码仍为 `0`）。
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+```
+
+用户预设位于 `~/.config/zealakit/presets.json`（`$ZEALAKIT_CONFIG_DIR` 可覆盖）；项目内 `zealakit.config.json` 同名时优先。
+
+其他命令：`zealakit preset`、`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
 
 ### 元数据查询（`zealakit info`）
 

@@ -10,6 +10,7 @@ import {
   getRecipeAgentEntry,
   getTemplate,
   getTemplateOverlayId,
+  readProjectManifest,
   resolveRecipeDependencies,
   scaffoldProject,
   validateScaffoldConfig,
@@ -94,6 +95,11 @@ export function assertScaffoldInvariants(app: ScaffoldedApp): void {
   const pkg = app.pkg();
 
   assert.equal(pkg.name, path.basename(app.dir), "package.json name should be the project name");
+
+  const projectManifest = readProjectManifest(app.dir);
+  assert.ok(projectManifest?.ok, "zealakit.json must exist and parse");
+  assert.equal(projectManifest.manifest.template, app.templateId);
+  assert.deepEqual(projectManifest.manifest.recipes, app.recipeIds);
 
   for (const leaked of ["overlays", "shared", "scaffold", "pnpm-workspace.yaml"]) {
     assert.ok(!app.exists(leaked), `${leaked} must not be copied into the app`);

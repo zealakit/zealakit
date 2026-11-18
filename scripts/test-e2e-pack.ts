@@ -134,6 +134,9 @@ function verifyTarballContents(tarballPath: string): string[] {
   for (const readme of ["README.md", "README_VI.md", "README_CN.md"]) {
     if (!packed.has(readme)) errors.push(`tarball is missing ${readme}`);
   }
+  if (!packed.has("schema/zealakit.schema.json")) {
+    errors.push("tarball is missing schema/zealakit.schema.json");
+  }
   if (packed.has("README_DEV.md")) errors.push("tarball must not include README_DEV.md");
   for (const file of tracked) {
     const base = path.posix.basename(file);
@@ -277,6 +280,9 @@ const SMOKE_CASES: SmokeCase[] = [
       if (!cursor || !fs.existsSync(cursor) || fs.readlinkSync(cursor) !== ".agents") {
         errors.push(".cursor should be a symlink to .agents");
       }
+      if (appDir && !fs.existsSync(path.join(appDir, "zealakit.json"))) {
+        errors.push("zealakit.json should be written into the project");
+      }
       if (appDir && fs.existsSync(path.join(appDir, "_gitignore"))) {
         errors.push("_gitignore should be renamed to .gitignore");
       }
@@ -340,10 +346,20 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "nest + type-orm prints start:dev",
-    args: ["smoke-nest", "-t", "nest", "-w", "type-orm,biome", "-y"],
+    args: ["smoke-nest", "-t", "nest", "-w", "type-orm,biome", "-y", "--pm", "npm"],
     check: (result) => [
       ...expectExit(result, true),
       ...(result.output.includes("npm run start:dev") ? [] : ["should print npm run start:dev"]),
+    ],
+  },
+  {
+    name: "--pm pnpm adapts next steps",
+    args: ["smoke-pnpm", "-t", "nest", "-y", "--pm", "pnpm"],
+    check: (result) => [
+      ...expectExit(result, true),
+      ...(result.output.includes("pnpm install") && result.output.includes("pnpm start:dev")
+        ? []
+        : ["should print pnpm install and pnpm start:dev"]),
     ],
   },
   {

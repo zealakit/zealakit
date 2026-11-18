@@ -103,6 +103,13 @@ export {
 } from "./info/index.js";
 export { HYBRID_ORM_WARNING, hybridOrmSelections } from "./orm-warnings.js";
 export {
+  adaptRunCommand,
+  detectPackageManager,
+  isPackageManager,
+  PACKAGE_MANAGERS,
+  type PackageManager,
+} from "./package-manager.js";
+export {
   getAllRecipeProfiles,
   getAllTemplateProfiles,
   getRecipeProfile,
@@ -113,6 +120,11 @@ export {
   type TemplateProfile,
   validateProfiles,
 } from "./profiles/index.js";
+export {
+  buildProjectManifest,
+  parseProjectManifest,
+  readProjectManifest,
+} from "./project-manifest.js";
 export {
   getStepInitialValue,
   getStepOptions,
@@ -158,6 +170,7 @@ export {
   setManifestAdapter,
   validateGeneratedOutput,
 } from "./scaffold/index.js";
+export type { PostGenerateResult } from "./scaffold/manifest.js";
 export {
   assertStagingRealPath,
   assertStagingSymlinksSafe,

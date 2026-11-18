@@ -143,18 +143,36 @@ Tín hiệu từ `discovery stats` chỉ mang tính gợi ý — **không** tự
 npx zealakit@latest create [tên-project] [options]
 ```
 
-| Option                 | Mô tả                                                          |
-| ---------------------- | -------------------------------------------------------------- |
-| `--discover`           | Project Discovery — gợi ý template/recipe từ yêu cầu của bạn   |
-| `-t, --template <id>`  | Tự chọn template gốc (mặc định: `vite-react`)                  |
-| `-w, --with <recipes>` | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`) |
-| `-y, --yes`            | Không hỏi; từ chối thư mục đích không rỗng (cần tên project)   |
-| `--force`              | Ghi đè thư mục đích không rỗng mà không hỏi                    |
-| `--dry-run`            | Xem trước kế hoạch, không ghi file                             |
-| `-h, --help`           | Xem trợ giúp                                                   |
-| `-V, --version`        | Xem phiên bản                                                  |
+| Option                       | Mô tả                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `--discover`                 | Project Discovery — gợi ý template/recipe từ yêu cầu của bạn                                 |
+| `-t, --template <id>`        | Tự chọn template gốc (mặc định: `vite-react`)                                                |
+| `-w, --with <recipes>`       | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`)                               |
+| `-y, --yes`                  | Không hỏi; từ chối thư mục đích không rỗng (cần tên project)                                 |
+| `--force`                    | Ghi đè thư mục đích không rỗng mà không hỏi                                                  |
+| `--pm <manager>`             | `npm`, `pnpm`, `yarn` hoặc `bun` cho cài đặt và các bước tiếp theo (mặc định: tự phát hiện)  |
+| `--install` / `--no-install` | Cài dependency sau khi tạo (`go mod tidy` với Go). Hỏi khi interactive; tắt khi dùng `-y`    |
+| `--git` / `--no-git`         | `git init` và commit đầu tiên. Hỏi khi interactive; tắt khi dùng `-y`                        |
+| `--no-manifest`              | Không ghi `zealakit.json` vào project                                                        |
+| `--preset <name>`            | Dùng preset đã lưu; flag truyền vào sẽ ghi đè preset                                         |
+| `--save-preset <name>`       | Lưu template và recipe đã chọn thành preset người dùng                                       |
+| `--json`                     | Chỉ non-interactive (cần `-y`, `-w`, `--preset` hoặc `--dry-run`): một kết quả JSON ở stdout |
+| `--dry-run`                  | Xem trước kế hoạch, không ghi file                                                           |
+| `-h, --help`                 | Xem trợ giúp                                                                                 |
+| `-V, --version`              | Xem phiên bản                                                                                |
 
-Lệnh khác: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+### `zealakit.json` và preset
+
+Mỗi project được tạo ra đều ghi `zealakit.json` (`kitVersion`, `template`, `recipes` đã resolve, `requestedRecipes`, `createdAt`); schema đi kèm package (`schema/zealakit.schema.json`), tắt bằng `--no-manifest`. Cài đặt hoặc git thất bại không làm hỏng việc tạo project (file đã được ghi, chỉ in cảnh báo, exit code vẫn là `0`).
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+```
+
+Preset người dùng nằm ở `~/.config/zealakit/presets.json` (đổi bằng `$ZEALAKIT_CONFIG_DIR`); `zealakit.config.json` trong project ưu tiên khi trùng tên.
+
+Lệnh khác: `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
 ### Truy vấn metadata (`zealakit info`)
 

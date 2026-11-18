@@ -3,6 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { ScaffoldValidationError } from "../diagnostics.js";
 import { fse } from "../fs-extra.js";
+import {
+  buildProjectManifest,
+  PROJECT_MANIFEST_FILE,
+  serializeProjectManifest,
+} from "../project-manifest.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import type { RecipeConfig, ScaffoldConfig } from "../types.js";
 import {
@@ -13,8 +18,8 @@ import {
 import { applyAgentEntry, ensureCursorAgentsSymlink } from "./agent-docs.js";
 import { commitStagedDirectory } from "./commit.js";
 import { copyRecipe, copyTemplate, foldIntoSrcDir } from "./copy.js";
-import { getManifestAdapterForConfig } from "./manifest.js";
-import { assertStagingSymlinksSafe } from "./paths.js";
+import { getManifestAdapterForConfig, resolveTemplateEcosystem } from "./manifest.js";
+import { assertStagingSymlinksSafe, resolveStagingPath } from "./paths.js";
 import { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
 import { applyFileTransforms } from "./transforms.js";
 import { validateGeneratedOutput } from "./validate-output.js";
@@ -26,7 +31,10 @@ export {
   type ManifestAdapter,
   type ManifestFieldConflict,
   type NextSteps,
+  type NextStepsOptions,
   type PackagePlan,
+  type PostGenerateOptions,
+  type PostGenerateResult,
   resolveTemplateEcosystem,
   setManifestAdapter,
 } from "./manifest.js";
@@ -37,6 +45,22 @@ function runFinalizers(recipes: RecipeConfig[], targetDir: string): void {
   for (const recipe of recipes) {
     recipe.finalize?.(targetDir);
   }
+}
+
+function writeProjectManifest(plan: ScaffoldPlan, targetDir: string): void {
+  const file = resolveStagingPath(targetDir, PROJECT_MANIFEST_FILE);
+  fs.writeFileSync(
+    file,
+    serializeProjectManifest(
+      buildProjectManifest({
+        ecosystem: resolveTemplateEcosystem(plan.config.templateId),
+        template: plan.config.templateId,
+        recipes: plan.config.recipeIds,
+        requestedRecipes: plan.selectedIds,
+      }),
+    ),
+    "utf-8",
+  );
 }
 
 /** Materialize a plan into `targetDir` (must be empty or non-existent). */
@@ -72,6 +96,9 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
 
   runFinalizers(recipes, targetDir);
   getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
+  if (plan.manifest) {
+    writeProjectManifest(plan, targetDir);
+  }
   ensureCursorAgentsSymlink(targetDir);
 }
 

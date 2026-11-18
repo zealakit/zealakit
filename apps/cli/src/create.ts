@@ -1,8 +1,10 @@
 import path from "node:path";
+import { confirm, isCancel } from "@clack/prompts";
 import {
   buildScaffoldPlan,
   DEFAULT_TEMPLATE_ID,
   type DiscoverySessionDraft,
+  detectPackageManager,
   ExitCode,
   executeScaffoldPlan,
   getAllRecipeIds,
@@ -11,9 +13,14 @@ import {
   getTemplate,
   HYBRID_ORM_WARNING,
   hybridOrmSelections,
+  isPackageManager,
+  PACKAGE_MANAGERS,
+  type PackageManager,
+  type PostGenerateResult,
   planIsReady,
   recordDiscoverySession,
   type ScaffoldConfig,
+  type ScaffoldPlan,
   ScaffoldValidationError,
   validateTemplate,
 } from "@zealakit/core/internal";
@@ -21,13 +28,23 @@ import type { Command } from "commander";
 import pc from "picocolors";
 import { runDiscoveryQuery } from "./discovery/query.js";
 import type { CliOptions } from "./options.js";
-import { failDiagnostic, printError, printInfo, printValidationErrors } from "./output.js";
+import {
+  failDiagnostic,
+  printError,
+  printInfo,
+  printValidationErrors,
+  printWarning,
+} from "./output.js";
+import { type GitResult, initGitRepository } from "./post-generate.js";
+import { getPreset, savePreset, validatePreset } from "./presets.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 import { resolveOverwritePolicy } from "./target-dir.js";
 
 type ResolvedCreateConfig = {
   config: ScaffoldConfig;
+  /** True when the user answered prompts (so we may also ask about install/git). */
+  interactive: boolean;
   discoveryFeedback: DiscoverySessionDraft | null;
 };
 
@@ -101,8 +118,9 @@ export async function resolveScaffoldConfig(
   }
 
   const recipesFlag = options.with?.trim();
-  if (projectName && (recipesFlag || options.yes || options.dryRun)) {
+  if (projectName && (recipesFlag || options.yes || options.dryRun || options.preset)) {
     return {
+      interactive: false,
       config: {
         projectName,
         templateId: options.template ?? DEFAULT_TEMPLATE_ID,
@@ -121,15 +139,36 @@ export async function resolveScaffoldConfig(
     return null;
   }
   return {
+    interactive: true,
     config: prompted.config,
     discoveryFeedback: prompted.feedback,
   };
 }
 
-function printSuccess(targetDir: string, config: ScaffoldConfig): void {
-  const relativePath = path.relative(process.cwd(), targetDir) || config.projectName;
+type PostGenerateSummary = {
+  packageManager: PackageManager;
+  install: PostGenerateResult["install"];
+  git: GitResult["git"];
+  warnings: string[];
+};
+
+function nextStepLines(
+  plan: ScaffoldPlan,
+  targetDir: string,
+  post: PostGenerateSummary,
+): { commands: string[]; tip?: string } {
+  const relativePath = path.relative(process.cwd(), targetDir) || plan.config.projectName;
+  const steps = getManifestAdapterForConfig(plan.config).nextSteps(plan.config, {
+    packageManager: post.packageManager,
+    installed: post.install === "ok",
+  });
+  return { commands: [`cd ${relativePath}`, ...steps.commands], tip: steps.tip };
+}
+
+function printSuccess(plan: ScaffoldPlan, targetDir: string, post: PostGenerateSummary): void {
+  const config = plan.config;
   const template = getTemplate(config.templateId);
-  const steps = getManifestAdapterForConfig(config).nextSteps(config);
+  const steps = nextStepLines(plan, targetDir, post);
 
   printInfo("");
   printInfo(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
@@ -141,10 +180,14 @@ function printSuccess(targetDir: string, config: ScaffoldConfig): void {
       printInfo(pc.dim(`  Selected ORM: ${ormIds.join(", ")}`));
     }
   }
+  for (const warning of post.warnings) {
+    printWarning(`⚠ ${warning}`);
+  }
   printInfo("");
   printInfo(pc.bold("Next steps:"));
-  printInfo(`  ${pc.cyan("cd")} ${relativePath}`);
-  for (const command of steps.commands) {
+  const [cd, ...rest] = steps.commands;
+  printInfo(`  ${pc.cyan("cd")} ${(cd ?? "").replace(/^cd /, "")}`);
+  for (const command of rest) {
     printInfo(`  ${pc.cyan(command)}`);
   }
   if (steps.tip) {
@@ -166,95 +209,214 @@ export function exitCodeForError(error: unknown): ExitCode {
   return error instanceof ScaffoldValidationError ? ExitCode.VALIDATION : ExitCode.INTERNAL;
 }
 
-function assertJsonDiscoveryUsage(projectName: string | undefined, options: CliOptions): void {
-  if (!options.discover) {
-    failDiagnostic(
-      {
-        title: "Invalid usage",
-        reason: "Flag --json requires --discover.",
-        resolution: "Run: zealakit create --discover --json < request.json",
-      },
-      ExitCode.USAGE,
-    );
+function usageError(reason: string, resolution: string): never {
+  return failDiagnostic({ title: "Invalid usage", reason, resolution }, ExitCode.USAGE);
+}
+
+function assertJsonUsage(projectName: string | undefined, options: CliOptions): void {
+  if (options.discover) {
+    if (projectName || options.template || options.with || options.yes || options.dryRun) {
+      usageError(
+        "JSON Discovery mode reads the whole request from stdin and cannot be combined with a project name, -t, -w, -y, or --dry-run.",
+        'Put "project.name", "selection", and "confirmation" in the JSON request instead.',
+      );
+    }
+    return;
   }
-  if (projectName || options.template || options.with || options.yes || options.dryRun) {
-    failDiagnostic(
-      {
-        title: "Invalid usage",
-        reason:
-          "JSON Discovery mode reads the whole request from stdin and cannot be combined with a project name, -t, -w, -y, or --dry-run.",
-        resolution:
-          'Put "project.name", "selection", and "confirmation" in the JSON request instead.',
-      },
-      ExitCode.USAGE,
+  if (!projectName || !(options.yes || options.with || options.preset || options.dryRun)) {
+    usageError(
+      "Flag --json is non-interactive: it needs a project name plus -y, -w, --preset or --dry-run.",
+      "Run: zealakit create <project-name> -t <template> -w <recipes> --json",
     );
   }
 }
 
-/** Runs the create flow and returns the process exit code (no `process.exit` inside). */
+/** Fold a saved preset under explicit flags (flags win). */
+function applyPreset(options: CliOptions): CliOptions {
+  if (!options.preset) return options;
+  const entry = getPreset(options.preset, process.cwd());
+  if (!entry) {
+    usageError(
+      `Preset '${options.preset}' was not found.`,
+      "Run `zealakit preset list` to see available presets.",
+    );
+  }
+  const errors = validatePreset(entry.name, entry.preset);
+  if (errors.length > 0) {
+    printValidationErrors(errors);
+    process.exit(ExitCode.VALIDATION);
+  }
+  const preset = entry.preset;
+  return {
+    ...options,
+    template: options.template ?? preset.template,
+    with: options.with ?? preset.recipes?.join(","),
+    pm: options.pm ?? preset.packageManager,
+    install: options.install ?? preset.install,
+    git: options.git ?? preset.git,
+  };
+}
+
+async function askYesNo(message: string): Promise<boolean> {
+  const answer = await confirm({ message, initialValue: true });
+  if (isCancel(answer)) {
+    process.exit(ExitCode.OK);
+  }
+  return answer;
+}
+
+type CreateResult =
+  | { kind: "cancelled" }
+  | { kind: "dry-run"; plan: ScaffoldPlan }
+  | { kind: "failed"; code: ExitCode; messages: string[] }
+  | {
+      kind: "created";
+      plan: ScaffoldPlan;
+      targetDir: string;
+      post: PostGenerateSummary;
+    };
+
+function failed(code: ExitCode, messages: string[]): CreateResult {
+  return { kind: "failed", code, messages };
+}
+
+/** Runs the create flow and reports what happened (no `process.exit` inside). */
 async function runCreate(
   projectName: string | undefined,
   options: CliOptions,
   session: { feedback: DiscoverySessionDraft | null },
-): Promise<ExitCode> {
+): Promise<CreateResult> {
   const resolved = await resolveScaffoldConfig(projectName, options);
   if (!resolved) {
-    return ExitCode.OK;
+    return { kind: "cancelled" };
   }
   session.feedback = resolved.discoveryFeedback;
 
   if (options.dryRun && !resolved.config.projectName) {
-    failDiagnostic(
-      {
-        title: "Invalid usage",
-        reason: "Flag --dry-run requires a project name.",
-        resolution: "Run: zealakit create <project-name> --dry-run …",
-      },
-      ExitCode.USAGE,
+    usageError(
+      "Flag --dry-run requires a project name.",
+      "Run: zealakit create <project-name> --dry-run …",
     );
+  }
+
+  let packageManager: PackageManager;
+  if (options.pm !== undefined) {
+    if (!isPackageManager(options.pm)) {
+      usageError(
+        `Unknown package manager '${options.pm}'.`,
+        `Use one of: ${PACKAGE_MANAGERS.join(", ")}.`,
+      );
+    }
+    packageManager = options.pm;
+  } else {
+    packageManager = detectPackageManager(process.env.npm_config_user_agent);
   }
 
   // One plan: defaults, id validation, dependency resolution and config
   // validation happen here, and the same plan is previewed or executed.
   const plan = buildScaffoldPlan(resolved.config, process.cwd(), {
     requestedRecipeIds: resolved.config.recipeIds,
+    manifest: options.manifest !== false,
   });
 
   if (options.dryRun) {
-    printInfo(formatScaffoldPreview(plan));
-    return planIsReady(plan) ? ExitCode.OK : ExitCode.VALIDATION;
+    return { kind: "dry-run", plan };
   }
 
   if (!planIsReady(plan)) {
     printValidationErrors(plan.blockers);
-    return ExitCode.VALIDATION;
+    return failed(ExitCode.VALIDATION, plan.blockers);
   }
 
   const overwrite = await resolveOverwritePolicy(plan.config.projectName, process.cwd(), options);
   if (!overwrite.result.valid) {
     printValidationErrors(overwrite.result.errors);
-    return ExitCode.VALIDATION;
+    return failed(ExitCode.VALIDATION, overwrite.result.errors);
   }
 
+  // Ask only when the user answered prompts; scripted runs default to "no".
+  const install =
+    options.install ?? (resolved.interactive ? await askYesNo("Install dependencies?") : false);
+  const useGit =
+    options.git ?? (resolved.interactive ? await askYesNo("Initialize a git repository?") : false);
+
   const targetDir = await executeScaffoldPlan(plan, { overwrite: overwrite.policy });
-  printSuccess(targetDir, plan.config);
-  return ExitCode.OK;
+
+  // The project is committed on disk: nothing below may fail the scaffold.
+  const warnings: string[] = [];
+  let installResult: PostGenerateResult = { install: "skipped" };
+  const adapter = getManifestAdapterForConfig(plan.config);
+  if (adapter.postGenerate) {
+    try {
+      installResult = await adapter.postGenerate(targetDir, plan.config, {
+        packageManager,
+        install,
+      });
+    } catch (error) {
+      installResult = {
+        install: "failed",
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+  if (installResult.install === "failed") {
+    warnings.push(
+      `Install failed (${installResult.message ?? "unknown error"}). The project was created; run the install command below to retry.`,
+    );
+  }
+
+  let gitResult: GitResult = { git: "skipped" };
+  if (useGit) {
+    gitResult = initGitRepository(targetDir);
+    if (gitResult.git !== "ok") {
+      warnings.push(`git: ${gitResult.message ?? gitResult.git}`);
+    }
+  }
+
+  return {
+    kind: "created",
+    plan,
+    targetDir,
+    post: {
+      packageManager,
+      install: installResult.install,
+      git: gitResult.git,
+      warnings,
+    },
+  };
+}
+
+const EXIT_CODE_NAMES: Record<number, string> = {
+  [ExitCode.USAGE]: "usage",
+  [ExitCode.VALIDATION]: "validation",
+  [ExitCode.INTERNAL]: "internal",
+};
+
+function printJson(value: unknown): void {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
 /** Shared create / root-scaffold action. */
 export async function runCreateAction(
   projectName: string | undefined,
-  options: CliOptions,
+  rawOptions: CliOptions,
 ): Promise<void> {
-  if (options.json) {
-    assertJsonDiscoveryUsage(projectName, options);
-    process.exit(await runDiscoveryQuery());
+  const json = rawOptions.json === true;
+  if (json) {
+    assertJsonUsage(projectName, rawOptions);
+    if (rawOptions.discover) {
+      process.exit(await runDiscoveryQuery());
+    }
   }
 
+  const presetOptions = applyPreset(rawOptions);
+  // JSON mode never prompts: a non-empty target is refused unless --force.
+  const options: CliOptions = json ? { ...presetOptions, yes: true } : presetOptions;
+
   const session: { feedback: DiscoverySessionDraft | null } = { feedback: null };
-  let code: ExitCode;
+  let result: CreateResult;
   try {
-    code = await runCreate(projectName, options, session);
+    result = await runCreate(projectName, options, session);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (error instanceof ScaffoldValidationError) {
@@ -263,11 +425,73 @@ export async function runCreateAction(
     } else {
       printError(message.includes("\n") ? message : formatSimpleInternal(message));
     }
-    code = exitCodeForError(error);
+    result = failed(exitCodeForError(error), [message]);
   }
+
+  let code: ExitCode = ExitCode.OK;
+  switch (result.kind) {
+    case "cancelled":
+      break;
+    case "failed":
+      code = result.code;
+      if (json) {
+        printJson({
+          ok: false,
+          error: { code: EXIT_CODE_NAMES[code] ?? "internal", messages: result.messages },
+        });
+      }
+      break;
+    case "dry-run": {
+      code = planIsReady(result.plan) ? ExitCode.OK : ExitCode.VALIDATION;
+      if (json) {
+        printJson({ ok: code === ExitCode.OK, ...result.plan });
+      } else {
+        printInfo(formatScaffoldPreview(result.plan));
+      }
+      break;
+    }
+    case "created": {
+      const { plan, targetDir, post } = result;
+      if (options.savePreset) {
+        try {
+          savePreset(options.savePreset, {
+            template: plan.config.templateId,
+            recipes: plan.selectedIds,
+            packageManager: post.packageManager,
+          });
+          post.warnings.push(`Saved preset '${options.savePreset}'.`);
+        } catch (error) {
+          post.warnings.push(
+            `Could not save preset: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+      if (json) {
+        printJson({
+          ok: true,
+          outputDirectory: targetDir,
+          template: plan.config.templateId,
+          recipes: plan.config.recipeIds,
+          requestedRecipes: plan.selectedIds,
+          files: plan.files.length,
+          warnings: [...plan.warnings, ...post.warnings],
+          postGenerate: {
+            packageManager: post.packageManager,
+            install: post.install,
+            git: post.git,
+          },
+          nextSteps: nextStepLines(plan, targetDir, post).commands,
+        });
+      } else {
+        printSuccess(plan, targetDir, post);
+      }
+      break;
+    }
+  }
+
   // Dry-run and cancelled flows have no generation to report on.
-  if (!options.dryRun) {
-    recordDiscoveryOutcome(session.feedback, code === ExitCode.OK);
+  if (result.kind === "created" || result.kind === "failed") {
+    recordDiscoveryOutcome(session.feedback, result.kind === "created");
   }
   process.exit(code);
 }
@@ -287,6 +511,20 @@ export function attachCreateOptions(command: Command): Command {
     .option("-y, --yes", "Non-interactive: never prompt; refuses a non-empty target")
     .option("--force", "Overwrite a non-empty target directory without asking")
     .option("--dry-run", "Resolve and validate without writing files")
+    .option(
+      "--pm <manager>",
+      `Package manager for install and next steps: ${PACKAGE_MANAGERS.join(", ")} (default: detected)`,
+    )
+    .option("--install", "Install dependencies after generating (go mod tidy for Go)")
+    .option("--no-install", "Do not install dependencies")
+    .option("--git", "Run git init and make an initial commit")
+    .option("--no-git", "Do not initialize a git repository")
+    .option("--no-manifest", "Do not write zealakit.json into the project")
+    .option(
+      "--preset <name>",
+      "Apply a saved preset (see `zealakit preset list`); flags override it",
+    )
+    .option("--save-preset <name>", "Save the chosen template and recipes as a user preset")
     .option(
       "--discover",
       "Project Discovery: answer a few questions and get template/recipe recommendations",

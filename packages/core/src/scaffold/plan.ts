@@ -1,5 +1,6 @@
 import path from "node:path";
 import { HYBRID_ORM_WARNING, hybridOrmSelections } from "../orm-warnings.js";
+import { PROJECT_MANIFEST_FILE } from "../project-manifest.js";
 import { getRecipe, getTemplate, withDefaultRecipes } from "../registry/index.js";
 import { formatRecipeResolveError, resolveRecipeDependencies } from "../resolve-recipes.js";
 import type { ScaffoldConfig, ValidationResult } from "../types.js";
@@ -27,6 +28,8 @@ export type ScaffoldPlan = {
   autoInjected: string[];
   files: PlannedFile[];
   packages: PackagePlan;
+  /** Whether `zealakit.json` is written into the project. */
+  manifest: boolean;
   checks: PlanCheck[];
   blockers: string[];
   warnings: string[];
@@ -47,6 +50,8 @@ export type BuildPlanOptions = {
    * When set, preview marks everything else as auto-injected.
    */
   requestedRecipeIds?: string[];
+  /** Write `zealakit.json` into the project (default true). */
+  manifest?: boolean;
 };
 
 /**
@@ -67,6 +72,7 @@ export function buildScaffoldPlan(
   const blockers: string[] = [];
   const warnings: string[] = [];
   const targetDir = path.resolve(cwd, config.projectName);
+  const manifest = options.manifest ?? true;
   const destinationExists = directoryHasFiles(targetDir);
 
   const template = getTemplate(config.templateId);
@@ -88,6 +94,7 @@ export function buildScaffoldPlan(
       autoInjected: [],
       files: [],
       packages: emptyPackagePlan(),
+      manifest,
       checks,
       blockers: [...new Set(blockers)],
       warnings,
@@ -107,6 +114,7 @@ export function buildScaffoldPlan(
       autoInjected: [],
       files: [],
       packages: emptyPackagePlan(),
+      manifest,
       checks,
       blockers,
       warnings,
@@ -248,6 +256,10 @@ export function buildScaffoldPlan(
     destinationExists ? "exists (overwrite required)" : "empty",
   );
 
+  if (manifest && template && !filesByPath.has(PROJECT_MANIFEST_FILE)) {
+    addFile({ path: PROJECT_MANIFEST_FILE, action: "create", sources: ["zealakit:manifest"] });
+  }
+
   files.sort((a, b) => a.path.localeCompare(b.path));
 
   return {
@@ -258,6 +270,7 @@ export function buildScaffoldPlan(
     autoInjected,
     files,
     packages,
+    manifest,
     checks,
     blockers: [...new Set(blockers)],
     warnings,

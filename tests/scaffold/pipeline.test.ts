@@ -59,6 +59,16 @@ function caseDir(): string {
   return dir;
 }
 
+/** `zealakit.json` carries `createdAt`; everything else must be byte-identical. */
+function withoutTimestamp(tree: Record<string, string>): Record<string, string> {
+  const copy = { ...tree };
+  const manifest = copy["zealakit.json"];
+  if (manifest) {
+    copy["zealakit.json"] = manifest.replace(/"createdAt": "[^"]*"/, '"createdAt": "<ts>"');
+  }
+  return copy;
+}
+
 function writeFile(dir: string, relativePath: string, content: string): void {
   const target = path.join(dir, relativePath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -315,13 +325,13 @@ describe("existing target directories and repeated generation", () => {
     const cwd = caseDir();
     const { config } = resolveGeneration("vite-react", ["biome", "zustand"]);
     const first = await scaffoldProject(config, cwd);
-    const firstTree = snapshotTree(first);
+    const firstTree = withoutTimestamp(snapshotTree(first));
     const firstManifest = readFile(first, "package.json");
 
     const second = await scaffoldProject(config, cwd);
 
     assert.equal(second, first);
-    assert.deepEqual(snapshotTree(second), firstTree);
+    assert.deepEqual(withoutTimestamp(snapshotTree(second)), firstTree);
     assert.equal(readFile(second, "package.json"), firstManifest);
     assertStagesCleaned();
     assertCommitSiblingsClean(cwd);

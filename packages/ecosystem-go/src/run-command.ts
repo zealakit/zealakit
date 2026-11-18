@@ -17,6 +17,7 @@ export const defaultRunCommand: RunCommand = (file, args, options = {}) => {
     let stderr = "";
 
     const child = spawn(file, [...args], {
+      cwd: options.cwd,
       stdio: ["ignore", "pipe", "pipe"],
       env: process.env,
       windowsHide: true,

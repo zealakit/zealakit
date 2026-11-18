@@ -54,6 +54,7 @@ describe("programmatic API public exports", () => {
       "handleDiscoveryRequest",
     ]);
     assert.deepEqual(Object.keys(ecosystemApi).sort(), [
+      "adaptRunCommand",
       "assertStagingRealPath",
       "emptyPackagePlan",
       "getNpmManifest",
@@ -63,6 +64,7 @@ describe("programmatic API public exports", () => {
       "getTemplate",
       "getTemplateDevCommand",
       "getTemplateOverlayId",
+      "installCommand",
       "registerRecipe",
       "registerTemplate",
       "resolveStagingPath",

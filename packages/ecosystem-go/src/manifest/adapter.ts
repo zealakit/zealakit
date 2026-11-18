@@ -7,11 +7,15 @@ import {
   getTemplateDevCommand,
   type ManifestAdapter,
   type NextSteps,
+  type NextStepsOptions,
   type PackagePlan,
+  type PostGenerateOptions,
+  type PostGenerateResult,
   resolveStagingPath,
   type ScaffoldConfig,
   type ValidationResult,
 } from "@zealakit/core/ecosystem";
+import { defaultRunCommand } from "../run-command.js";
 import { validateGoOutput } from "../validation/output.js";
 import { isValidGoProjectName } from "../validation/project-name.js";
 
@@ -94,11 +98,37 @@ export const goManifestAdapter: ManifestAdapter = {
   validateOutput(targetDir: string, config: ScaffoldConfig): string[] {
     return validateGoOutput(targetDir, config);
   },
-  nextSteps(config: ScaffoldConfig): NextSteps {
+  async postGenerate(
+    targetDir: string,
+    _config: ScaffoldConfig,
+    options: PostGenerateOptions,
+  ): Promise<PostGenerateResult> {
+    if (!options.install) {
+      return { install: "skipped" };
+    }
+    const result = await defaultRunCommand("go", ["mod", "tidy"], {
+      cwd: targetDir,
+      timeoutMs: 180_000,
+    });
+    if (result.spawnError) {
+      return {
+        install: "failed",
+        message: `go toolchain not found (${result.spawnError.message})`,
+      };
+    }
+    if (result.exitCode === 0) {
+      return { install: "ok" };
+    }
+    return {
+      install: "failed",
+      message: result.stderr.trim() || `go mod tidy exited with code ${result.exitCode}`,
+    };
+  },
+  nextSteps(config: ScaffoldConfig, options: NextStepsOptions): NextSteps {
     const template = getTemplate(config.templateId);
     const devCommand = template ? getTemplateDevCommand(template) : "go run .";
     return {
-      commands: [devCommand],
+      commands: options.installed ? [devCommand] : ["go mod tidy", devCommand],
       tip: "Run `zealakit doctor` if the Go toolchain is missing.",
     };
   },

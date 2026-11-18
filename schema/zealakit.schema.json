@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit project manifest",
+  "description": "Written by zealakit into every generated project (zealakit.json).",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kitVersion",
+    "ecosystem",
+    "template",
+    "recipes",
+    "requestedRecipes",
+    "createdAt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "kitVersion": {
+      "type": "string",
+      "description": "zealakit version that generated the project."
+    },
+    "ecosystem": { "enum": ["node", "go"] },
+    "template": { "type": "string" },
+    "recipes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Resolved apply order, including defaults and dependencies."
+    },
+    "requestedRecipes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Recipes the user asked for."
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

@@ -23,6 +23,15 @@ function findPackageRoot(startDir: string): string {
 }
 
 export const PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
+function readKitVersion(): string {
+  const { version } = JSON.parse(
+    fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf-8"),
+  ) as { version?: string };
+  return version ?? "0.0.0";
+}
+
+/** Version of the installed zealakit package (written into `zealakit.json`). */
+export const KIT_VERSION = readKitVersion();
 export const TEMPLATES_DIR = path.join(PACKAGE_ROOT, "templates");
 export const RECIPES_DIR = path.join(PACKAGE_ROOT, "recipes");
 

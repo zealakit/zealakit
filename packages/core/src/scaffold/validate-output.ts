@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PROJECT_MANIFEST_FILE, readProjectManifest } from "../project-manifest.js";
 import { getTemplate } from "../registry/index.js";
 import type { ScaffoldConfig } from "../types.js";
 import { getManifestAdapter, resolveTemplateEcosystem } from "./manifest.js";
@@ -107,6 +108,32 @@ function validateCommonLayout(targetDir: string, templateId: string, errors: str
   validateSymlinkSafety(targetDir, errors);
 }
 
+/** When `zealakit.json` is present it must parse and agree with the scaffold config. */
+function validateProjectManifestFile(
+  targetDir: string,
+  config: ScaffoldConfig,
+  errors: string[],
+): void {
+  const result = readProjectManifest(targetDir);
+  if (!result) return;
+  if (!result.ok) {
+    errors.push(...result.errors);
+    return;
+  }
+  const { manifest } = result;
+  if (manifest.template !== config.templateId) {
+    errors.push(
+      `${PROJECT_MANIFEST_FILE} template is '${manifest.template}', expected '${config.templateId}'.`,
+    );
+  }
+  const missing = config.recipeIds.filter((id) => !manifest.recipes.includes(id));
+  if (missing.length > 0) {
+    errors.push(
+      `${PROJECT_MANIFEST_FILE} recipes are missing applied recipe(s): ${missing.join(", ")}.`,
+    );
+  }
+}
+
 /**
  * Structural checks on a generated (or staged) project. No network, no installs,
  * no running project scripts.
@@ -122,6 +149,8 @@ export function validateGeneratedOutput(
   }
 
   validateCommonLayout(targetDir, config.templateId, errors);
+
+  validateProjectManifestFile(targetDir, config, errors);
 
   // Ecosystem-specific checks (package.json / go.mod) belong to the adapter.
   errors.push(

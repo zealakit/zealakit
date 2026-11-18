@@ -20,6 +20,7 @@ import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
 import type { CliOptions } from "./options.js";
 import { failDiagnostic } from "./output.js";
+import { registerPresetCommands } from "./preset-commands.js";
 
 registerNodeEcosystem();
 registerGoEcosystem();
@@ -58,7 +59,7 @@ attachCreateOptions(
 )
   .option(
     "--json",
-    "With --discover: read one Discovery/scaffold JSON request from stdin and print one JSON response",
+    "Machine-readable output: with --discover read one JSON request from stdin; otherwise non-interactive (needs -y, -w, --preset or --dry-run) and print one JSON result on stdout",
   )
   .action(async (projectName: string | undefined, options: CliOptions) => {
     await runCreateAction(projectName, options);
@@ -127,6 +128,7 @@ program
   });
 
 registerDiscoveryCommands(program);
+registerPresetCommands(program);
 
 /** Commander exits directly per command; override nested ones so parse errors map to usage. */
 function overrideCommanderExit(command: Command): void {
