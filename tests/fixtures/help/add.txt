@@ -1,0 +1,17 @@
+Usage: zealakit add [options] <recipes...>
+
+Add recipes to an existing project (reads zealakit.json; previews a diff first)
+
+Options:
+  --cwd <dir>        Project directory (default: current directory)
+  --dry-run          Show what would change without writing
+  -y, --yes          Apply without asking for confirmation
+  --force            Proceed even when the git working tree is dirty
+  --overwrite-files  Replace files you edited with the kit's version (originals
+                     are backed up)
+  --install          Install dependencies afterwards
+  --no-install       Do not install dependencies
+  --pm <manager>     Package manager for install (npm, pnpm, yarn, bun; default:
+                     from lockfile)
+  --json             Machine-readable output (needs -y or --dry-run)
+  -h, --help         display help for command

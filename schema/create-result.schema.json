@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit create --json",
+  "description": "One JSON object on stdout for a non-interactive `create`. `--dry-run --json` prints the plan instead (ok, config, targetDir, files, packages, checks, blockers, warnings).",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "ok",
+        "outputDirectory",
+        "template",
+        "recipes",
+        "requestedRecipes",
+        "files",
+        "warnings",
+        "postGenerate",
+        "nextSteps"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "outputDirectory": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string"
+        },
+        "recipes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requestedRecipes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "number"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "postGenerate": {
+          "type": "object",
+          "required": ["packageManager", "install", "git"],
+          "properties": {
+            "packageManager": {
+              "enum": ["npm", "pnpm", "yarn", "bun"]
+            },
+            "install": {
+              "enum": ["skipped", "ok", "failed"]
+            },
+            "git": {
+              "enum": ["ok", "skipped", "failed"]
+            }
+          }
+        },
+        "nextSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["ok", "error"],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "messages"],
+          "properties": {
+            "code": {
+              "enum": ["usage", "validation", "internal"]
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

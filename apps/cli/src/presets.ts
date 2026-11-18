@@ -21,7 +21,9 @@ export type PresetSource = "project" | "user";
 export type PresetEntry = { name: string; preset: Preset; source: PresetSource };
 
 export const PROJECT_CONFIG_FILE = "zealakit.config.json";
-const USER_PRESETS_FILE = "presets.json";
+const USER_CONFIG_FILE = "config.json";
+/** Pre-config.json name; still read so saved presets keep working. */
+const LEGACY_USER_PRESETS_FILE = "presets.json";
 
 /** `$ZEALAKIT_CONFIG_DIR`, else `$XDG_CONFIG_HOME/zealakit`, else `~/.config/zealakit`. */
 export function userConfigDir(env: NodeJS.ProcessEnv = process.env): string {
@@ -31,11 +33,19 @@ export function userConfigDir(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 export function userPresetsFile(env: NodeJS.ProcessEnv = process.env): string {
-  return path.join(userConfigDir(env), USER_PRESETS_FILE);
+  return path.join(userConfigDir(env), USER_CONFIG_FILE);
 }
 
-function readPresetFile(file: string): Record<string, unknown> {
-  if (!fs.existsSync(file)) return {};
+/** Defaults applied to `create` when neither a flag nor a preset sets them. */
+export type ConfigDefaults = Pick<Preset, "packageManager" | "install" | "git"> & {
+  pm?: PackageManager;
+};
+
+type ConfigFile = { defaults: Record<string, unknown>; presets: Record<string, unknown> };
+
+function readConfigFile(file: string): ConfigFile {
+  const empty: ConfigFile = { defaults: {}, presets: {} };
+  if (!fs.existsSync(file)) return empty;
   let json: unknown;
   try {
     json = JSON.parse(fs.readFileSync(file, "utf-8"));
@@ -44,12 +54,23 @@ function readPresetFile(file: string): Record<string, unknown> {
       `${file} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  const presets = (json as { presets?: unknown } | null)?.presets;
-  if (presets === undefined) return {};
-  if (typeof presets !== "object" || presets === null || Array.isArray(presets)) {
+  const root = (json ?? {}) as { presets?: unknown; defaults?: unknown };
+  const isObject = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
+  if (root.presets !== undefined && !isObject(root.presets)) {
     throw new Error(`${file}: "presets" must be an object keyed by preset name.`);
   }
-  return presets as Record<string, unknown>;
+  if (root.defaults !== undefined && !isObject(root.defaults)) {
+    throw new Error(`${file}: "defaults" must be an object.`);
+  }
+  return {
+    defaults: (root.defaults as Record<string, unknown> | undefined) ?? {},
+    presets: (root.presets as Record<string, unknown> | undefined) ?? {},
+  };
+}
+
+function readPresetFile(file: string): Record<string, unknown> {
+  return readConfigFile(file).presets;
 }
 
 /** Validate a preset against the live registry; returns error messages. */
@@ -88,14 +109,29 @@ export function validatePreset(name: string, value: unknown): string[] {
   return errors;
 }
 
-/** Project-local presets override user presets of the same name. */
-export function listPresets(cwd: string, env: NodeJS.ProcessEnv = process.env): PresetEntry[] {
-  const merged = new Map<string, PresetEntry>();
+/** Config layers, lowest precedence first: legacy user presets, user config, project config, `--config`. */
+function configLayers(
+  cwd: string,
+  env: NodeJS.ProcessEnv,
+  explicit?: string,
+): Array<[PresetSource, string]> {
   const layers: Array<[PresetSource, string]> = [
+    ["user", path.join(userConfigDir(env), LEGACY_USER_PRESETS_FILE)],
     ["user", userPresetsFile(env)],
     ["project", path.join(cwd, PROJECT_CONFIG_FILE)],
   ];
-  for (const [source, file] of layers) {
+  if (explicit) layers.push(["project", path.resolve(cwd, explicit)]);
+  return layers;
+}
+
+/** Later layers override earlier ones of the same preset name. */
+export function listPresets(
+  cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
+  explicitConfig?: string,
+): PresetEntry[] {
+  const merged = new Map<string, PresetEntry>();
+  for (const [source, file] of configLayers(cwd, env, explicitConfig)) {
     for (const [name, preset] of Object.entries(readPresetFile(file))) {
       merged.set(name, { name, preset: preset as Preset, source });
     }
@@ -103,18 +139,59 @@ export function listPresets(cwd: string, env: NodeJS.ProcessEnv = process.env): 
   return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Merged `defaults` from every config layer (later layers win). */
+export function loadConfigDefaults(
+  cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
+  explicitConfig?: string,
+): ConfigDefaults {
+  const merged: Record<string, unknown> = {};
+  for (const [, file] of configLayers(cwd, env, explicitConfig)) {
+    Object.assign(merged, readConfigFile(file).defaults);
+  }
+  const errors: string[] = [];
+  if (merged.pm !== undefined && !(typeof merged.pm === "string" && isPackageManager(merged.pm))) {
+    errors.push("defaults.pm must be one of npm, pnpm, yarn, bun.");
+  }
+  for (const flag of ["install", "git"] as const) {
+    if (merged[flag] !== undefined && typeof merged[flag] !== "boolean") {
+      errors.push(`defaults.${flag} must be true or false.`);
+    }
+  }
+  if (errors.length > 0) throw new Error(errors.join("\n"));
+  return {
+    ...(merged.pm ? { packageManager: merged.pm as PackageManager } : {}),
+    ...(merged.install !== undefined ? { install: merged.install as boolean } : {}),
+    ...(merged.git !== undefined ? { git: merged.git as boolean } : {}),
+  };
+}
+
 export function getPreset(
   name: string,
   cwd: string,
   env: NodeJS.ProcessEnv = process.env,
+  explicitConfig?: string,
 ): PresetEntry | undefined {
-  return listPresets(cwd, env).find((entry) => entry.name === name);
+  return listPresets(cwd, env, explicitConfig).find((entry) => entry.name === name);
 }
 
 function writeUserPresets(presets: Record<string, unknown>, env: NodeJS.ProcessEnv): void {
   const file = userPresetsFile(env);
+  const { defaults } = readConfigFile(file);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify({ presets }, null, 2)}\n`, "utf-8");
+  fs.writeFileSync(
+    file,
+    `${JSON.stringify({ ...(Object.keys(defaults).length > 0 ? { defaults } : {}), presets }, null, 2)}\n`,
+    "utf-8",
+  );
+}
+
+/** Presets stored in the user config file (what `save`/`remove` edit); legacy file is migrated on write. */
+function readUserPresets(env: NodeJS.ProcessEnv): Record<string, unknown> {
+  return {
+    ...readPresetFile(path.join(userConfigDir(env), LEGACY_USER_PRESETS_FILE)),
+    ...readPresetFile(userPresetsFile(env)),
+  };
 }
 
 /** Save to the user-level presets file; throws on an invalid preset. */
@@ -125,15 +202,16 @@ export function savePreset(
 ): void {
   const errors = validatePreset(name, preset);
   if (errors.length > 0) throw new Error(errors.join("\n"));
-  const presets = readPresetFile(userPresetsFile(env));
+  const presets = readUserPresets(env);
   presets[name] = preset;
   writeUserPresets(presets, env);
 }
 
 export function removePreset(name: string, env: NodeJS.ProcessEnv = process.env): boolean {
-  const presets = readPresetFile(userPresetsFile(env));
+  const presets = readUserPresets(env);
   if (!(name in presets)) return false;
   delete presets[name];
+  fs.rmSync(path.join(userConfigDir(env), LEGACY_USER_PRESETS_FILE), { force: true });
   writeUserPresets(presets, env);
   return true;
 }

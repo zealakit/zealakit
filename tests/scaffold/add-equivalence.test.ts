@@ -49,11 +49,14 @@ for (const template of getAllTemplates()) {
     for (const recipe of recipes) {
       it(`${recipe.id}`, async () => {
         const name = `eq-${++counter}`;
+        // Recipes like goose/sqlc need one of several others (`requiresAnyOf`); the project already has it.
+        const companion = recipe.requiresAnyOf?.[0];
+        const baseRecipes = companion ? [companion] : [];
         const created = await scaffoldProject(
           {
             projectName: name,
             templateId: template.id,
-            recipeIds: withDefaultRecipes(template.scope, [recipe.id]),
+            recipeIds: withDefaultRecipes(template.scope, [...baseRecipes, recipe.id]),
           },
           path.join(workRoot, "created"),
         );
@@ -62,7 +65,7 @@ for (const template of getAllTemplates()) {
           {
             projectName: name,
             templateId: template.id,
-            recipeIds: withDefaultRecipes(template.scope, []),
+            recipeIds: withDefaultRecipes(template.scope, baseRecipes),
           },
           path.join(workRoot, "base"),
         );

@@ -1,0 +1,69 @@
+Usage: zealakit [options] [command] [project-name]
+
+Recipe-based project scaffolding. Prefer `zealakit create` (supports --discover
+and --template). The root form `zealakit [name] -t …` is deprecated.
+
+Arguments:
+  project-name                     Project name (npm naming rules)
+
+Options:
+  -V, --version                    output the version number
+  -t, --template <template>        Choose a base template yourself (default:
+                                   vite-react). Available: vite-react, vite-vue,
+                                   vite-svelte, astro-react-client,
+                                   astro-react-hybrid, next, nuxt, nest, hono,
+                                   stdlib-api, gin-api, stdlib-worker
+  -w, --with <recipes>             Recipes to apply, comma-separated (e.g.
+                                   biome). Available: biome, eslint, zustand,
+                                   pinia, nanostores, client-shared-pieces,
+                                   hookform-zod, vee-validate-zod, kyjs, axios,
+                                   tanstack-query, antd, mui, shadcn-ui,
+                                   nuxt-ui, shadcn-vue, storybook, vitest,
+                                   docker, better-auth, nest-auth,
+                                   github-actions, type-orm, mikro-orm,
+                                   drizzle-orm, prisma, postgres, mysql,
+                                   mongodb, docker-go, github-actions-go, goose,
+                                   sqlc, redis
+  -y, --yes                        Non-interactive: never prompt; refuses a
+                                   non-empty target
+  --force                          Overwrite a non-empty target directory
+                                   without asking
+  --dry-run                        Resolve and validate without writing files
+  --pm <manager>                   Package manager for install and next steps:
+                                   npm, pnpm, yarn, bun (default: detected)
+  --install                        Install dependencies after generating (go mod
+                                   tidy for Go)
+  --no-install                     Do not install dependencies
+  --git                            Run git init and make an initial commit
+  --no-git                         Do not initialize a git repository
+  --no-manifest                    Do not write zealakit.json into the project
+  --config <file>                  Config file with `defaults` and `presets`
+                                   (highest precedence over project/user config)
+  --preset <name>                  Apply a saved preset (see `zealakit preset
+                                   list`); flags override it
+  --save-preset <name>             Save the chosen template and recipes as a
+                                   user preset
+  --discover                       Project Discovery: answer a few questions and
+                                   get template/recipe recommendations
+  --info                           Print kit metadata (alias of `zealakit info`)
+  --json                           With --info: print only machine-readable JSON
+  -h, --help                       display help for command
+
+Commands:
+  create [options] [project-name]  Create a new project. Modes: interactive
+                                   prompts, --discover (recommendations), or
+                                   --template <id>.
+  info [options]                   Print kit metadata: templates, recipes,
+                                   ecosystems, categories, Discovery profiles
+  doctor [options]                 Check Zealakit runtime and optional Go
+                                   toolchain availability
+  discovery                        Local Project Discovery feedback and
+                                   stateless JSON queries (offline; no network
+                                   uploads)
+  preset                           Manage saved create presets (user-level plus
+                                   ./zealakit.config.json)
+  add [options] <recipes...>       Add recipes to an existing project (reads
+                                   zealakit.json; previews a diff first)
+  outdated [options]               Compare this project's template/recipe
+                                   dependency ranges with the installed kit
+                                   (report only)

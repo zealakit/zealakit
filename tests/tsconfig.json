@@ -10,5 +10,6 @@
     "../packages/ecosystem-node/src/**/*.ts",
     "../packages/ecosystem-go/src/**/*.ts",
     "../apps/cli/src/**/*.ts"
-  ]
+  ],
+  "exclude": ["./fixtures/**"]
 }

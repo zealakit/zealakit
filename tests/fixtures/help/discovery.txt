@@ -1,0 +1,16 @@
+Usage: zealakit discovery [options] [command]
+
+Local Project Discovery feedback and stateless JSON queries (offline; no network
+uploads)
+
+Options:
+  -h, --help         display help for command
+
+Commands:
+  query [options]    Run a stateless Discovery JSON operation (questions |
+                     recommendations | validate | scaffold); reads a request
+                     from stdin or --input
+  stats              Show aggregated local Discovery feedback statistics
+  feedback [action]  Enable, disable, clear, or show local Discovery feedback
+                     settings
+  help [command]     display help for command

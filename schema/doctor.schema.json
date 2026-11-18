@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit doctor --json",
+  "type": "object",
+  "required": ["zealakit", "node", "go"],
+  "properties": {
+    "zealakit": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["runtime", "status", "version", "message"],
+      "properties": {
+        "status": {
+          "enum": ["ready", "missing", "incompatible", "error"]
+        }
+      }
+    },
+    "go": {
+      "type": "object",
+      "required": ["available", "status", "message", "issues"],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": ["ready", "missing", "incompatible", "error"]
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["dir", "isZealakitProject", "checks"],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "message"],
+            "properties": {
+              "status": {
+                "enum": ["ok", "warn", "fail", "info"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

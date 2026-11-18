@@ -56,6 +56,26 @@ export function validateRecipeConflicts(recipeIds: string[]): ValidationResult {
   return result(errors);
 }
 
+/** Every recipe's `requiresAnyOf` must be satisfied by the selection. */
+export function validateRecipeRequirements(recipeIds: string[]): ValidationResult {
+  const selected = new Set(recipeIds);
+  const errors: string[] = [];
+  for (const recipeId of selected) {
+    const needs = getRecipe(recipeId)?.requiresAnyOf;
+    if (needs && needs.length > 0 && !needs.some((id) => selected.has(id))) {
+      errors.push(
+        formatDiagnostic({
+          title: "Recipe needs another recipe",
+          selected: [recipeId],
+          reason: `Recipe '${recipeId}' requires one of: ${needs.join(", ")}.`,
+          resolution: `Add one of ${needs.map((id) => `'${id}'`).join(" or ")} with -w.`,
+        }),
+      );
+    }
+  }
+  return result(errors);
+}
+
 /** Scope, UI framework, and overlay availability for every recipe on the template. */
 export function validateRecipeCompatibility(
   templateId: string,

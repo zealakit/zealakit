@@ -18,6 +18,8 @@ export type CliOptions = {
   git?: boolean;
   /** `--no-manifest` sets this to false; default true. */
   manifest?: boolean;
+  /** Config file with `defaults` / `presets` (overrides the project and user files). */
+  config?: string;
   /** Apply a saved preset (flags override it). */
   preset?: string;
   /** Save the chosen template/recipes as a user preset after success. */

@@ -6,6 +6,7 @@ import {
   validateRecipeCompatibility,
   validateRecipeConflicts,
   validateRecipeIds,
+  validateRecipeRequirements,
   validateTemplate,
 } from "./recipes.js";
 import { checkTargetDirectory, nonEmptyTargetMessage, type OverwritePolicy } from "./target-dir.js";
@@ -45,6 +46,7 @@ export function validateScaffoldConfig(config: ScaffoldConfig): ValidationResult
     validateRecipeIds(config.recipeIds),
     validateRecipeConflicts(config.recipeIds),
     validateRecipeCompatibility(config.templateId, config.recipeIds),
+    validateRecipeRequirements(config.recipeIds),
   ].flatMap((check) => check.errors);
 
   return { valid: errors.length === 0, errors };

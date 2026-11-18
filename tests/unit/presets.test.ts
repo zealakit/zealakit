@@ -7,6 +7,7 @@ import { after, describe, it } from "node:test";
 import {
   getPreset,
   listPresets,
+  loadConfigDefaults,
   removePreset,
   savePreset,
   validatePreset,
@@ -64,5 +65,57 @@ describe("presets", () => {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "presets.json"), "{ nope");
     assert.throws(() => listPresets(root, e), /not valid JSON/);
+  });
+});
+
+describe("config defaults and --config", () => {
+  it("merges defaults from user, project and explicit layers (later wins)", () => {
+    const e = env();
+    const dir = e.ZEALAKIT_CONFIG_DIR as string;
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "config.json"),
+      JSON.stringify({ defaults: { pm: "yarn", git: true } }),
+    );
+    const project = fs.mkdtempSync(path.join(root, "proj-"));
+    fs.writeFileSync(
+      path.join(project, "zealakit.config.json"),
+      JSON.stringify({ defaults: { pm: "pnpm" } }),
+    );
+    assert.deepEqual(loadConfigDefaults(project, e), { packageManager: "pnpm", git: true });
+
+    fs.writeFileSync(
+      path.join(project, "extra.json"),
+      JSON.stringify({ defaults: { install: false }, presets: { x: { template: "next" } } }),
+    );
+    assert.deepEqual(loadConfigDefaults(project, e, "extra.json"), {
+      packageManager: "pnpm",
+      git: true,
+      install: false,
+    });
+    assert.equal(getPreset("x", project, e, "extra.json")?.preset.template, "next");
+  });
+
+  it("rejects invalid defaults", () => {
+    const project = fs.mkdtempSync(path.join(root, "proj-"));
+    fs.writeFileSync(
+      path.join(project, "zealakit.config.json"),
+      JSON.stringify({ defaults: { pm: "pip" } }),
+    );
+    assert.throws(() => loadConfigDefaults(project, env()), /defaults\.pm/);
+  });
+
+  it("still reads the legacy presets.json and migrates it on save", () => {
+    const e = env();
+    const dir = e.ZEALAKIT_CONFIG_DIR as string;
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "presets.json"),
+      JSON.stringify({ presets: { old: { template: "next" } } }),
+    );
+    assert.equal(getPreset("old", root, e)?.preset.template, "next");
+    savePreset("fresh", { template: "nuxt" }, e);
+    assert.ok(fs.existsSync(path.join(dir, "config.json")));
+    assert.equal(getPreset("old", root, e)?.preset.template, "next");
   });
 });

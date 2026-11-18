@@ -1,0 +1,1 @@
+- **sqlc:** [.agents/skills/sqlc/SKILL.md](.agents/skills/sqlc/SKILL.md) — type-safe queries generated from SQL (`make sqlc`)

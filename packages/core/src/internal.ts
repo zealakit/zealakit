@@ -212,3 +212,7 @@ export {
   validateScaffoldConfig,
   validateTemplate,
 } from "./validation/index.js";
+export {
+  computeOutdated,
+  type OutdatedReport,
+} from "./versions/outdated.js";

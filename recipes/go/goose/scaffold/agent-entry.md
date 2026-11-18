@@ -1,0 +1,1 @@
+- **Migrations:** [.agents/skills/goose/SKILL.md](.agents/skills/goose/SKILL.md) — goose SQL migrations (`make migrate-up`)

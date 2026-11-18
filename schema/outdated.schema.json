@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit outdated --json",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["ok", "kitVersion", "entries", "blockers"],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "kitVersion": {
+          "type": "object",
+          "required": ["project", "installed", "status"],
+          "properties": {
+            "status": {
+              "enum": ["same", "behind", "ahead"]
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["package", "field", "project", "kit", "source", "status"],
+            "properties": {
+              "field": {
+                "enum": ["dependencies", "devDependencies", "go.mod"]
+              },
+              "status": {
+                "enum": ["behind", "ahead", "different"]
+              }
+            }
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["ok", "error"],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "messages"]
+        }
+      }
+    }
+  ]
+}

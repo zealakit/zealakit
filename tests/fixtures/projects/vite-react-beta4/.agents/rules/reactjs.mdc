@@ -1,0 +1,11 @@
+---
+description: React UI generation, refactoring, and performance practices
+globs: "**/*.{tsx,jsx}"
+alwaysApply: false
+---
+
+# React UI
+
+When generating or refactoring UI, follow `.agents/skills/reactjs/SKILL.md`.
+
+Place files using `.agents/skills/project-structure/SKILL.md` (kebab-case files, PascalCase component exports). Do not use this skill to pick a UI kit, HTTP client, or store library.

@@ -56,7 +56,12 @@ function toApp(dir: string, templateId: string, recipeIds: string[]): Scaffolded
 export function resolveRecipeIds(templateId: string, picked: string[]): string[] {
   const template = getTemplate(templateId);
   assert.ok(template, `unknown template ${templateId}`);
-  const withDefaults = withDefaultRecipes(template.scope, picked);
+  // `requiresAnyOf` recipes (goose, sqlc) get the first required recipe unless one is already picked.
+  const companions = picked.flatMap((id) => {
+    const needs = getRecipe(id)?.requiresAnyOf;
+    return needs && !needs.some((need) => picked.includes(need)) ? [needs[0] as string] : [];
+  });
+  const withDefaults = withDefaultRecipes(template.scope, [...companions, ...picked]);
   const resolved = resolveRecipeDependencies(withDefaults);
   assert.equal(resolved.ok, true, "recipe dependency resolution should succeed in tests");
   return resolved.ok ? resolved.recipeIds : withDefaults;

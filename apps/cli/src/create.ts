@@ -1,5 +1,5 @@
 import path from "node:path";
-import { confirm, isCancel } from "@clack/prompts";
+import { confirm, isCancel, text } from "@clack/prompts";
 import {
   buildScaffoldPlan,
   DEFAULT_TEMPLATE_ID,
@@ -36,7 +36,7 @@ import {
   printWarning,
 } from "./output.js";
 import { type GitResult, initGitRepository } from "./post-generate.js";
-import { getPreset, savePreset, validatePreset } from "./presets.js";
+import { getPreset, loadConfigDefaults, savePreset, validatePreset } from "./presets.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
 import { resolveOverwritePolicy } from "./target-dir.js";
@@ -232,9 +232,29 @@ function assertJsonUsage(projectName: string | undefined, options: CliOptions): 
 }
 
 /** Fold a saved preset under explicit flags (flags win). */
-function applyPreset(options: CliOptions): CliOptions {
+function applyPreset(base: CliOptions): CliOptions {
+  // Config `defaults` sit below presets and explicit flags.
+  let options = base;
+  try {
+    const defaults = loadConfigDefaults(process.cwd(), process.env, base.config);
+    options = {
+      ...base,
+      pm: base.pm ?? defaults.packageManager,
+      install: base.install ?? defaults.install,
+      git: base.git ?? defaults.git,
+    };
+  } catch (error) {
+    printValidationErrors([error instanceof Error ? error.message : String(error)]);
+    process.exit(ExitCode.VALIDATION);
+  }
   if (!options.preset) return options;
-  const entry = getPreset(options.preset, process.cwd());
+  let entry: ReturnType<typeof getPreset>;
+  try {
+    entry = getPreset(options.preset, process.cwd(), process.env, options.config);
+  } catch (error) {
+    printValidationErrors([error instanceof Error ? error.message : String(error)]);
+    process.exit(ExitCode.VALIDATION);
+  }
   if (!entry) {
     usageError(
       `Preset '${options.preset}' was not found.`,
@@ -274,6 +294,8 @@ type CreateResult =
       plan: ScaffoldPlan;
       targetDir: string;
       post: PostGenerateSummary;
+      /** The user answered prompts (so offering to save a preset makes sense). */
+      interactive: boolean;
     };
 
 function failed(code: ExitCode, messages: string[]): CreateResult {
@@ -375,6 +397,7 @@ async function runCreate(
 
   return {
     kind: "created",
+    interactive: resolved.interactive,
     plan,
     targetDir,
     post: {
@@ -452,14 +475,32 @@ export async function runCreateAction(
     }
     case "created": {
       const { plan, targetDir, post } = result;
-      if (options.savePreset) {
+      let presetName = options.savePreset;
+      if (!presetName && result.interactive && !json && !options.yes && process.stdin.isTTY) {
+        // Off by default: only an explicit "yes" and a name saves anything.
+        const wants = await confirm({
+          message: "Save these choices as a preset?",
+          initialValue: false,
+        });
+        if (wants === true) {
+          const name = await text({
+            message: "Preset name:",
+            validate: (value) =>
+              value && /^[a-z0-9][a-z0-9._-]*$/i.test(value)
+                ? undefined
+                : "Use letters, digits, '.', '_' or '-'.",
+          });
+          if (typeof name === "string") presetName = name;
+        }
+      }
+      if (presetName) {
         try {
-          savePreset(options.savePreset, {
+          savePreset(presetName, {
             template: plan.config.templateId,
             recipes: plan.selectedIds,
             packageManager: post.packageManager,
           });
-          post.warnings.push(`Saved preset '${options.savePreset}'.`);
+          post.warnings.push(`Saved preset '${presetName}'.`);
         } catch (error) {
           post.warnings.push(
             `Could not save preset: ${error instanceof Error ? error.message : String(error)}`,
@@ -520,6 +561,10 @@ export function attachCreateOptions(command: Command): Command {
     .option("--git", "Run git init and make an initial commit")
     .option("--no-git", "Do not initialize a git repository")
     .option("--no-manifest", "Do not write zealakit.json into the project")
+    .option(
+      "--config <file>",
+      "Config file with `defaults` and `presets` (highest precedence over project/user config)",
+    )
     .option(
       "--preset <name>",
       "Apply a saved preset (see `zealakit preset list`); flags override it",

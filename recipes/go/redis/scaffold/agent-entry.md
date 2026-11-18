@@ -1,0 +1,1 @@
+- **Redis:** [.agents/skills/redis/SKILL.md](.agents/skills/redis/SKILL.md) — go-redis client and configuration

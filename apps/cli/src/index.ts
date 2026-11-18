@@ -20,7 +20,8 @@ import { runDoctor } from "./doctor.js";
 import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
 import type { CliOptions } from "./options.js";
-import { failDiagnostic } from "./output.js";
+import { registerOutdatedCommand } from "./outdated.js";
+import { failDiagnostic, printWarning } from "./output.js";
 import { registerPresetCommands } from "./preset-commands.js";
 
 registerNodeEcosystem();
@@ -45,7 +46,7 @@ const program = new Command();
 program
   .name("zealakit")
   .description(
-    "Recipe-based project scaffolding. Prefer `zealakit create` (supports --discover and --template).",
+    "Recipe-based project scaffolding. Prefer `zealakit create` (supports --discover and --template). The root form `zealakit [name] -t …` is deprecated.",
   )
   .version(readKitManifest().version)
   .enablePositionalOptions();
@@ -87,6 +88,11 @@ attachCreateOptions(program)
       );
     }
 
+    if (projectName || options.template || options.with) {
+      printWarning(
+        "⚠ `zealakit [name] -t …` is deprecated and will be removed; use `zealakit create [name] -t …`.",
+      );
+    }
     await runCreateAction(projectName, options);
   });
 
@@ -133,6 +139,7 @@ program
 registerDiscoveryCommands(program);
 registerPresetCommands(program);
 registerAddCommand(program);
+registerOutdatedCommand(program);
 
 /** Commander exits directly per command; override nested ones so parse errors map to usage. */
 function overrideCommanderExit(command: Command): void {

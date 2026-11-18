@@ -113,6 +113,12 @@ export type RecipeConfig = {
    */
   dependsOn?: string[];
   /**
+   * At least one of these recipes must also be selected (e.g. a migration tool
+   * needs one of several database recipes). Unlike `dependsOn` nothing is
+   * auto-added: the user picks which one.
+   */
+  requiresAnyOf?: string[];
+  /**
    * Directory under `recipes/` (e.g. `node/mui`). Defaults to `id` when omitted.
    */
   path?: string;
