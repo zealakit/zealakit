@@ -173,6 +173,13 @@ zealakit add github-actions -y --json   # 非交互，JSON 输出
 
 `add` 用当前安装的 kit 分别生成「含/不含」新 Recipe 的项目，只应用差异——未改动的项目结果与 `create -w <全部 Recipe>` 完全一致。依赖与脚本会合并进 `package.json`；你编辑过的文件**不会被静默覆盖**（列为冲突并给出补丁，或使用 `--overwrite-files`，原文件会备份）。git 工作区不干净时拒绝执行，除非加 `--force`。在项目内运行 `zealakit doctor` 还会检查 manifest、`.cursor` 链接、Recipe 文件、`.env` 与依赖。
 
+### 外部 Recipe、Stack、MCP 与 API
+
+- **外部 Recipe**：`-w ./my-recipe` 或 `-w github:owner/repo/path#ref`——仅数据、不执行代码，使用前必须确认（非交互需 `--trust-external`）。见 [`docs/external-recipes.md`](docs/external-recipes.md)；用 `zealakit recipe init|validate` 创建。
+- **Stack**：`zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` 创建含 `apps/web`、`apps/api`、`packages/contracts` 的工作区及 `schemaVersion: 2` 的 `zealakit.json`；用 `zealakit add <recipe> --app web` 追加。
+- **MCP**：`zealakit mcp --root <dir>`（见 [`docs/mcp.md`](docs/mcp.md)）；**API**：`import { createZealakit } from "zealakit/api"`。
+- 旧的根命令形式 `zealakit [name] -t …` 已**移除**，请使用 `zealakit create`。
+
 ### `zealakit outdated` 与稳定性约定
 
 `zealakit outdated` 将项目中（来自模板/Recipe）的依赖版本范围与当前安装的 kit 今天会写入的版本对比；仅报告，不改文件（`--json` 输出机器可读结果）。预设还会读取 `./zealakit.config.json`、`--config <file>` 以及 `defaults`（`pm`、`git`、`install`）。CLI、JSON 输出与 `zealakit.json` 由契约测试和 `schema/` 中的 JSON Schema 固定——见 [`docs/stability.md`](docs/stability.md)。

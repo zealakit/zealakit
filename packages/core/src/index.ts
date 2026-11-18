@@ -10,6 +10,7 @@ export {
   type DiscoveryQuery,
   type EcosystemRegistration,
   type MetadataQuery,
+  type ProjectClient,
   type ScaffoldClient,
   type ScaffoldExecutionResult,
   type Zealakit,
@@ -55,6 +56,8 @@ export type {
   RecipeMetadata,
   TemplateMetadata,
 } from "./info/index.js";
+export type { AddPlan, ApplyAddResult, FileChange } from "./project/add.js";
+export type { ProjectCheck, ProjectReport } from "./project/checks.js";
 export { ScaffoldCommitError, type ScaffoldCommitErrorDetails } from "./scaffold/commit.js";
 export type {
   ManifestFieldConflict,
@@ -70,3 +73,4 @@ export type {
   Scope,
   ValidationResult,
 } from "./types.js";
+export type { OutdatedEntry, OutdatedReport } from "./versions/outdated.js";

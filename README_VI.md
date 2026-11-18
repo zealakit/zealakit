@@ -173,6 +173,13 @@ zealakit add github-actions -y --json   # không tương tác, đầu ra JSON
 
 `add` tạo lại project bằng kit đang cài, có và không có recipe mới, rồi chỉ áp dụng phần khác biệt — project nguyên bản sẽ giống hệt `create -w <tất cả recipe>`. Dependency và script được merge vào `package.json`; file bạn đã sửa **không bao giờ bị ghi đè âm thầm** (hiển thị là conflict kèm patch để tự áp dụng, hoặc dùng `--overwrite-files`; bản gốc được backup). Từ chối chạy khi git tree chưa sạch trừ khi có `--force`. `zealakit doctor` chạy trong project sẽ kiểm tra thêm manifest, symlink `.cursor`, file recipe, `.env` và dependency.
 
+### Recipe ngoài, stack, MCP và API
+
+- **Recipe ngoài**: `-w ./my-recipe` hoặc `-w github:owner/repo/path#ref` — chỉ là dữ liệu (không chạy code), luôn cần xác nhận (`--trust-external` khi không tương tác). Xem [`docs/external-recipes.md`](docs/external-recipes.md); tạo bằng `zealakit recipe init|validate`.
+- **Stack**: `zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` tạo workspace với `apps/web`, `apps/api`, `packages/contracts` và `zealakit.json` `schemaVersion: 2`; dùng `zealakit add <recipe> --app web`.
+- **MCP**: `zealakit mcp --root <dir>` (xem [`docs/mcp.md`](docs/mcp.md)); **API**: `import { createZealakit } from "zealakit/api"`.
+- Dạng cũ `zealakit [name] -t …` đã bị **gỡ bỏ**: dùng `zealakit create`.
+
 ### `zealakit outdated` và hợp đồng ổn định
 
 `zealakit outdated` so sánh range dependency của project (từ template/recipe) với những gì kit đang cài sẽ ghi hôm nay; chỉ báo cáo, không sửa file (`--json` cho máy đọc). Preset còn đọc `./zealakit.config.json`, `--config <file>` và mục `defaults` (`pm`, `git`, `install`). CLI, các JSON output và `zealakit.json` được khóa bằng contract test + JSON Schema trong `schema/` — xem [`docs/stability.md`](docs/stability.md).

@@ -13,5 +13,7 @@ Options:
   --no-install       Do not install dependencies
   --pm <manager>     Package manager for install (npm, pnpm, yarn, bun; default:
                      from lockfile)
+  --app <name>       Stack member to add to (workspace projects)
+  --trust-external   Apply external (path or github:) recipes without asking
   --json             Machine-readable output (needs -y or --dry-run)
   -h, --help         display help for command

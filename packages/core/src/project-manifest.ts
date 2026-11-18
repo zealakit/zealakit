@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { KIT_VERSION } from "./scaffold/paths.js";
-import type { EcosystemId } from "./types.js";
+import type { EcosystemId, ExternalRecipeInfo } from "./types.js";
 
 export const PROJECT_MANIFEST_FILE = "zealakit.json";
 export const PROJECT_MANIFEST_SCHEMA_VERSION = 1;
@@ -18,6 +18,8 @@ export type ProjectManifest = {
   /** What the user asked for, before defaults and dependency expansion. */
   requestedRecipes: string[];
   createdAt: string;
+  /** Recipes that came from outside the kit (data-only); re-resolved by `add` / `doctor` / `outdated`. */
+  externalRecipes?: Array<ExternalRecipeInfo & { id: string }>;
 };
 
 export type ProjectManifestInput = {
@@ -27,6 +29,7 @@ export type ProjectManifestInput = {
   requestedRecipes: string[];
   kitVersion?: string;
   createdAt?: string;
+  externalRecipes?: Array<ExternalRecipeInfo & { id: string }>;
 };
 
 export function projectManifestSchemaUrl(kitVersion: string = KIT_VERSION): string {
@@ -44,6 +47,9 @@ export function buildProjectManifest(input: ProjectManifestInput): ProjectManife
     recipes: [...input.recipes],
     requestedRecipes: [...input.requestedRecipes],
     createdAt: input.createdAt ?? new Date().toISOString(),
+    ...(input.externalRecipes && input.externalRecipes.length > 0
+      ? { externalRecipes: input.externalRecipes }
+      : {}),
   };
 }
 
@@ -85,6 +91,31 @@ export function parseProjectManifest(json: unknown): ProjectManifestParse {
       errors.push(`${PROJECT_MANIFEST_FILE} field '${field}' must be an array of strings.`);
     }
   }
+  let externalRecipes: ProjectManifest["externalRecipes"];
+  if (data.externalRecipes !== undefined) {
+    const list = data.externalRecipes;
+    const valid =
+      Array.isArray(list) &&
+      list.every(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as Record<string, unknown>).id === "string" &&
+          typeof (item as Record<string, unknown>).source === "string",
+      );
+    if (!valid) {
+      errors.push(
+        `${PROJECT_MANIFEST_FILE} field 'externalRecipes' must be an array of { id, source, ref?, sha? }.`,
+      );
+    } else {
+      externalRecipes = (list as Array<Record<string, unknown>>).map((item) => ({
+        id: item.id as string,
+        source: item.source as string,
+        ...(typeof item.ref === "string" ? { ref: item.ref } : {}),
+        ...(typeof item.sha === "string" ? { sha: item.sha } : {}),
+      }));
+    }
+  }
   if (errors.length > 0) {
     return { ok: false, errors };
   }
@@ -100,6 +131,7 @@ export function parseProjectManifest(json: unknown): ProjectManifestParse {
       recipes: [...(data.recipes as string[])],
       requestedRecipes: [...(data.requestedRecipes as string[])],
       createdAt: data.createdAt as string,
+      ...(externalRecipes ? { externalRecipes } : {}),
     },
   };
 }

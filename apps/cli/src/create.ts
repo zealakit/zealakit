@@ -18,6 +18,7 @@ import {
   type PackageManager,
   type PostGenerateResult,
   planIsReady,
+  type RecipeConfig,
   recordDiscoverySession,
   type ScaffoldConfig,
   type ScaffoldPlan,
@@ -27,6 +28,7 @@ import {
 import type { Command } from "commander";
 import pc from "picocolors";
 import { runDiscoveryQuery } from "./discovery/query.js";
+import { describeExternals, loadExternalSpecs, splitRecipeList } from "./external.js";
 import type { CliOptions } from "./options.js";
 import {
   failDiagnostic,
@@ -39,6 +41,7 @@ import { type GitResult, initGitRepository } from "./post-generate.js";
 import { getPreset, loadConfigDefaults, savePreset, validatePreset } from "./presets.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
+import { runStackCreate } from "./stack.js";
 import { resolveOverwritePolicy } from "./target-dir.js";
 
 type ResolvedCreateConfig = {
@@ -277,8 +280,8 @@ function applyPreset(base: CliOptions): CliOptions {
   };
 }
 
-async function askYesNo(message: string): Promise<boolean> {
-  const answer = await confirm({ message, initialValue: true });
+async function askYesNo(message: string, initialValue = true): Promise<boolean> {
+  const answer = await confirm({ message, initialValue });
   if (isCancel(answer)) {
     process.exit(ExitCode.OK);
   }
@@ -334,12 +337,35 @@ async function runCreate(
     packageManager = detectPackageManager(process.env.npm_config_user_agent);
   }
 
+  // External recipes (`./dir`, `github:owner/repo/path#ref`) are loaded as data and
+  // registered under their own id before the plan is built.
+  const split = splitRecipeList(resolved.config.recipeIds);
+  let externals: RecipeConfig[] = [];
+  if (split.external.length > 0) {
+    const loaded = await loadExternalSpecs(split.external, process.cwd());
+    if (loaded.errors.length > 0) {
+      printValidationErrors(loaded.errors);
+      return failed(ExitCode.VALIDATION, loaded.errors);
+    }
+    externals = loaded.recipes;
+    resolved.config = {
+      ...resolved.config,
+      recipeIds: [...split.builtin, ...externals.map((recipe) => recipe.id)],
+    };
+  }
+
   // One plan: defaults, id validation, dependency resolution and config
   // validation happen here, and the same plan is previewed or executed.
   const plan = buildScaffoldPlan({ ...resolved.config, packageManager }, process.cwd(), {
     requestedRecipeIds: resolved.config.recipeIds,
     manifest: options.manifest !== false,
   });
+
+  for (const recipe of externals) {
+    plan.warnings.push(
+      `External recipe '${recipe.id}' from ${recipe.external?.source ?? "?"}${recipe.external?.sha ? ` @ ${recipe.external.sha}` : ""} (data only).`,
+    );
+  }
 
   if (options.dryRun) {
     return { kind: "dry-run", plan };
@@ -348,6 +374,21 @@ async function runCreate(
   if (!planIsReady(plan)) {
     printValidationErrors(plan.blockers);
     return failed(ExitCode.VALIDATION, plan.blockers);
+  }
+
+  if (externals.length > 0 && options.trustExternal !== true) {
+    // Never apply untrusted recipes silently: a person must confirm, or opt in with a flag.
+    if (options.yes || !process.stdin.isTTY) {
+      const message =
+        "External recipes need confirmation: pass --trust-external to apply them non-interactively.";
+      printValidationErrors([message]);
+      return failed(ExitCode.USAGE, [message]);
+    }
+    printInfo(describeExternals(externals));
+    if (!(await askYesNo("Apply these external recipes?", false))) {
+      printInfo("Cancelled; no files were changed.");
+      return { kind: "cancelled" };
+    }
   }
 
   const overwrite = await resolveOverwritePolicy(plan.config.projectName, process.cwd(), options);
@@ -435,6 +476,14 @@ export async function runCreateAction(
   const presetOptions = applyPreset(rawOptions);
   // JSON mode never prompts: a non-empty target is refused unless --force.
   const options: CliOptions = json ? { ...presetOptions, yes: true } : presetOptions;
+
+  if (rawOptions.stack !== undefined) {
+    await runStackCreate(projectName, {
+      ...rawOptions,
+      git: rawOptions.git,
+      install: rawOptions.install,
+    });
+  }
 
   const session: { feedback: DiscoverySessionDraft | null } = { feedback: null };
   let result: CreateResult;
@@ -564,6 +613,14 @@ export function attachCreateOptions(command: Command): Command {
     .option(
       "--config <file>",
       "Config file with `defaults` and `presets` (highest precedence over project/user config)",
+    )
+    .option(
+      "--stack <members>",
+      "Create a workspace of several apps, e.g. web=next,api=hono (recipes: -w web:mui,api:prisma)",
+    )
+    .option(
+      "--trust-external",
+      "Apply external (path or github:) recipes without asking; required with -y or --json",
     )
     .option(
       "--preset <name>",

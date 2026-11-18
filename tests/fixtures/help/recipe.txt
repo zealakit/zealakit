@@ -1,0 +1,13 @@
+Usage: zealakit recipe [options] [command]
+
+Author external recipes (data-only folders with recipe.json)
+
+Options:
+  -h, --help                display help for command
+
+Commands:
+  init [options] <name>     Create a recipe folder with recipe.json, shared/,
+                            scaffold/ and an agent skill
+  validate [options] <dir>  Check a recipe folder: schema, no symlinks/code, and
+                            staging against every compatible template
+  help [command]            display help for command

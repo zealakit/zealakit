@@ -19,10 +19,12 @@ import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
 import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
+import { registerMcpCommand } from "./mcp.js";
 import type { CliOptions } from "./options.js";
 import { registerOutdatedCommand } from "./outdated.js";
-import { failDiagnostic, printWarning } from "./output.js";
+import { failDiagnostic } from "./output.js";
 import { registerPresetCommands } from "./preset-commands.js";
+import { registerRecipeCommands } from "./recipe-commands.js";
 
 registerNodeEcosystem();
 registerGoEcosystem();
@@ -46,7 +48,7 @@ const program = new Command();
 program
   .name("zealakit")
   .description(
-    "Recipe-based project scaffolding. Prefer `zealakit create` (supports --discover and --template). The root form `zealakit [name] -t …` is deprecated.",
+    "Recipe-based project scaffolding. Start with `zealakit create` (supports --discover and --template).",
   )
   .version(readKitManifest().version)
   .enablePositionalOptions();
@@ -67,33 +69,29 @@ attachCreateOptions(
     await runCreateAction(projectName, options);
   });
 
-// Backward-compatible root scaffold (`zealakit [name] -t …`) plus --info alias.
-attachCreateOptions(program)
+// The root scaffold form (`zealakit [name] -t …`) was removed; `--info` stays as an alias.
+program
   .option("--info", "Print kit metadata (alias of `zealakit info`)")
   .option("--json", "With --info: print only machine-readable JSON")
-  .action(async (projectName: string | undefined, options: CliOptions) => {
+  .argument("[removed...]")
+  .usage("[options] [command]")
+  .allowUnknownOption()
+  .action((args: string[], options: { info?: boolean; json?: boolean }) => {
     if (options.info) {
-      // Filters live on `zealakit info`; the root alias stays flag-compatible.
       process.exitCode = runInfo({ json: options.json === true });
       return;
     }
-    if (options.json) {
+    if (args.length > 0 || process.argv.slice(2).length > 0) {
       failDiagnostic(
         {
-          title: "Invalid usage",
-          reason: "Flag --json requires --info.",
-          resolution: "Use `zealakit info --json` or `zealakit --info --json`.",
+          title: "Unknown command",
+          reason: `'zealakit ${process.argv.slice(2).join(" ")}' is not a command. The root scaffold form \`zealakit [name] -t …\` was removed in this beta.`,
+          resolution: "Run: zealakit create <project-name> [options]   (see `zealakit --help`)",
         },
         ExitCode.USAGE,
       );
     }
-
-    if (projectName || options.template || options.with) {
-      printWarning(
-        "⚠ `zealakit [name] -t …` is deprecated and will be removed; use `zealakit create [name] -t …`.",
-      );
-    }
-    await runCreateAction(projectName, options);
+    program.help();
   });
 
 program
@@ -140,6 +138,8 @@ registerDiscoveryCommands(program);
 registerPresetCommands(program);
 registerAddCommand(program);
 registerOutdatedCommand(program);
+registerRecipeCommands(program);
+registerMcpCommand(program);
 
 /** Commander exits directly per command; override nested ones so parse errors map to usage. */
 function overrideCommanderExit(command: Command): void {

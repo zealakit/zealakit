@@ -132,6 +132,14 @@ export {
 } from "./project/checks.js";
 export { unifiedDiff } from "./project/diff.js";
 export {
+  buildStackPlan,
+  executeStackPlan,
+  parseStackSpec,
+  readStackManifest,
+  type StackPlan,
+  stackMemberDir,
+} from "./project/stack.js";
+export {
   buildProjectManifest,
   parseProjectManifest,
   readProjectManifest,
@@ -142,6 +150,18 @@ export {
   type PromptStep,
   STEPS_BY_SCOPE,
 } from "./prompts/steps.js";
+export {
+  loadRecipeDirectory,
+  parseRecipeData,
+  RECIPE_DATA_SCHEMA_VERSION,
+} from "./recipes/data.js";
+export {
+  type FetchLike,
+  isExternalRecipeSpec,
+  parseExternalSpec,
+  resolveExternalRecipe,
+  unsafeArchiveEntries,
+} from "./recipes/external.js";
 export {
   clearRegistry,
   DEFAULT_TEMPLATE_ID,
@@ -179,6 +199,7 @@ export {
   type ScaffoldPlan,
   scaffoldProject,
   setManifestAdapter,
+  stagePlan,
   validateGeneratedOutput,
 } from "./scaffold/index.js";
 export type { PostGenerateResult } from "./scaffold/manifest.js";

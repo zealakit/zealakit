@@ -57,6 +57,10 @@ function writeProjectManifest(plan: ScaffoldPlan, targetDir: string): void {
         template: plan.config.templateId,
         recipes: plan.config.recipeIds,
         requestedRecipes: plan.selectedIds,
+        externalRecipes: plan.config.recipeIds.flatMap((id) => {
+          const external = getRecipe(id)?.external;
+          return external ? [{ id, ...external }] : [];
+        }),
       }),
     ),
     "utf-8",

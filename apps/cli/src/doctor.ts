@@ -1,11 +1,18 @@
 import path from "node:path";
-import { checkProject, ExitCode, type ProjectReport } from "@zealakit/core/internal";
+import {
+  checkProject,
+  ExitCode,
+  type ProjectReport,
+  readStackManifest,
+  stackMemberDir,
+} from "@zealakit/core/internal";
 import {
   detectGoEnvironment,
   type GoEnvironmentReport,
   type ToolchainStatus,
 } from "@zealakit/ecosystem-go";
 import pc from "picocolors";
+import { loadProjectExternals } from "./external.js";
 import { readKitManifest } from "./manifest.js";
 import { printInfo } from "./output.js";
 
@@ -34,6 +41,8 @@ export type DoctorReport = {
   go: GoEnvironmentReport;
   /** Present when the checked directory contains `zealakit.json`. */
   project?: ProjectReport;
+  /** Per-app reports when the directory is a stack workspace. */
+  stack?: Record<string, ProjectReport>;
 };
 
 function parseNodeMajor(version: string): number | undefined {
@@ -145,6 +154,18 @@ function formatDoctorHuman(report: DoctorReport): string {
       lines.push(`  ${icon} ${check.message}${check.fix ? pc.dim(`  → ${check.fix}`) : ""}`);
     }
   }
+  for (const [name, member] of Object.entries(report.stack ?? {})) {
+    lines.push("", pc.bold(`Stack app: ${name}`), field("Directory:", member.dir));
+    for (const check of member.checks) {
+      const icon = {
+        ok: pc.green("✔"),
+        warn: pc.yellow("⚠"),
+        fail: pc.red("✖"),
+        info: pc.cyan("i"),
+      }[check.status];
+      lines.push(`  ${icon} ${check.message}${check.fix ? pc.dim(`  → ${check.fix}`) : ""}`);
+    }
+  }
   return lines.join("\n");
 }
 
@@ -154,7 +175,25 @@ export async function buildDoctorReport(options: DoctorOptions = {}): Promise<Do
   const go = await detectGoEnvironment({
     minimumVersion: options.minGoVersion,
   });
-  const project = checkProject(path.resolve(options.cwd ?? process.cwd()));
+  const projectDir = path.resolve(options.cwd ?? process.cwd());
+  await loadProjectExternals(projectDir); // so external recipe files are checked too
+  const stack = readStackManifest(projectDir);
+  if (stack?.ok) {
+    const members: Record<string, ProjectReport> = {};
+    for (const [name, member] of Object.entries(stack.manifest.stack)) {
+      const memberDir =
+        stackMemberDir(projectDir, stack.manifest, name) ?? path.join(projectDir, member.dir);
+      await loadProjectExternals(memberDir);
+      members[name] = checkProject(memberDir);
+    }
+    return {
+      zealakit: { name: manifest.name, version: manifest.version },
+      node,
+      go,
+      stack: members,
+    };
+  }
+  const project = checkProject(projectDir);
   return {
     zealakit: { name: manifest.name, version: manifest.version },
     node,
@@ -176,7 +215,12 @@ export function doctorExitCode(report: DoctorReport, options: DoctorOptions = {}
   if (report.node.status === "incompatible") {
     return ExitCode.VALIDATION;
   }
-  if (report.project?.checks.some((check) => check.status === "fail")) {
+  if (
+    report.project?.checks.some((check) => check.status === "fail") ||
+    Object.values(report.stack ?? {}).some((member) =>
+      member.checks.some((check) => check.status === "fail"),
+    )
+  ) {
     return ExitCode.VALIDATION;
   }
   if (options.minGoVersion && report.go.status !== "ready") {

@@ -1,7 +1,14 @@
 import path from "node:path";
-import { computeOutdated, ExitCode, type OutdatedReport } from "@zealakit/core/internal";
+import {
+  computeOutdated,
+  ExitCode,
+  type OutdatedReport,
+  readStackManifest,
+  stackMemberDir,
+} from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+import { loadProjectExternals } from "./external.js";
 import { printInfo, printValidationErrors } from "./output.js";
 
 function formatReport(report: OutdatedReport): string {
@@ -65,8 +72,39 @@ export function registerOutdatedCommand(program: Command): void {
     )
     .option("--cwd <dir>", "Project directory (default: current directory)")
     .option("--json", "Machine-readable output")
-    .action((options: { cwd?: string; json?: boolean }) => {
-      const report = computeOutdated(path.resolve(options.cwd ?? process.cwd()));
+    .action(async (options: { cwd?: string; json?: boolean }) => {
+      const dir = path.resolve(options.cwd ?? process.cwd());
+      const stack = readStackManifest(dir);
+      let report: OutdatedReport;
+      if (stack?.ok) {
+        // Aggregate every app; entries are tagged with the app they belong to.
+        report = {
+          kitVersion: { project: stack.manifest.kitVersion, installed: "", status: "same" },
+          entries: [],
+          blockers: [],
+        };
+        for (const name of Object.keys(stack.manifest.stack)) {
+          const memberDir = stackMemberDir(dir, stack.manifest, name);
+          if (!memberDir) continue;
+          const restoredMember = await loadProjectExternals(memberDir);
+          const memberReport = computeOutdated(memberDir);
+          report.kitVersion = memberReport.kitVersion;
+          report.entries.push(
+            ...memberReport.entries.map((entry) => ({
+              ...entry,
+              source: `${name}/${entry.source}`,
+            })),
+          );
+          report.blockers.push(
+            ...memberReport.blockers.map((b) => `[${name}] ${b}`),
+            ...restoredMember.errors,
+          );
+        }
+      } else {
+        const restored = await loadProjectExternals(dir);
+        report = computeOutdated(dir);
+        report.blockers.push(...restored.errors);
+      }
       if (report.blockers.length > 0) {
         if (options.json)
           printInfo(

@@ -86,6 +86,16 @@ export type FinalizeContext = {
   config: ScaffoldConfig;
 };
 
+/** Provenance of a recipe loaded from outside the kit (data-only: no code runs). */
+export type ExternalRecipeInfo = {
+  /** What the user typed (`./path` or `github:owner/repo/path#ref`). */
+  source: string;
+  /** Git ref requested, when any. */
+  ref?: string;
+  /** Resolved commit SHA for GitHub sources. */
+  sha?: string;
+};
+
 export type RecipeConfig = {
   id: string;
   name: string;
@@ -127,6 +137,8 @@ export type RecipeConfig = {
    * to the `recipes/<ecosystem>/` path prefix for unregistered configs.
    */
   ecosystem?: EcosystemId;
+  /** Set for recipes loaded from `recipe.json` outside the kit. */
+  external?: ExternalRecipeInfo;
   /** Discovery metadata (authored next to the recipe; `id` is implied). */
   discovery?: Omit<RecipeProfile, "id">;
   /** Ecosystem-specific package/module contributions; each adapter reads its own branch. */

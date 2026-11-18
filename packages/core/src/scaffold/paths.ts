@@ -38,7 +38,9 @@ export const RECIPES_DIR = path.join(PACKAGE_ROOT, "recipes");
 export const RECIPE_OVERLAYS_DIR = "overlays";
 export const RECIPE_SHARED_DIR = "shared";
 export const RECIPE_SCAFFOLD_DIR = "scaffold";
+/** Names at a recipe root that are never copied into projects (folders and `recipe.json`). */
 export const RECIPE_META_DIRS = new Set([
+  "recipe.json",
   RECIPE_OVERLAYS_DIR,
   RECIPE_SHARED_DIR,
   RECIPE_SCAFFOLD_DIR,
@@ -57,6 +59,8 @@ export function getRecipeDir(recipeId: string): string {
   if (!recipe) {
     throw new Error(`Recipe does not exist: ${recipeId}`);
   }
+  // External recipes live outside the kit; their `path` is an absolute directory.
+  if (recipe.path && path.isAbsolute(recipe.path)) return recipe.path;
   return path.join(RECIPES_DIR, recipe.path ?? recipe.id);
 }
 

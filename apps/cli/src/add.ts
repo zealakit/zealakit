@@ -12,10 +12,18 @@ import {
   PACKAGE_MANAGERS,
   type PackageManager,
   planAddRecipes,
+  readStackManifest,
+  stackMemberDir,
   validateRecipeIds,
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+import {
+  describeExternals,
+  loadExternalSpecs,
+  loadProjectExternals,
+  splitRecipeList,
+} from "./external.js";
 import {
   failDiagnostic,
   printError,
@@ -33,6 +41,9 @@ export type AddOptions = {
   install?: boolean;
   pm?: string;
   json?: boolean;
+  trustExternal?: boolean;
+  /** Stack member to add to (workspace projects). */
+  app?: string;
 };
 
 const LOCKFILES: Array<[string, PackageManager]> = [
@@ -170,7 +181,7 @@ async function ask(message: string): Promise<boolean> {
 
 export async function runAdd(recipeIds: string[], options: AddOptions): Promise<void> {
   const json = options.json === true;
-  const dir = path.resolve(options.cwd ?? process.cwd());
+  let dir = path.resolve(options.cwd ?? process.cwd());
   const fail = (code: ExitCode, messages: string[]): never => {
     if (json) {
       process.stdout.write(
@@ -182,7 +193,31 @@ export async function runAdd(recipeIds: string[], options: AddOptions): Promise<
     process.exit(code);
   };
 
-  const unique = [...new Set(recipeIds)];
+  // A stack root only indexes its apps: recipes are added to one member project.
+  const stack = readStackManifest(dir);
+  if (stack?.ok) {
+    const member = options.app ? stackMemberDir(dir, stack.manifest, options.app) : undefined;
+    if (!member) {
+      fail(ExitCode.USAGE, [
+        `This is a stack workspace; choose an app with --app <name> (${Object.keys(stack.manifest.stack).join(", ")}).`,
+      ]);
+    } else {
+      dir = member;
+    }
+  } else if (options.app) {
+    fail(ExitCode.USAGE, [
+      "--app only applies to stack workspaces (a root zealakit.json with schemaVersion 2).",
+    ]);
+  }
+
+  // Recipes the project was generated with from outside the kit must be known to plan.
+  const restored = await loadProjectExternals(dir);
+  if (restored.errors.length > 0) fail(ExitCode.VALIDATION, restored.errors);
+
+  const split = splitRecipeList([...new Set(recipeIds)]);
+  const loaded = await loadExternalSpecs(split.external, dir);
+  if (loaded.errors.length > 0) fail(ExitCode.VALIDATION, loaded.errors);
+  const unique = [...split.builtin, ...loaded.recipes.map((recipe) => recipe.id)];
   const idsCheck = validateRecipeIds(unique);
   if (!idsCheck.valid) fail(ExitCode.VALIDATION, idsCheck.errors);
 
@@ -227,6 +262,19 @@ export async function runAdd(recipeIds: string[], options: AddOptions): Promise<
   }
 
   if (!json) printInfo(formatPreview(plan));
+
+  if (loaded.recipes.length > 0 && !options.trustExternal) {
+    if (options.yes || json || !process.stdin.isTTY) {
+      fail(ExitCode.USAGE, [
+        "External recipes need confirmation: pass --trust-external to apply them non-interactively.",
+      ]);
+    }
+    printInfo(describeExternals(loaded.recipes));
+    if (!(await ask("Apply these external recipes?"))) {
+      printInfo("Cancelled; no files were changed.");
+      process.exit(ExitCode.OK);
+    }
+  }
 
   if (!options.yes && !(await ask("Apply these changes?"))) {
     printInfo("Cancelled; no files were changed.");
@@ -306,6 +354,8 @@ export function registerAddCommand(program: Command): void {
       "--pm <manager>",
       `Package manager for install (${PACKAGE_MANAGERS.join(", ")}; default: from lockfile)`,
     )
+    .option("--app <name>", "Stack member to add to (workspace projects)")
+    .option("--trust-external", "Apply external (path or github:) recipes without asking")
     .option("--json", "Machine-readable output (needs -y or --dry-run)")
     .action(async (recipes: string[], options: AddOptions) => {
       await runAdd(recipes, options);

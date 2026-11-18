@@ -20,6 +20,10 @@ export type CliOptions = {
   manifest?: boolean;
   /** Config file with `defaults` / `presets` (overrides the project and user files). */
   config?: string;
+  /** Create a workspace with several apps, e.g. `web=next,api=hono`. */
+  stack?: string;
+  /** Allow external (path / github:) recipes without an interactive confirmation. */
+  trustExternal?: boolean;
   /** Apply a saved preset (flags override it). */
   preset?: string;
   /** Save the chosen template/recipes as a user preset after success. */

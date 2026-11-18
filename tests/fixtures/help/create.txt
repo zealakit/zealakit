@@ -36,6 +36,10 @@ Options:
   --no-manifest              Do not write zealakit.json into the project
   --config <file>            Config file with `defaults` and `presets` (highest
                              precedence over project/user config)
+  --stack <members>          Create a workspace of several apps, e.g.
+                             web=next,api=hono (recipes: -w web:mui,api:prisma)
+  --trust-external           Apply external (path or github:) recipes without
+                             asking; required with -y or --json
   --preset <name>            Apply a saved preset (see `zealakit preset list`);
                              flags override it
   --save-preset <name>       Save the chosen template and recipes as a user

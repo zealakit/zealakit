@@ -352,6 +352,16 @@ function resolveInside(root: string, relative: string): string {
   return target;
 }
 
+/** Existing `externalRecipes` plus any newly added external recipe, keyed by id. */
+function mergeExternals(plan: AddPlan): Pick<ProjectManifest, "externalRecipes"> {
+  const byId = new Map((plan.manifest.externalRecipes ?? []).map((item) => [item.id, item]));
+  for (const id of plan.config.recipeIds) {
+    const external = getRecipe(id)?.external;
+    if (external) byId.set(id, { id, ...external });
+  }
+  return byId.size > 0 ? { externalRecipes: [...byId.values()] } : {};
+}
+
 /**
  * Write only the changed files. Overwritten files are backed up under
  * `.zealakit/backup-<ts>/` and restored if anything fails; the backup is
@@ -408,6 +418,7 @@ export function applyAddPlan(plan: AddPlan, options: ApplyAddOptions = {}): Appl
       serializeProjectManifest({
         ...plan.manifest,
         recipes: plan.config.recipeIds,
+        ...mergeExternals(plan),
         requestedRecipes: [
           ...plan.manifest.requestedRecipes,
           ...plan.added.filter((id) => !plan.manifest.requestedRecipes.includes(id)),

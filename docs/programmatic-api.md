@@ -4,17 +4,16 @@ Zealakit can be used from TypeScript without invoking the CLI. The API is a thin
 façade over the same registry, metadata query layer, Discovery engine, and
 scaffold pipeline used by `zealakit create`.
 
-**Distribution:** the published npm package (`zealakit`) currently ships the CLI
-(`dist/index.js`) plus templates/recipes. The programmatic API is consumed from
-the workspace packages `@zealakit/core` and `@zealakit/ecosystem-node` /
-`@zealakit/ecosystem-go` (source exports with full types). A published `/api`
-subpath is not part of this release.
+**Distribution:** the npm package `zealakit` ships the API as the `zealakit/api` subpath (ESM, with bundled types) next to the CLI. Inside this repo the same code is `@zealakit/core` plus `@zealakit/ecosystem-node` / `@zealakit/ecosystem-go`.
+
+```ts
+import { createZealakit, goEcosystem, nodeEcosystem } from "zealakit/api";
+```
 
 ## Requirements
 
 - Node.js 22.12+
-- Import from the workspace/source TypeScript packages; no terminal, TTY, or
-  `@clack/prompts` is involved.
+- No terminal, TTY, `@clack/prompts` or `process.exit` is involved.
 
 ## Register ecosystems
 
@@ -22,8 +21,7 @@ Registration is explicit and process-global; `createZealakit` never imports
 ecosystem packages. Use only the ecosystems you need.
 
 ```ts
-import { createZealakit } from "@zealakit/core";
-import { nodeEcosystem } from "@zealakit/ecosystem-node";
+import { createZealakit, nodeEcosystem } from "zealakit/api";
 
 const zealakit = createZealakit({ ecosystems: [nodeEcosystem] });
 ```
@@ -31,8 +29,6 @@ const zealakit = createZealakit({ ecosystems: [nodeEcosystem] });
 Both ecosystems:
 
 ```ts
-import { goEcosystem } from "@zealakit/ecosystem-go";
-
 const zealakit = createZealakit({
   ecosystems: [nodeEcosystem, goEcosystem],
 });
@@ -120,3 +116,18 @@ console.log(result.outputDirectory); // absolute target directory
 | `ScaffoldCommitError` (backup/temp paths on the error) | filesystem/commit failures                               |
 
 No exit codes are used by the programmatic API.
+
+## Existing projects
+
+```ts
+const plan = zealakit.project.planAdd("./my-app", ["zustand"]); // read-only
+if (plan.blockers.length === 0) zealakit.project.applyAdd(plan); // conflicts are kept
+const report = zealakit.project.check("./my-app"); // doctor
+const outdated = zealakit.project.outdated("./my-app");
+```
+
+`planAdd` / `applyAdd` have the same semantics as `zealakit add` (see the README).
+
+## Stability
+
+`zealakit/api` follows `docs/stability.md`: the runtime export list is locked by `tests/unit/api-public-exports.test.ts`, and the packed tarball is installed, executed and type-checked by `pnpm test:pack`.

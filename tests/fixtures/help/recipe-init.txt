@@ -1,0 +1,8 @@
+Usage: zealakit recipe init [options] <name>
+
+Create a recipe folder with recipe.json, shared/, scaffold/ and an agent skill
+
+Options:
+  --dir <dir>              Target directory (default: ./<name>)
+  --ecosystem <ecosystem>  node (default) or go
+  -h, --help               display help for command

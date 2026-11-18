@@ -31,13 +31,13 @@
     "!templates/**/pnpm-lock.yaml"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p apps/api/tsconfig.build.json",
     "dev": "tsup --watch",
     "check": "biome check .",
     "check:write": "biome check --write .",
     "format": "biome format --write .",
     "check:exports": "tsx scripts/check-exports.ts",
-    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/ecosystem-node/tsconfig.json && tsc --noEmit -p packages/ecosystem-go/tsconfig.json && tsc --noEmit -p apps/cli/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p monitor/tsconfig.json",
+    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/ecosystem-node/tsconfig.json && tsc --noEmit -p packages/ecosystem-go/tsconfig.json && tsc --noEmit -p apps/cli/tsconfig.json && tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p monitor/tsconfig.json",
     "test": "tsx scripts/test.ts",
     "test:unit": "tsx scripts/test.ts --unit",
     "test:scaffold": "tsx scripts/test.ts --scaffold",
@@ -94,5 +94,15 @@
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  }
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./api": {
+      "types": "./dist/types/apps/api/src/index.d.ts",
+      "import": "./dist/api.js"
+    },
+    "./schema/*": "./schema/*",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/types/apps/api/src/index.d.ts"
 }
