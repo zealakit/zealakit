@@ -5,6 +5,11 @@ import { ScaffoldValidationError } from "../diagnostics.js";
 import { fse } from "../fs-extra.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import type { RecipeConfig, ScaffoldConfig } from "../types.js";
+import {
+  directoryHasFiles,
+  nonEmptyTargetMessage,
+  type OverwritePolicy,
+} from "../validation/target-dir.js";
 import { applyAgentEntry, ensureCursorAgentsSymlink } from "./agent-docs.js";
 import { commitStagedDirectory } from "./commit.js";
 import { copyRecipe, copyTemplate, foldIntoSrcDir } from "./copy.js";
@@ -20,6 +25,7 @@ export {
   getManifestAdapterForConfig,
   type ManifestAdapter,
   type ManifestFieldConflict,
+  type NextSteps,
   type PackagePlan,
   resolveTemplateEcosystem,
   setManifestAdapter,
@@ -55,28 +61,43 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
 
   for (const recipe of recipes) {
     copyRecipe(recipe.id, template.id, targetDir);
-    assertStagingSymlinksSafe(targetDir);
     foldIntoSrcDir(template, targetDir);
     applyAgentEntry(recipe.id, targetDir);
     applyFileTransforms(recipe, template.id, targetDir);
   }
+
+  // Recipes are bundled and every transform/fold re-checks its real path, so one
+  // full walk after all copies (before finalizers write) is enough.
+  assertStagingSymlinksSafe(targetDir);
 
   runFinalizers(recipes, targetDir);
   getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
   ensureCursorAgentsSymlink(targetDir);
 }
 
+export type ExecutePlanOptions = {
+  /**
+   * `refuse` throws when the destination already has files; `allow` replaces it
+   * (the caller has obtained consent). Omit to leave the check to the caller.
+   */
+  overwrite?: OverwritePolicy;
+};
+
 /**
- * Pipeline: preflight plan → stage → validate → commit.
- * Callers must still confirm destination overwrite (`validateTargetDirectory`).
+ * Pipeline back half: stage → validate output → commit. Takes a plan that
+ * `buildScaffoldPlan` already produced, so dependency resolution and config
+ * validation run exactly once per scaffold.
  */
-export async function scaffoldProject(
-  config: ScaffoldConfig,
-  cwd: string = process.cwd(),
+export async function executeScaffoldPlan(
+  plan: ScaffoldPlan,
+  options: ExecutePlanOptions = {},
 ): Promise<string> {
-  const plan = buildScaffoldPlan(config, cwd);
   if (!planIsReady(plan)) {
     throw new ScaffoldValidationError(plan.blockers.join("\n"), plan.blockers);
+  }
+  if (options.overwrite === "refuse" && directoryHasFiles(plan.targetDir)) {
+    const message = nonEmptyTargetMessage(plan.config.projectName);
+    throw new ScaffoldValidationError(message, [message]);
   }
 
   const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-stage-"));
@@ -102,4 +123,16 @@ export async function scaffoldProject(
     }
     throw error;
   }
+}
+
+/**
+ * Convenience: `executeScaffoldPlan(buildScaffoldPlan(config))`.
+ * Callers must still decide the destination overwrite policy.
+ */
+export async function scaffoldProject(
+  config: ScaffoldConfig,
+  cwd: string = process.cwd(),
+  options: ExecutePlanOptions = {},
+): Promise<string> {
+  return executeScaffoldPlan(buildScaffoldPlan(config, cwd), options);
 }

@@ -10,7 +10,7 @@ import {
   STEPS_BY_SCOPE,
   type TemplateConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
 import { type DiscoveryPromptResult, runDiscoveryPrompts } from "./discovery/flow.js";

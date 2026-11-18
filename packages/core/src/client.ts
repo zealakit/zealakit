@@ -1,5 +1,4 @@
 import { ECOSYSTEMS } from "./constants.js";
-import { ScaffoldValidationError } from "./diagnostics.js";
 import {
   DISCOVERY_API_SCHEMA_VERSION,
   type DiscoveryApiErrorCode,
@@ -19,10 +18,9 @@ import {
   type RecipeMetadata,
   type TemplateMetadata,
 } from "./info/index.js";
-import { scaffoldProject } from "./scaffold/index.js";
+import { executeScaffoldPlan } from "./scaffold/index.js";
 import { buildScaffoldPlan, type ScaffoldPlan } from "./scaffold/plan.js";
 import type { EcosystemId, ScaffoldConfig } from "./types.js";
-import { validateScaffoldInput } from "./validation/index.js";
 
 /**
  * Explicit ecosystem registration for programmatic consumers.
@@ -175,13 +173,10 @@ export function createZealakit(options: ZealakitOptions = {}): Zealakit {
       },
       async create(config, createOptions = {}) {
         const cwd = createOptions.cwd ?? process.cwd();
-        // Same non-interactive safety check the CLI uses (`yes` refuses non-empty
-        // targets without prompting) before the staging/commit pipeline writes.
-        const validation = await validateScaffoldInput(config, cwd, { yes: true });
-        if (!validation.valid) {
-          throw new ScaffoldValidationError(validation.errors.join("\n"), validation.errors);
-        }
-        const outputDirectory = await scaffoldProject(config, cwd);
+        // One plan drives validation and execution. Programmatic callers never
+        // get a prompt: a non-empty target is refused.
+        const plan = buildScaffoldPlan(config, cwd);
+        const outputDirectory = await executeScaffoldPlan(plan, { overwrite: "refuse" });
         return {
           outputDirectory,
           projectName: config.projectName,

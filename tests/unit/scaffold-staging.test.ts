@@ -17,7 +17,7 @@ import {
   type RecipeConfig,
   resolveStagingPath,
   type ScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { goManifestAdapter } from "@zealakit/ecosystem-go";
 import { walkFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
@@ -49,9 +49,7 @@ function recipeWith(transforms: NonNullable<RecipeConfig["fileTransforms"]>): Re
     name: "Test recipe",
     category: "utils",
     supportedScopes: "all",
-    packages: {},
-    devDependencies: {},
-    scripts: {},
+    manifest: { ecosystem: "node", packages: {}, devDependencies: {}, scripts: {} },
     fileTransforms: transforms,
   };
 }

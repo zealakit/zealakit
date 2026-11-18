@@ -148,7 +148,8 @@ npx zealakit@latest create [project-name] [options]
 | `--discover`           | Project Discovery — recommend a template/recipes from your requirements |
 | `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                 |
 | `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                       |
-| `-y, --yes`            | Non-interactive mode (requires a project name)                          |
+| `-y, --yes`            | Non-interactive; refuses a non-empty target (needs a project name)      |
+| `--force`              | Overwrite a non-empty target directory without asking                   |
 | `--dry-run`            | Preview the plan without writing files                                  |
 | `-h, --help`           | Show help                                                               |
 | `-V, --version`        | Show version                                                            |

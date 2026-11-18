@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core";
+import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core/ecosystem";
 import { defineRecipe } from "./define.js";
 
 /**
@@ -24,6 +24,7 @@ function dropNestedRootFlag(targetDir: string): void {
 
 export default defineRecipe({
   id: "biome",
+  discovery: { capabilities: [], alwaysRelevant: true },
   name: "Biome",
   hint: "Fast, all-in-one — recommended",
   category: "linter",

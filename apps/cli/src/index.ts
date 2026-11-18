@@ -1,9 +1,7 @@
 import {
   CAPABILITIES,
-  type CliOptions,
   ECOSYSTEMS,
   ExitCode,
-  failDiagnostic,
   getRecipeIds,
   getTemplateIds,
   PROJECT_TYPES,
@@ -11,7 +9,7 @@ import {
   SCOPES,
   UI_FRAMEWORKS,
   validateProfiles,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 import { Command, CommanderError } from "commander";
@@ -20,6 +18,8 @@ import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
 import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
+import type { CliOptions } from "./options.js";
+import { failDiagnostic } from "./output.js";
 
 registerNodeEcosystem();
 registerGoEcosystem();
@@ -32,7 +32,7 @@ if (!profiles.valid) {
       title: "Invalid Discovery profiles",
       reason: profiles.errors.join("\n"),
       resolution:
-        "Fix the profile registry in packages/core/src/profiles/ or the ecosystem registration.",
+        "Fix the `discovery` metadata on the template/recipe definitions in the ecosystem packages.",
     },
     ExitCode.INTERNAL,
   );

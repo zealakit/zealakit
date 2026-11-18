@@ -1,8 +1,17 @@
-import type { TemplateConfig } from "@zealakit/core";
+import type { TemplateConfig } from "@zealakit/core/ecosystem";
 
 export const templateList: TemplateConfig[] = [
   {
     id: "vite-react",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["saas", "business", "internal-tool", "prototype", "learning"],
+      frontendModes: ["spa"],
+      delivery: "vite",
+      capabilities: ["web-ui"],
+      deploymentTargets: ["static-hosting"],
+      architectureLevels: ["minimal"],
+    },
     name: "Vite + React",
     label: "Vite + React + TypeScript",
     scope: "client",
@@ -12,6 +21,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "vite-vue",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["saas", "business", "internal-tool", "prototype", "learning"],
+      frontendModes: ["spa"],
+      delivery: "vite",
+      capabilities: ["web-ui"],
+      deploymentTargets: ["static-hosting"],
+      architectureLevels: ["minimal"],
+    },
     name: "Vite + Vue",
     label: "Vite + Vue + TypeScript",
     scope: "client",
@@ -21,6 +39,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "vite-svelte",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["saas", "business", "internal-tool", "prototype", "learning"],
+      frontendModes: ["spa"],
+      delivery: "vite",
+      capabilities: ["web-ui"],
+      deploymentTargets: ["static-hosting"],
+      architectureLevels: ["minimal"],
+    },
     name: "Vite + Svelte",
     label: "Vite + Svelte + TypeScript",
     scope: "client",
@@ -30,6 +57,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "astro-react-client",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["content-platform", "business", "prototype", "learning"],
+      frontendModes: ["static", "ssg", "islands"],
+      delivery: "astro",
+      capabilities: ["web-ui"],
+      deploymentTargets: ["static-hosting"],
+      architectureLevels: ["minimal"],
+    },
     name: "Astro + React",
     label: "Astro + React + TypeScript",
     scope: "client",
@@ -39,6 +75,16 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "astro-react-hybrid",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["content-platform", "saas", "business", "prototype"],
+      frontendModes: ["ssr", "islands", "hybrid"],
+      delivery: "astro",
+      backend: { runtimes: ["node"] },
+      capabilities: ["web-ui", "http-api"],
+      deploymentTargets: ["container", "vps", "serverless"],
+      architectureLevels: ["balanced"],
+    },
     name: "Astro + React (Hybrid)",
     label: "Astro + React hybrid (SSR, Actions, Sessions)",
     scope: "hybrid",
@@ -49,6 +95,16 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "next",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["saas", "business", "ecommerce", "content-platform", "internal-tool", "prototype"],
+      frontendModes: ["ssr", "ssg", "hybrid"],
+      delivery: "next",
+      backend: { runtimes: ["node"] },
+      capabilities: ["web-ui", "http-api"],
+      deploymentTargets: ["serverless", "container", "vps", "static-hosting"],
+      architectureLevels: ["balanced"],
+    },
     name: "Next.js",
     label: "Next.js App Router + TypeScript",
     scope: "hybrid",
@@ -58,6 +114,16 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "nuxt",
+    discovery: {
+      projectTypes: ["ui"],
+      purposes: ["saas", "business", "content-platform", "prototype", "internal-tool"],
+      frontendModes: ["ssr", "ssg", "hybrid", "spa"],
+      delivery: "nuxt",
+      backend: { runtimes: ["node"] },
+      capabilities: ["web-ui", "http-api"],
+      deploymentTargets: ["serverless", "container", "vps", "static-hosting"],
+      architectureLevels: ["balanced"],
+    },
     name: "Nuxt",
     label: "Nuxt + TypeScript",
     scope: "hybrid",
@@ -68,6 +134,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "nest",
+    discovery: {
+      projectTypes: ["server-api"],
+      purposes: ["api-service", "saas", "business", "internal-tool"],
+      backend: { runtimes: ["node"], frameworks: ["nest"] },
+      capabilities: ["http-api"],
+      deploymentTargets: ["container", "vps", "serverless"],
+      architectureLevels: ["structured"],
+      trafficExpectations: ["low", "medium", "high"],
+    },
     name: "NestJS",
     label: "NestJS + TypeScript",
     scope: "server",
@@ -77,6 +152,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "hono",
+    discovery: {
+      projectTypes: ["server-api"],
+      purposes: ["api-service", "saas", "developer-tool", "prototype"],
+      backend: { runtimes: ["node"], frameworks: ["hono"] },
+      capabilities: ["http-api"],
+      deploymentTargets: ["container", "vps", "serverless"],
+      architectureLevels: ["balanced"],
+      trafficExpectations: ["low", "medium", "high"],
+    },
     name: "Hono",
     label: "Hono + TypeScript",
     scope: "server",

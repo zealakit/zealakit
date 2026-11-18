@@ -148,7 +148,8 @@ npx zealakit@latest create [tên-project] [options]
 | `--discover`           | Project Discovery — gợi ý template/recipe từ yêu cầu của bạn   |
 | `-t, --template <id>`  | Tự chọn template gốc (mặc định: `vite-react`)                  |
 | `-w, --with <recipes>` | Danh sách recipe, cách nhau bởi dấu phẩy (vd. `biome,zustand`) |
-| `-y, --yes`            | Chế độ không hỏi (bắt buộc có tên project)                     |
+| `-y, --yes`            | Không hỏi; từ chối thư mục đích không rỗng (cần tên project)   |
+| `--force`              | Ghi đè thư mục đích không rỗng mà không hỏi                    |
 | `--dry-run`            | Xem trước kế hoạch, không ghi file                             |
 | `-h, --help`           | Xem trợ giúp                                                   |
 | `-V, --version`        | Xem phiên bản                                                  |

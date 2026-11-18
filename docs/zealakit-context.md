@@ -53,13 +53,11 @@ chọn template → chọn recipe → copy files
 ```
 CLI create
   → resolve config (flags hoặc prompt)
-  → withDefaultRecipes(scope, ids)
-  → validateRecipeIds
-  → resolveRecipeDependencies (dependsOn, cycle, missing)
-  → [--dry-run] buildScaffoldPlan + in preview
-  → validateScaffoldInput (config + target dir)
-  → scaffoldProject
-       → buildScaffoldPlan
+  → buildScaffoldPlan (một lần: withDefaultRecipes → validateRecipeIds →
+      resolveRecipeDependencies → validateScaffoldConfig → inventory)
+  → [--dry-run] in preview rồi dừng
+  → CLI xác nhận ghi đè thư mục đích (-y từ chối, --force cho phép)
+  → executeScaffoldPlan(plan)
        → materialize vào thư mục staging tạm (os.tmpdir)
        → validateGeneratedOutput
        → commitStagedDirectory (rename/backup/rollback)
@@ -461,7 +459,8 @@ Flags của `create`:
 
 - `-t, --template <id>`
 - `-w, --with <recipes>` — comma-separated
-- `-y, --yes`
+- `-y, --yes` — không prompt; từ chối thư mục đích không rỗng
+- `--force` — ghi đè thư mục đích không rỗng không cần hỏi
 - `--dry-run`
 - `--discover`
 - `--json` (chỉ hợp lệ với `--discover`)
@@ -841,7 +840,7 @@ pnpm test <filter...>   # lọc theo test name
 | Thêm template                | `packages/ecosystem-<eco>/src/registry/templates.ts` + `templates/<eco>/<id>/`                          |
 | Thêm recipe                  | `packages/ecosystem-node/src/registry/recipes/<id>.ts` + export trong `index.ts` + `recipes/node/<id>/` |
 | Thêm overlay cho recipe      | `recipes/node/<id>/overlays/<overlayId>/`                                                               |
-| Thêm Discovery profile       | `packages/core/src/profiles/template-profiles/index.ts` hoặc `recipe-profiles/index.ts`                 |
+| Thêm Discovery profile       | trường `discovery` trên định nghĩa template/recipe (trong package ecosystem)                            |
 | Thêm enum/domain value       | `packages/core/src/constants/<name>.ts` + export ở `constants/index.ts`                                 |
 | Đổi scoring/ranking          | `packages/core/src/discovery/matching/` (weights, scoring, constraints, ranking)                        |
 | Thêm câu hỏi Discovery       | `packages/core/src/discovery/questionnaire/questions.ts` + types + resolve                              |

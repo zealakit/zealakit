@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "vee-validate-zod",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "VeeValidate + Zod",
   hint: "Recommended",
   category: "form",

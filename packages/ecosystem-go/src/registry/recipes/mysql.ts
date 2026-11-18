@@ -1,5 +1,5 @@
 import path from "node:path";
-import { getRecipeDir } from "@zealakit/core";
+import { getRecipeDir } from "@zealakit/core/ecosystem";
 import { defineGoRecipe } from "./define.js";
 import { addGoRequires, appendEnvSection, mergeGoSum } from "./shared.js";
 
@@ -9,15 +9,17 @@ const GO_MODULES = {
 
 export default defineGoRecipe({
   id: "mysql",
+  discovery: {
+    capabilities: [],
+    projectTypes: ["server-api", "background-worker"],
+    databases: ["mysql"],
+  },
   name: "MySQL",
   hint: "database/sql + go-sql-driver/mysql",
   category: "infrastructure",
   supportedScopes: ["server", "infrastructure"],
   exclusive: true,
-  packages: {},
   goModules: { ...GO_MODULES },
-  devDependencies: {},
-  scripts: {},
   finalize(targetDir) {
     addGoRequires(targetDir, GO_MODULES, "MySQL");
     mergeGoSum(targetDir, path.join(getRecipeDir("mysql"), "scaffold", "go.sum"));

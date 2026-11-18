@@ -17,7 +17,7 @@ import {
   resolveTemplateProfile,
   type TemplateProfile,
   validateProfiles,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 describe("template profile registry", () => {
   it("exposes one profile per registered template", () => {

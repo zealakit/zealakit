@@ -1,7 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getRecipe, getTemplate } from "@zealakit/core";
+import { getRecipe, getTemplate } from "@zealakit/core/internal";
 import {
   defaultRecipeIdsForScope,
   formatSelectionSummary,

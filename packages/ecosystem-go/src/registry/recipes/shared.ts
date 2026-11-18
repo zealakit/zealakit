@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core";
+import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core/ecosystem";
 
 /** Append missing `require` lines to the generated go.mod. */
 export function addGoRequires(

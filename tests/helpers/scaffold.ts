@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { after } from "node:test";
 import {
+  getNpmManifest,
   getRecipe,
   getRecipeAgentEntry,
   getTemplate,
@@ -13,7 +14,7 @@ import {
   scaffoldProject,
   validateScaffoldConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-test-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));
@@ -113,13 +114,11 @@ export function assertScaffoldInvariants(app: ScaffoldedApp): void {
   for (const recipeId of app.recipeIds) {
     const recipe = getRecipe(recipeId);
     assert.ok(recipe);
-    Object.assign(expectedDeps, recipe.packages, recipe.overlayPackages?.[overlayId]);
-    Object.assign(
-      expectedDevDeps,
-      recipe.devDependencies,
-      recipe.overlayDevDependencies?.[overlayId],
-    );
-    Object.assign(expectedScripts, recipe.scripts);
+    const npm = getNpmManifest(recipe);
+    assert.ok(npm);
+    Object.assign(expectedDeps, npm.packages, npm.overlayPackages?.[overlayId]);
+    Object.assign(expectedDevDeps, npm.devDependencies, npm.overlayDevDependencies?.[overlayId]);
+    Object.assign(expectedScripts, npm.scripts);
 
     const entry = getRecipeAgentEntry(recipeId);
     for (const file of ["AGENTS.md", "CLAUDE.md"]) {

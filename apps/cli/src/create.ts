@@ -1,54 +1,43 @@
 import path from "node:path";
 import {
   buildScaffoldPlan,
-  type CliOptions,
   DEFAULT_TEMPLATE_ID,
   type DiscoverySessionDraft,
   ExitCode,
-  fail,
-  failDiagnostic,
-  formatRecipeResolveError,
+  executeScaffoldPlan,
   getAllRecipeIds,
   getAllTemplateIds,
+  getManifestAdapterForConfig,
   getTemplate,
-  getTemplateDevCommand,
   HYBRID_ORM_WARNING,
   hybridOrmSelections,
   planIsReady,
-  printError,
-  printInfo,
-  printValidationErrors,
   recordDiscoverySession,
-  resolveRecipeDependencies,
   type ScaffoldConfig,
   ScaffoldValidationError,
-  scaffoldProject,
-  validateRecipeIds,
-  validateScaffoldInput,
   validateTemplate,
-  withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
 import { runDiscoveryQuery } from "./discovery/query.js";
+import type { CliOptions } from "./options.js";
+import { failDiagnostic, printError, printInfo, printValidationErrors } from "./output.js";
 import { formatScaffoldPreview } from "./preview.js";
 import { runInteractivePrompts } from "./prompts.js";
+import { resolveOverwritePolicy } from "./target-dir.js";
 
 type ResolvedCreateConfig = {
   config: ScaffoldConfig;
   discoveryFeedback: DiscoverySessionDraft | null;
 };
 
-function safeRecordDiscovery(
-  draft: DiscoverySessionDraft | null,
-  extras: {
-    status: "completed" | "generation_failed";
-    generationSucceeded: boolean;
-  },
-): void {
+function recordDiscoveryOutcome(draft: DiscoverySessionDraft | null, succeeded: boolean): void {
   if (!draft) return;
   try {
-    recordDiscoverySession(draft, extras);
+    recordDiscoverySession(draft, {
+      status: succeeded ? "completed" : "generation_failed",
+      generationSucceeded: succeeded,
+    });
   } catch {
     // Feedback must never interrupt scaffolding.
   }
@@ -140,7 +129,7 @@ export async function resolveScaffoldConfig(
 function printSuccess(targetDir: string, config: ScaffoldConfig): void {
   const relativePath = path.relative(process.cwd(), targetDir) || config.projectName;
   const template = getTemplate(config.templateId);
-  const devCommand = template ? getTemplateDevCommand(template) : "npm run dev";
+  const steps = getManifestAdapterForConfig(config).nextSteps(config);
 
   printInfo("");
   printInfo(`${pc.green("✔")} Project ${pc.cyan(config.projectName)} created successfully!`);
@@ -155,12 +144,11 @@ function printSuccess(targetDir: string, config: ScaffoldConfig): void {
   printInfo("");
   printInfo(pc.bold("Next steps:"));
   printInfo(`  ${pc.cyan("cd")} ${relativePath}`);
-  if ((template?.ecosystem ?? "node") === "go") {
-    printInfo(`  ${pc.cyan(devCommand)}`);
-    printInfo(pc.dim("  Tip: run `zealakit doctor` if the Go toolchain is missing."));
-  } else {
-    printInfo(`  ${pc.cyan("npm install")}`);
-    printInfo(`  ${pc.cyan(devCommand)}`);
+  for (const command of steps.commands) {
+    printInfo(`  ${pc.cyan(command)}`);
+  }
+  if (steps.tip) {
+    printInfo(pc.dim(`  Tip: ${steps.tip}`));
   }
   printInfo("");
 }
@@ -203,6 +191,56 @@ function assertJsonDiscoveryUsage(projectName: string | undefined, options: CliO
   }
 }
 
+/** Runs the create flow and returns the process exit code (no `process.exit` inside). */
+async function runCreate(
+  projectName: string | undefined,
+  options: CliOptions,
+  session: { feedback: DiscoverySessionDraft | null },
+): Promise<ExitCode> {
+  const resolved = await resolveScaffoldConfig(projectName, options);
+  if (!resolved) {
+    return ExitCode.OK;
+  }
+  session.feedback = resolved.discoveryFeedback;
+
+  if (options.dryRun && !resolved.config.projectName) {
+    failDiagnostic(
+      {
+        title: "Invalid usage",
+        reason: "Flag --dry-run requires a project name.",
+        resolution: "Run: zealakit create <project-name> --dry-run …",
+      },
+      ExitCode.USAGE,
+    );
+  }
+
+  // One plan: defaults, id validation, dependency resolution and config
+  // validation happen here, and the same plan is previewed or executed.
+  const plan = buildScaffoldPlan(resolved.config, process.cwd(), {
+    requestedRecipeIds: resolved.config.recipeIds,
+  });
+
+  if (options.dryRun) {
+    printInfo(formatScaffoldPreview(plan));
+    return planIsReady(plan) ? ExitCode.OK : ExitCode.VALIDATION;
+  }
+
+  if (!planIsReady(plan)) {
+    printValidationErrors(plan.blockers);
+    return ExitCode.VALIDATION;
+  }
+
+  const overwrite = await resolveOverwritePolicy(plan.config.projectName, process.cwd(), options);
+  if (!overwrite.result.valid) {
+    printValidationErrors(overwrite.result.errors);
+    return ExitCode.VALIDATION;
+  }
+
+  const targetDir = await executeScaffoldPlan(plan, { overwrite: overwrite.policy });
+  printSuccess(targetDir, plan.config);
+  return ExitCode.OK;
+}
+
 /** Shared create / root-scaffold action. */
 export async function runCreateAction(
   projectName: string | undefined,
@@ -213,82 +251,11 @@ export async function runCreateAction(
     process.exit(await runDiscoveryQuery());
   }
 
-  let discoveryFeedback: DiscoverySessionDraft | null = null;
+  const session: { feedback: DiscoverySessionDraft | null } = { feedback: null };
+  let code: ExitCode;
   try {
-    const resolved = await resolveScaffoldConfig(projectName, options);
-    if (!resolved) {
-      process.exit(ExitCode.OK);
-    }
-    discoveryFeedback = resolved.discoveryFeedback;
-
-    const template = getTemplate(resolved.config.templateId);
-    const requestedRecipeIds = resolved.config.recipeIds;
-    const withDefaults = template
-      ? withDefaultRecipes(template.scope, resolved.config.recipeIds)
-      : resolved.config.recipeIds;
-
-    // Validate ids before dependency expansion: an unknown id is a user
-    // configuration error, not a missing `dependsOn`.
-    const recipeIdsCheck = validateRecipeIds(withDefaults);
-    if (!recipeIdsCheck.valid) {
-      safeRecordDiscovery(discoveryFeedback, {
-        status: "generation_failed",
-        generationSucceeded: false,
-      });
-      printValidationErrors(recipeIdsCheck.errors);
-      process.exit(ExitCode.VALIDATION);
-    }
-
-    const dependencyResolution = resolveRecipeDependencies(withDefaults);
-    if (!dependencyResolution.ok) {
-      safeRecordDiscovery(discoveryFeedback, {
-        status: "generation_failed",
-        generationSucceeded: false,
-      });
-      fail(formatRecipeResolveError(dependencyResolution.error), ExitCode.VALIDATION);
-    }
-    const config: ScaffoldConfig = {
-      ...resolved.config,
-      recipeIds: dependencyResolution.recipeIds,
-    };
-
-    if (options.dryRun) {
-      if (!config.projectName) {
-        failDiagnostic(
-          {
-            title: "Invalid usage",
-            reason: "Flag --dry-run requires a project name.",
-            resolution: "Run: zealakit create <project-name> --dry-run …",
-          },
-          ExitCode.USAGE,
-        );
-      }
-      const plan = buildScaffoldPlan(config, process.cwd(), { requestedRecipeIds });
-      printInfo(formatScaffoldPreview(plan));
-      process.exit(planIsReady(plan) ? ExitCode.OK : ExitCode.VALIDATION);
-    }
-
-    const validation = await validateScaffoldInput(config, process.cwd(), { yes: options.yes });
-    if (!validation.valid) {
-      safeRecordDiscovery(discoveryFeedback, {
-        status: "generation_failed",
-        generationSucceeded: false,
-      });
-      printValidationErrors(validation.errors);
-      process.exit(ExitCode.VALIDATION);
-    }
-
-    const targetDir = await scaffoldProject(config);
-    safeRecordDiscovery(discoveryFeedback, {
-      status: "completed",
-      generationSucceeded: true,
-    });
-    printSuccess(targetDir, config);
+    code = await runCreate(projectName, options, session);
   } catch (error) {
-    safeRecordDiscovery(discoveryFeedback, {
-      status: "generation_failed",
-      generationSucceeded: false,
-    });
     const message = error instanceof Error ? error.message : String(error);
     if (error instanceof ScaffoldValidationError) {
       // Validation messages are already actionable; keep them verbatim.
@@ -296,8 +263,13 @@ export async function runCreateAction(
     } else {
       printError(message.includes("\n") ? message : formatSimpleInternal(message));
     }
-    process.exit(exitCodeForError(error));
+    code = exitCodeForError(error);
   }
+  // Dry-run and cancelled flows have no generation to report on.
+  if (!options.dryRun) {
+    recordDiscoveryOutcome(session.feedback, code === ExitCode.OK);
+  }
+  process.exit(code);
 }
 
 /** Attach shared create options to a Commander command. */
@@ -312,7 +284,8 @@ export function attachCreateOptions(command: Command): Command {
       "-w, --with <recipes>",
       `Recipes to apply, comma-separated (e.g. biome). Available: ${getAllRecipeIds().join(", ")}`,
     )
-    .option("-y, --yes", "Non-interactive mode (skip overwrite confirmation)")
+    .option("-y, --yes", "Non-interactive: never prompt; refuses a non-empty target")
+    .option("--force", "Overwrite a non-empty target directory without asking")
     .option("--dry-run", "Resolve and validate without writing files")
     .option(
       "--discover",

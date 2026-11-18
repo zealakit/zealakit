@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "storybook",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "Storybook",
   category: ["ui", "testing", "documentation"],
   supportedScopes: ["client", "hybrid"],

@@ -1,4 +1,4 @@
-import type { RecipeConfig } from "@zealakit/core";
+import type { RecipeConfig } from "@zealakit/core/ecosystem";
 import mongodb from "./mongodb.js";
 import mysql from "./mysql.js";
 import postgres from "./postgres.js";

@@ -7,7 +7,7 @@ import {
   type DiscoveryValidationData,
   handleDiscoveryRequest,
   registerRecipe,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 /** Synthetic recipes registered in this file only (Node runs test files in separate processes). */
 function synthetic(id: string, dependsOn: string[]) {
@@ -17,9 +17,7 @@ function synthetic(id: string, dependsOn: string[]) {
     category: "utils" as const,
     supportedScopes: "all" as const,
     dependsOn,
-    packages: {},
-    devDependencies: {},
-    scripts: {},
+    manifest: { ecosystem: "node" as const, packages: {}, devDependencies: {}, scripts: {} },
   };
 }
 

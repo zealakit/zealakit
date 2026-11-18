@@ -1,4 +1,4 @@
-import { ExitCode, printInfo } from "@zealakit/core";
+import { ExitCode } from "@zealakit/core/internal";
 import {
   detectGoEnvironment,
   type GoEnvironmentReport,
@@ -6,6 +6,7 @@ import {
 } from "@zealakit/ecosystem-go";
 import pc from "picocolors";
 import { readKitManifest } from "./manifest.js";
+import { printInfo } from "./output.js";
 
 export type DoctorOptions = {
   json?: boolean;

@@ -11,7 +11,7 @@ import {
   type DiscoveryScaffoldData,
   getRecipe,
   handleDiscoveryRequest,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-scaffold-api-test-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));

@@ -143,15 +143,16 @@ npx zealakit@latest create --discover
 npx zealakit@latest create [项目名] [选项]
 ```
 
-| 选项                   | 说明                                        |
-| ---------------------- | ------------------------------------------- |
-| `--discover`           | Project Discovery — 根据需求推荐模板/Recipe |
-| `-t, --template <id>`  | 自行选择基础模板（默认：`vite-react`）      |
-| `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`）  |
-| `-y, --yes`            | 非交互模式（必须提供项目名）                |
-| `--dry-run`            | 预览生成计划，不写入文件                    |
-| `-h, --help`           | 显示帮助                                    |
-| `-V, --version`        | 显示版本                                    |
+| 选项                   | 说明                                             |
+| ---------------------- | ------------------------------------------------ |
+| `--discover`           | Project Discovery — 根据需求推荐模板/Recipe      |
+| `-t, --template <id>`  | 自行选择基础模板（默认：`vite-react`）           |
+| `-w, --with <recipes>` | 逗号分隔的 Recipe ID（如 `biome,zustand`）       |
+| `-y, --yes`            | 非交互模式，目标目录非空时拒绝（必须提供项目名） |
+| `--force`              | 无需确认，直接覆盖非空目标目录                   |
+| `--dry-run`            | 预览生成计划，不写入文件                         |
+| `-h, --help`           | 显示帮助                                         |
+| `-V, --version`        | 显示版本                                         |
 
 其他命令：`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
 

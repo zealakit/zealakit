@@ -19,10 +19,21 @@ export type PackagePlan = {
   conflicts: ManifestFieldConflict[];
 };
 
+/** What the user should run after `cd <project>`. */
+export type NextSteps = {
+  commands: string[];
+  /** Optional dim hint printed after the commands. */
+  tip?: string;
+};
+
 export type ManifestAdapter = {
   planMerges(config: ScaffoldConfig): PackagePlan;
   applyMerges(targetDir: string, config: ScaffoldConfig): void;
   validateProjectName(name: string): ValidationResult;
+  /** Ecosystem-specific structural checks on the generated project; returns error messages. */
+  validateOutput(targetDir: string, config: ScaffoldConfig): string[];
+  /** Commands shown after a successful scaffold. */
+  nextSteps(config: ScaffoldConfig): NextSteps;
 };
 
 const adapters = new Map<EcosystemId, ManifestAdapter>();

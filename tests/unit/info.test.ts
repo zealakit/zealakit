@@ -4,13 +4,15 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
+  getAllRecipeIds,
+  getAllTemplateIds,
+  getAllTemplates,
+  getRecipe,
   getRecipeIncompatibility,
   INFO_SCHEMA_VERSION,
   PACKAGE_ROOT,
   RECIPE_CATEGORIES,
-  recipes,
-  templates,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { buildInfoResponse, type InfoResponse } from "../../apps/cli/src/info.js";
 import { readKitManifest } from "../../apps/cli/src/manifest.js";
 import { forceColorEnv, noColorEnv } from "../helpers/env.js";
@@ -81,7 +83,7 @@ describe("buildInfoResponse", () => {
   it("lists every template, category and recipe from the registry", () => {
     assert.deepEqual(
       response.data.templates.map((template) => template.id),
-      Object.keys(templates),
+      getAllTemplateIds(),
     );
     assert.deepEqual(
       response.data.categories.map((category) => category.id),
@@ -89,15 +91,15 @@ describe("buildInfoResponse", () => {
     );
     assert.deepEqual(
       response.data.recipes.map((recipe) => recipe.id),
-      Object.keys(recipes),
+      getAllRecipeIds(),
     );
   });
 
   it("matches compat for every recipe × template", () => {
     for (const recipe of response.data.recipes) {
-      const config = recipes[recipe.id];
+      const config = getRecipe(recipe.id);
       assert.ok(config);
-      for (const template of Object.values(templates)) {
+      for (const template of getAllTemplates()) {
         const compatible: boolean = getRecipeIncompatibility(config, template) === undefined;
         assert.equal(
           recipe.templates.includes(template.id),

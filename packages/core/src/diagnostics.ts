@@ -1,5 +1,3 @@
-import pc from "picocolors";
-
 /** Stable CLI exit codes (CI can treat any non-zero as failure). */
 export const ExitCode = {
   /** Success, or user cancelled interactively */
@@ -53,30 +51,6 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
     lines.push("", "Resolution:", `  ${diagnostic.resolution}`);
   }
   return lines.join("\n");
-}
-
-export function printError(message: string): void {
-  console.error(pc.red(message));
-}
-
-export function printWarning(message: string): void {
-  console.error(pc.yellow(message));
-}
-
-export function printInfo(message: string): void {
-  console.log(message);
-}
-
-export function fail(message: string, code: ExitCode = ExitCode.INTERNAL): never {
-  printError(message);
-  process.exit(code);
-}
-
-export function failDiagnostic(
-  diagnostic: Diagnostic,
-  code: ExitCode = ExitCode.VALIDATION,
-): never {
-  fail(formatDiagnostic(diagnostic), code);
 }
 
 export function recipeConflictDiagnostic(category: string, recipeIds: string[]): Diagnostic {

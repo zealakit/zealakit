@@ -1,7 +1,12 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { clearRegistry, getInfo, getRecipeMetadata, getTemplateMetadata } from "@zealakit/core";
+import {
+  clearRegistry,
+  getInfo,
+  getRecipeMetadata,
+  getTemplateMetadata,
+} from "@zealakit/core/internal";
 
 describe("info metadata with an empty registry", () => {
   it("returns empty collections instead of throwing", () => {

@@ -2,6 +2,7 @@ import { appendExport, defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "shadcn-ui",
+  discovery: { capabilities: ["web-ui"], projectTypes: ["ui"] },
   name: "shadcn/ui (core: base-ui | theme: vega | icons: lucide)",
   category: "ui",
   supportedScopes: ["client", "hybrid"],

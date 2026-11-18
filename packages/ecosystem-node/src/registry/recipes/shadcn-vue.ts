@@ -2,6 +2,7 @@ import { appendExport, defineRecipe, nuxtConfigKeys, nuxtModule } from "./define
 
 export default defineRecipe({
   id: "shadcn-vue",
+  discovery: { capabilities: ["web-ui"], projectTypes: ["ui"] },
   name: "shadcn-vue (style: new-york | icons: lucide)",
   category: "ui",
   supportedScopes: ["client", "hybrid"],

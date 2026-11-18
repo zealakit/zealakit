@@ -23,7 +23,7 @@ import {
   saveDiscoveryFeedbackStore,
   setDiscoveryFeedbackEnabled,
   trimDiscoverySessions,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { noColorEnv } from "../helpers/env.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");

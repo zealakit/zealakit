@@ -1,4 +1,4 @@
-import type { RecipeConfig } from "@zealakit/core";
+import type { RecipeConfig } from "@zealakit/core/ecosystem";
 import antd from "./antd.js";
 import axios from "./axios.js";
 import biome from "./biome.js";

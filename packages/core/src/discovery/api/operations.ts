@@ -488,7 +488,7 @@ async function scaffoldResponse(
     templateId: selection.templateId,
     recipeIds: evaluation.data.resolvedRecipeIds,
   };
-  const inputValidation = await validateScaffoldInput(config, parentDir, { yes: true });
+  const inputValidation = validateScaffoldInput(config, parentDir, { overwrite: "refuse" });
   if (!inputValidation.valid) {
     return failure(
       "scaffold",

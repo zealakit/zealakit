@@ -1,5 +1,20 @@
+/**
+ * Local Dependency Monitor for Zealakit.
+ *
+ * Scope: root + apps/* + packages/* + templates/node/* package.json files, plus
+ * the npm versions declared in recipe registry modules
+ * (packages/ecosystem-node/src/registry/recipes/<id>.ts).
+ *
+ *   pnpm monitor
+ *   → http://127.0.0.1:4177
+ *
+ * Synced with the Zealakit Overlay monitor (same API, row model, registry
+ * classification, safety rules, and check/upgrade prompts). Zealakit-specific:
+ * template + recipe manifests, and recipe updates edit TypeScript source.
+ */
 import { execFile } from "node:child_process";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,69 +23,120 @@ import {
   getRecipeCategories,
   RECIPE_CATEGORIES,
   type RecipeConfig,
-  recipes,
   SCOPES,
-  templates,
-} from "@zealakit/core";
-import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
-
-registerNodeEcosystem();
+} from "@zealakit/core/internal";
+import { RECIPE_LIST, templateList } from "@zealakit/ecosystem-node";
 
 const execFileAsync = promisify(execFile);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const HOST = "127.0.0.1";
-const PREFERRED_PORT = 4000;
-const SKIP_DIRS = new Set(["node_modules", "dist", ".git"]);
+const PREFERRED_PORT = 4177;
+const INDEX_HTML = path.join(__dirname, "index.html");
 const RECIPES_REGISTRY_DIR = "packages/ecosystem-node/src/registry/recipes";
 
-function recipeRegistryFile(recipeId: string): string {
-  return `${RECIPES_REGISTRY_DIR}/${recipeId}.ts`;
-}
+/** Workspace folders scanned one level deep (explicit, never a recursive walk). */
+const WORKSPACE_DIRS = ["apps", "packages"] as const;
+const TEMPLATE_DIRS = ["templates/node"] as const;
 
-type DepType = "dep" | "dev";
+type DepType = "dependencies" | "devDependencies" | "peerDependencies" | "optionalDependencies";
 
-type PackageEntry = {
+type ManifestKind = "root" | "workspace" | "template" | "recipe";
+
+type ManifestInfo = {
+  id: string;
   name: string;
-  current: string;
-  latest: string | null;
-  depType: DepType;
-  needsUpdate: boolean;
-  overlay?: string;
+  label: string;
+  kind: ManifestKind;
+  /** Template scope or recipe categories, shown as tags. */
+  tags: string[];
+  tagKind: "scope" | "category" | null;
+  /** File that holds the declarations (package.json or recipe registry module). */
+  relativePath: string;
+  absolutePath: string;
+  /** Recipe id for `recipe` manifests. */
   recipeId?: string;
+};
+
+type DeclaredDependency = {
+  id: string;
+  dependency: string;
+  manifestId: string;
+  packageName: string;
+  kind: ManifestKind;
+  depType: DepType;
+  /** Recipe overlay family (`overlayPackages.next` → `next`); null otherwise. */
+  overlay: string | null;
+  declared: string;
+  resolved: string | null;
+  ecosystem: "node";
+  local: boolean;
+};
+
+type UpdateClass =
+  | "up-to-date"
+  | "patch-available"
+  | "minor-available"
+  | "major-available"
+  | "deprecated"
+  | "registry-check-failed"
+  | "skipped";
+
+type RegistryInfo = {
+  latest: string | null;
+  latestPatch: string | null;
+  latestMinor: string | null;
+  latestMajor: string | null;
+  versions: string[];
+  deprecated: boolean | string | null;
+  classification: UpdateClass;
   error?: string;
 };
 
-type PackageGroup = {
-  label: string;
-  filePath: string;
-  relativePath: string;
-  recipeId?: string;
-  /** Template scope or recipe categories shown as fixed-color tags */
-  tag?: string;
-  tags?: string[];
-  tagKind?: "scope" | "category";
-  /** False when UI must not mutate this group (unused for now; root uses pnpm install) */
-  allowUpdate: boolean;
-  packages: PackageEntry[];
+type DependencyRow = DeclaredDependency & {
+  registry: RegistryInfo;
 };
 
-type UpdateBody = {
-  filePath: string;
-  packageName: string;
-  newVersion: string;
+type UpdateRequest = {
+  manifestId: string;
+  dependency: string;
   depType: DepType;
-  recipeId?: string;
-  overlay?: string;
+  overlay: string | null;
+  targetVersion: string;
+  preserveRange?: boolean;
 };
 
-const latestCache = new Map<string, Promise<string>>();
+type SemVer = {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease: string | null;
+  raw: string;
+};
+
+const DEP_TYPES: DepType[] = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+];
+
+/** Recipe modules only declare runtime + dev dependencies. */
+const RECIPE_DEP_TYPES: DepType[] = ["dependencies", "devDependencies"];
+
+const registryCache = new Map<
+  string,
+  { ok: true; info: RegistryInfo } | { ok: false; error: string }
+>();
+
+let lastRegistryCheckAt: string | null = null;
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(payload),
   });
   res.end(payload);
@@ -79,6 +145,7 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 function sendText(res: ServerResponse, status: number, body: string, contentType: string): void {
   res.writeHead(status, {
     "Content-Type": contentType,
+    "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(body),
   });
   res.end(body);
@@ -94,285 +161,371 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return JSON.parse(raw) as unknown;
 }
 
-function toPosix(relativePath: string): string {
-  return relativePath.split(path.sep).join("/");
+function isLocalHost(req: IncomingMessage): boolean {
+  const host = (req.headers.host ?? "").split(":")[0]?.toLowerCase();
+  return host === "127.0.0.1" || host === "localhost";
 }
 
-function assetIdFromPath(parts: string[]): string | undefined {
-  // templates/<ecosystem>/<id>/... or recipes/<ecosystem>/<id>/...
-  if (parts.length >= 3 && (parts[0] === "templates" || parts[0] === "recipes")) {
-    return parts[2];
-  }
-  return undefined;
+function readManifestName(absolutePath: string, fallback: string): string {
+  const json = JSON.parse(fs.readFileSync(absolutePath, "utf8")) as { name?: string };
+  return json.name ?? fallback;
 }
 
-function groupLabel(relativePath: string): string {
-  if (relativePath === "package.json") return "Root";
-  const parts = relativePath.split("/");
-  const id = assetIdFromPath(parts);
-  if (parts[0] === "templates" && id) {
-    return `template/${id}`;
-  }
-  if (parts[0] === "recipes" && id) {
-    return `recipe/${id}`;
-  }
-  return relativePath;
+function recipeRegistryFile(recipeId: string): string {
+  return `${RECIPES_REGISTRY_DIR}/${recipeId}.ts`;
 }
 
-async function walkForPackageJson(dir: string, out: string[]): Promise<void> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (SKIP_DIRS.has(entry.name)) continue;
+function rankIn(order: readonly string[], value: string | undefined): number {
+  const index = order.indexOf(value ?? "");
+  return index === -1 ? order.length : index;
+}
 
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name.startsWith(".")) continue;
-        await walkForPackageJson(fullPath, out);
-        continue;
-      }
-      if (entry.isFile() && entry.name === "package.json") {
-        out.push(fullPath);
-      }
+/**
+ * Explicit discovery: root, immediate children of apps/ and packages/, Node
+ * templates, and registered Node recipes. Go templates have no package.json;
+ * tests/, scripts/, monitor/, and .sandbox/ are never scanned.
+ */
+function discoverManifests(): ManifestInfo[] {
+  const manifests: ManifestInfo[] = [];
+
+  const rootPkg = path.join(ROOT, "package.json");
+  if (fs.existsSync(rootPkg)) {
+    manifests.push({
+      id: ".",
+      name: readManifestName(rootPkg, "zealakit"),
+      label: "Root",
+      kind: "root",
+      tags: [],
+      tagKind: null,
+      relativePath: "package.json",
+      absolutePath: rootPkg,
+    });
+  }
+
+  for (const base of WORKSPACE_DIRS) {
+    const dir = path.join(ROOT, base);
+    if (!fs.existsSync(dir)) continue;
+    for (const dirName of fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort()) {
+      const absolutePath = path.join(dir, dirName, "package.json");
+      if (!fs.existsSync(absolutePath)) continue;
+      const name = readManifestName(absolutePath, dirName);
+      manifests.push({
+        id: `${base}/${dirName}`,
+        name,
+        label: name,
+        kind: "workspace",
+        tags: [],
+        tagKind: null,
+        relativePath: `${base}/${dirName}/package.json`,
+        absolutePath,
+      });
     }
-  } catch {
-    return;
   }
-}
 
-async function discoverPackageJsonFiles(): Promise<string[]> {
-  const files = new Set<string>([path.join(ROOT, "package.json")]);
-
-  const templateFiles: string[] = [];
-  await walkForPackageJson(path.join(ROOT, "templates"), templateFiles);
-  for (const file of templateFiles) files.add(file);
-
-  const recipeFiles: string[] = [];
-  await walkForPackageJson(path.join(ROOT, "recipes"), recipeFiles);
-  for (const file of recipeFiles) files.add(file);
-
-  return [...files].sort((a, b) => a.localeCompare(b));
-}
-
-function stripRangePrefix(version: string): string {
-  return version.replace(/^[~^>=<\s]+/, "").trim();
-}
-
-function parseSemverParts(version: string): number[] | null {
-  const cleaned = stripRangePrefix(version).split("-")[0]?.split("+")[0] ?? "";
-  const parts = cleaned.split(".").map((part) => Number.parseInt(part, 10));
-  if (parts.length === 0 || parts.some((n) => Number.isNaN(n))) return null;
-  while (parts.length < 3) parts.push(0);
-  return parts;
-}
-
-function compareSemver(a: string, b: string): number {
-  const pa = parseSemverParts(a);
-  const pb = parseSemverParts(b);
-  if (!pa || !pb) return a === b ? 0 : -1;
-  for (let i = 0; i < 3; i++) {
-    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (diff !== 0) return diff > 0 ? 1 : -1;
+  const templateScope = new Map(templateList.map((template) => [template.id, template.scope]));
+  const templates: ManifestInfo[] = [];
+  for (const base of TEMPLATE_DIRS) {
+    const dir = path.join(ROOT, base);
+    if (!fs.existsSync(dir)) continue;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const absolutePath = path.join(dir, entry.name, "package.json");
+      if (!fs.existsSync(absolutePath)) continue;
+      const scope = templateScope.get(entry.name);
+      templates.push({
+        id: `${base}/${entry.name}`,
+        name: readManifestName(absolutePath, entry.name),
+        label: `template/${entry.name}`,
+        kind: "template",
+        tags: scope ? [scope] : [],
+        tagKind: "scope",
+        relativePath: `${base}/${entry.name}/package.json`,
+        absolutePath,
+      });
+    }
   }
-  return 0;
+  templates.sort(
+    (a, b) => rankIn(SCOPES, a.tags[0]) - rankIn(SCOPES, b.tags[0]) || a.id.localeCompare(b.id),
+  );
+  manifests.push(...templates);
+
+  const recipeManifests: ManifestInfo[] = [];
+  for (const recipe of RECIPE_LIST) {
+    const relativePath = recipeRegistryFile(recipe.id);
+    const absolutePath = path.join(ROOT, relativePath);
+    if (!fs.existsSync(absolutePath)) continue;
+    recipeManifests.push({
+      id: `recipe/${recipe.id}`,
+      name: recipe.id,
+      label: `recipe/${recipe.id}`,
+      kind: "recipe",
+      tags: getRecipeCategories(recipe),
+      tagKind: "category",
+      relativePath,
+      absolutePath,
+      recipeId: recipe.id,
+    });
+  }
+  recipeManifests.sort(
+    (a, b) =>
+      rankIn(RECIPE_CATEGORIES, a.tags[0]) - rankIn(RECIPE_CATEGORIES, b.tags[0]) ||
+      a.id.localeCompare(b.id),
+  );
+  manifests.push(...recipeManifests);
+
+  return manifests;
 }
 
-function needsUpdate(current: string, latest: string | null): boolean {
-  if (!latest) return false;
-  if (current === "latest" || current === "*") return false;
-  return compareSemver(current, latest) < 0;
+function assertApprovedManifest(manifestId: string): ManifestInfo {
+  const match = discoverManifests().find((item) => item.id === manifestId);
+  if (!match) {
+    throw new Error(`Unknown or disallowed manifest id: ${manifestId}`);
+  }
+  return match;
 }
 
-function preserveVersionPrefix(current: string, latest: string): string {
-  const match = current.match(/^([~^])/);
-  return match ? `${match[1]}${latest}` : latest;
+function parseSemVer(input: string): SemVer | null {
+  const token =
+    input
+      .trim()
+      .match(/v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/)?.[0]
+      ?.replace(/^v/, "") ?? "";
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(token);
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    prerelease: match[4] ?? null,
+    raw: `${match[1]}.${match[2]}.${match[3]}${match[4] ? `-${match[4]}` : ""}`,
+  };
 }
 
-async function fetchLatestVersion(packageName: string): Promise<string> {
-  const cached = latestCache.get(packageName);
-  if (cached) return cached;
+function compareSemVer(a: SemVer, b: SemVer): number {
+  if (a.major !== b.major) return a.major - b.major;
+  if (a.minor !== b.minor) return a.minor - b.minor;
+  if (a.patch !== b.patch) return a.patch - b.patch;
+  if (a.prerelease === b.prerelease) return 0;
+  if (a.prerelease === null) return 1;
+  if (b.prerelease === null) return -1;
+  return a.prerelease.localeCompare(b.prerelease);
+}
 
-  const request = (async () => {
-    const encoded = packageName
-      .split("/")
-      .map((segment) => encodeURIComponent(segment))
-      .join("/");
-    const url = `https://registry.npmjs.org/${encoded}/latest`;
-    const response = await fetch(url, {
+function maxStable(versions: string[], predicate?: (v: SemVer) => boolean): string | null {
+  let best: SemVer | null = null;
+  for (const version of versions) {
+    const parsed = parseSemVer(version);
+    if (!parsed || parsed.prerelease) continue;
+    if (predicate && !predicate(parsed)) continue;
+    if (!best || compareSemVer(parsed, best) > 0) best = parsed;
+  }
+  return best?.raw ?? null;
+}
+
+function isSkippableSpec(spec: string): boolean {
+  return (
+    spec.startsWith("workspace:") ||
+    spec.startsWith("file:") ||
+    spec.startsWith("link:") ||
+    spec.startsWith("portal:") ||
+    spec.startsWith("catalog:") ||
+    spec.includes("://") ||
+    spec.startsWith("git+")
+  );
+}
+
+function preserveRange(current: string, nextExact: string): string {
+  if (current.startsWith("^")) return `^${nextExact}`;
+  if (current.startsWith("~")) return `~${nextExact}`;
+  return nextExact;
+}
+
+function classify(
+  declared: string,
+  info: Omit<RegistryInfo, "classification" | "error">,
+): UpdateClass {
+  if (info.deprecated) return "deprecated";
+  if (!info.latest) return "registry-check-failed";
+  const current = parseSemVer(declared);
+  const latest = parseSemVer(info.latest);
+  if (!current || !latest) return "registry-check-failed";
+  if (compareSemVer(latest, current) <= 0) return "up-to-date";
+  if (latest.major > current.major) return "major-available";
+  if (latest.minor > current.minor) return "minor-available";
+  return "patch-available";
+}
+
+function failedRegistryInfo(classification: UpdateClass, error: string): RegistryInfo {
+  return {
+    latest: null,
+    latestPatch: null,
+    latestMinor: null,
+    latestMajor: null,
+    versions: [],
+    deprecated: null,
+    classification,
+    error,
+  };
+}
+
+async function fetchRegistry(dependency: string, declared: string): Promise<RegistryInfo> {
+  if (isSkippableSpec(declared)) {
+    return failedRegistryInfo("skipped", "Non-registry version specification");
+  }
+
+  const cached = registryCache.get(dependency);
+  if (cached?.ok) {
+    return { ...cached.info, classification: classify(declared, cached.info) };
+  }
+  if (cached && !cached.ok) {
+    return failedRegistryInfo("registry-check-failed", cached.error);
+  }
+
+  const encoded = dependency
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  try {
+    const response = await fetch(`https://registry.npmjs.org/${encoded}`, {
       headers: { Accept: "application/json" },
     });
     if (!response.ok) {
-      throw new Error(`registry ${response.status} for ${packageName}`);
+      const error = `Registry HTTP ${response.status} for ${dependency}`;
+      registryCache.set(dependency, { ok: false, error });
+      return failedRegistryInfo("registry-check-failed", error);
     }
-    const data = (await response.json()) as { version?: string };
-    if (!data.version) {
-      throw new Error(`missing version for ${packageName}`);
-    }
-    return data.version;
-  })();
 
-  latestCache.set(packageName, request);
-  try {
-    return await request;
+    const doc = (await response.json()) as {
+      "dist-tags"?: { latest?: string };
+      versions?: Record<string, { deprecated?: string }>;
+      deprecated?: string;
+    };
+
+    const versions = Object.keys(doc.versions ?? {}).filter((version) => {
+      const parsed = parseSemVer(version);
+      return Boolean(parsed && !parsed.prerelease);
+    });
+    const latest = doc["dist-tags"]?.latest ?? maxStable(versions);
+    const baseline = parseSemVer(declared);
+    const latestPatch = baseline
+      ? maxStable(versions, (v) => v.major === baseline.major && v.minor === baseline.minor)
+      : null;
+    const latestMinor = baseline ? maxStable(versions, (v) => v.major === baseline.major) : null;
+    const latestMajor = maxStable(versions);
+    const deprecated = (latest && doc.versions?.[latest]?.deprecated) || doc.deprecated || false;
+
+    const base: Omit<RegistryInfo, "classification" | "error"> = {
+      latest: latest ?? null,
+      latestPatch,
+      latestMinor,
+      latestMajor,
+      versions: versions.sort((a, b) => {
+        const pa = parseSemVer(a);
+        const pb = parseSemVer(b);
+        if (!pa || !pb) return a.localeCompare(b);
+        return compareSemVer(pb, pa);
+      }),
+      deprecated: deprecated === false ? false : deprecated,
+    };
+
+    registryCache.set(dependency, { ok: true, info: { ...base, classification: "up-to-date" } });
+    return { ...base, classification: classify(declared, base) };
   } catch (error) {
-    latestCache.delete(packageName);
-    throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    registryCache.set(dependency, { ok: false, error: message });
+    return failedRegistryInfo("registry-check-failed", message);
   }
 }
 
-async function collectEntries(
-  deps: Record<string, string> | undefined,
-  depType: DepType,
-  meta: { overlay?: string; recipeId?: string } = {},
-): Promise<PackageEntry[]> {
-  if (!deps) return [];
+/** Importer ids in pnpm-lock.yaml that map to monitored package.json manifests. */
+const LOCK_IMPORTER = /^ {2}(\.|(?:apps|packages|templates\/node)\/[^:\s]+):$/;
 
-  const names = Object.keys(deps).sort((a, b) => a.localeCompare(b));
-  const entries = await Promise.all(
-    names.map(async (name) => {
-      const current = deps[name] ?? "";
-      try {
-        const latest = await fetchLatestVersion(name);
-        return {
-          name,
-          current,
-          latest,
-          depType,
-          needsUpdate: needsUpdate(current, latest),
-          ...meta,
-        } satisfies PackageEntry;
-      } catch (error) {
-        return {
-          name,
-          current,
-          latest: null,
-          depType,
-          needsUpdate: false,
-          ...meta,
-          error: error instanceof Error ? error.message : String(error),
-        } satisfies PackageEntry;
+function readResolvedFromLockfile(): Map<string, string> {
+  const lockPath = path.join(ROOT, "pnpm-lock.yaml");
+  const resolved = new Map<string, string>();
+  if (!fs.existsSync(lockPath)) return resolved;
+
+  const lines = fs.readFileSync(lockPath, "utf8").split("\n");
+  let inImporters = false;
+  let currentImporter: string | null = null;
+  let inDepBlock = false;
+
+  for (const line of lines) {
+    if (line === "importers:") {
+      inImporters = true;
+      continue;
+    }
+    if (inImporters && /^\S/.test(line)) {
+      // pnpm 12 can emit more than one importers/packages pair (the first one
+      // only carries configDependencies). Keep scanning the file so the real
+      // workspace importers later in the lockfile are not skipped.
+      inImporters = false;
+      currentImporter = null;
+      inDepBlock = false;
+      continue;
+    }
+    if (!inImporters) continue;
+
+    const importerMatch = LOCK_IMPORTER.exec(line);
+    if (importerMatch) {
+      currentImporter = importerMatch[1] ?? null;
+      inDepBlock = false;
+      continue;
+    }
+    if (/^ {2}\S/.test(line)) {
+      currentImporter = null;
+      inDepBlock = false;
+      continue;
+    }
+
+    if (
+      currentImporter &&
+      /^ {4}(dependencies|devDependencies|peerDependencies|optionalDependencies):$/.test(line)
+    ) {
+      inDepBlock = true;
+      continue;
+    }
+
+    if (currentImporter && /^ {4}\S/.test(line)) {
+      inDepBlock = false;
+    }
+
+    if (!currentImporter || !inDepBlock) continue;
+
+    const nameMatch = /^ {6}(.+):$/.exec(line);
+    if (nameMatch) {
+      const depName = nameMatch[1]?.replace(/^['"]|['"]$/g, "") ?? "";
+      resolved.set(`${currentImporter}::pending`, depName);
+      continue;
+    }
+
+    const versionMatch = /^ {8}version:\s+(.+)$/.exec(line);
+    if (versionMatch) {
+      const depName = resolved.get(`${currentImporter}::pending`);
+      if (depName) {
+        let version = versionMatch[1]?.trim() ?? "";
+        version = version.replace(/^['"]|['"]$/g, "");
+        // pnpm may store "1.2.3(peer@x)" — take the leading semver
+        version = version.split("(")[0]?.trim() ?? version;
+        resolved.set(`${currentImporter}::${depName}`, version);
+        resolved.delete(`${currentImporter}::pending`);
       }
-    }),
-  );
+    }
+  }
 
-  return entries;
+  return resolved;
 }
 
-async function collectRecipeEntries(recipe: RecipeConfig): Promise<PackageEntry[]> {
-  const meta = { recipeId: recipe.id };
-  const packages = [
-    ...(await collectEntries(recipe.packages, "dep", meta)),
-    ...(await collectEntries(recipe.devDependencies, "dev", meta)),
-  ];
-
-  for (const [overlay, deps] of Object.entries(recipe.overlayPackages ?? {})) {
-    packages.push(...(await collectEntries(deps, "dep", { ...meta, overlay })));
-  }
-  for (const [overlay, deps] of Object.entries(recipe.overlayDevDependencies ?? {})) {
-    packages.push(...(await collectEntries(deps, "dev", { ...meta, overlay })));
-  }
-
-  return packages;
-}
-
-async function buildRecipeGroups(): Promise<PackageGroup[]> {
-  const groups: PackageGroup[] = [];
-  const ids = Object.keys(recipes).sort((a, b) => {
-    const recipeA = recipes[a];
-    const recipeB = recipes[b];
-    const rank = (category: string | undefined) => {
-      const idx = (RECIPE_CATEGORIES as readonly string[]).indexOf(category ?? "");
-      return idx === -1 ? RECIPE_CATEGORIES.length : idx;
-    };
-    const primaryA = recipeA ? getRecipeCategories(recipeA)[0] : undefined;
-    const primaryB = recipeB ? getRecipeCategories(recipeB)[0] : undefined;
-    const categoryCmp = rank(primaryA) - rank(primaryB);
-    if (categoryCmp !== 0) return categoryCmp;
-    return a.localeCompare(b);
-  });
-
-  for (const id of ids) {
-    const recipe = recipes[id];
-    if (!recipe) continue;
-
-    const categories = getRecipeCategories(recipe);
-    const packages = await collectRecipeEntries(recipe);
-    groups.push({
-      label: `recipe/${recipe.id}`,
-      filePath: recipeRegistryFile(recipe.id),
-      relativePath: recipeRegistryFile(recipe.id),
-      recipeId: recipe.id,
-      tag: categories[0],
-      tags: categories,
-      tagKind: "category",
-      allowUpdate: true,
-      packages,
-    });
-  }
-
-  return groups;
-}
-
-async function buildPackagesResponse(): Promise<PackageGroup[]> {
-  const files = await discoverPackageJsonFiles();
-  const groups: PackageGroup[] = [];
-
-  for (const filePath of files) {
-    const relativePath = toPosix(path.relative(ROOT, filePath));
-    const raw = await readFile(filePath, "utf8");
-    const pkg = JSON.parse(raw) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-
-    const packages = [
-      ...(await collectEntries(pkg.dependencies, "dep")),
-      ...(await collectEntries(pkg.devDependencies, "dev")),
-    ];
-
-    const templateId = relativePath.startsWith("templates/")
-      ? assetIdFromPath(relativePath.split("/"))
-      : undefined;
-    const template = templateId ? templates[templateId] : undefined;
-
-    groups.push({
-      label: groupLabel(relativePath),
-      filePath: relativePath,
-      relativePath,
-      allowUpdate: true,
-      ...(template ? { tag: template.scope, tagKind: "scope" as const } : {}),
-      packages,
-    });
-  }
-
-  groups.push(...(await buildRecipeGroups()));
-  return groups;
-}
-
-function resolveSafePackageJsonPath(relativeOrAbsolute: string): string {
-  const absolute = path.isAbsolute(relativeOrAbsolute)
-    ? path.normalize(relativeOrAbsolute)
-    : path.resolve(ROOT, relativeOrAbsolute);
-  const relative = path.relative(ROOT, absolute);
-
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("filePath must stay inside the project root");
-  }
-  if (path.basename(absolute) !== "package.json") {
-    throw new Error("filePath must point to a package.json");
-  }
-
-  const posixRel = toPosix(relative);
-  const allowed =
-    posixRel === "package.json" ||
-    posixRel.startsWith("templates/") ||
-    posixRel.startsWith("recipes/");
-  if (!allowed) {
-    throw new Error("filePath must be root, templates/*, or recipes/* package.json");
-  }
-
-  return absolute;
-}
+// ---------------------------------------------------------------------------
+// Recipe registry modules: `export default defineRecipe({ … })`
+// Versions are read from and written to the TypeScript source so the monitor
+// always reflects the file on disk (never a stale in-process import).
+// ---------------------------------------------------------------------------
 
 /** Previous non-whitespace char suggests `/` starts a RegExp, not division. */
 function isRegexLiteralStart(source: string, slashIndex: number): boolean {
@@ -496,95 +649,42 @@ function findMatchingBrace(source: string, openIndex: number): number {
   throw new Error("Unbalanced braces while locating recipe block");
 }
 
-/** Each recipe module exports `defineRecipe({ ... })`; the object literal is the editable block. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** The object literal passed to `defineRecipe(` — the editable recipe block. */
 function findRecipeBlockRange(source: string, recipeId: string): { start: number; end: number } {
   const callIndex = source.indexOf("defineRecipe({");
   if (callIndex === -1) {
     throw new Error(`defineRecipe({ … }) not found in ${recipeRegistryFile(recipeId)}`);
   }
-
   const openIndex = source.indexOf("{", callIndex);
-  if (openIndex === -1) {
-    throw new Error(`Recipe "${recipeId}" has no object body`);
-  }
-  const end = findMatchingBrace(source, openIndex);
-  return { start: openIndex, end };
+  return { start: openIndex, end: findMatchingBrace(source, openIndex) };
 }
 
-function replacePackageVersionInBlock(
-  block: string,
-  packageName: string,
-  currentVersion: string,
-  nextVersion: string,
-): string {
-  const escapedName = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const escapedCurrent = currentVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp(`("${escapedName}"\\s*:\\s*")${escapedCurrent}(")`),
-    new RegExp(`('${escapedName}'\\s*:\\s*")${escapedCurrent}(")`),
-    new RegExp(`(\\b${escapedName}\\s*:\\s*")${escapedCurrent}(")`),
-  ];
-
-  for (const pattern of patterns) {
-    if (pattern.test(block)) {
-      return block.replace(pattern, `$1${nextVersion}$2`);
-    }
-  }
-
-  throw new Error(`Could not find ${packageName}: "${currentVersion}" in recipe block`);
-}
-
-function extractVersionAssignment(
-  block: string,
-  packageName: string,
-): { current: string; matchIndex: number } {
-  const escapedName = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp(`"${escapedName}"\\s*:\\s*"([^"]+)"`),
-    new RegExp(`'${escapedName}'\\s*:\\s*"([^"]+)"`),
-    new RegExp(`\\b${escapedName}\\s*:\\s*"([^"]+)"`),
-  ];
-
-  for (const pattern of patterns) {
-    const match = pattern.exec(block);
-    if (match?.[1] != null && match.index != null) {
-      return { current: match[1], matchIndex: match.index };
-    }
-  }
-
-  throw new Error(`Package ${packageName} not found in recipe block`);
-}
-
-function narrowBlockForBucket(
+/**
+ * Locate the `{ … }` that holds one dependency bucket inside the recipe block.
+ * Returns null when the recipe does not declare that bucket.
+ */
+function findBucket(
   recipeBlock: string,
   depType: DepType,
-  overlay?: string,
-): { block: string; offset: number } {
+  overlay: string | null,
+): { block: string; offset: number } | null {
   if (overlay) {
-    const field = depType === "dep" ? "overlayPackages" : "overlayDevDependencies";
-    const fieldMatch = new RegExp(`${field}\\s*:\\s*\\{`).exec(recipeBlock);
-    if (!fieldMatch || fieldMatch.index == null) {
-      throw new Error(`Missing ${field} in recipe`);
-    }
+    const field = depType === "dependencies" ? "overlayPackages" : "overlayDevDependencies";
+    const fieldMatch = new RegExp(`(?:^|\\n)\\s*${field}\\s*:\\s*\\{`).exec(recipeBlock);
+    if (!fieldMatch) return null;
     const fieldOpen = recipeBlock.indexOf("{", fieldMatch.index);
     const fieldClose = findMatchingBrace(recipeBlock, fieldOpen);
     const fieldBlock = recipeBlock.slice(fieldOpen, fieldClose + 1);
 
-    const overlayKey = /^[A-Za-z_][\w-]*$/.test(overlay) ? overlay : JSON.stringify(overlay);
-    const escapedOverlay = overlay.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const overlayPatterns = [
-      new RegExp(`\\n\\s*${escapedOverlay}\\s*:\\s*\\{`),
-      new RegExp(`\\n\\s*"${escapedOverlay}"\\s*:\\s*\\{`),
-      new RegExp(`\\n\\s*'${escapedOverlay}'\\s*:\\s*\\{`),
-    ];
-    let overlayMatch: RegExpExecArray | null = null;
-    for (const pattern of overlayPatterns) {
-      overlayMatch = pattern.exec(fieldBlock);
-      if (overlayMatch) break;
-    }
-    if (!overlayMatch || overlayMatch.index == null) {
-      throw new Error(`Missing overlay "${overlayKey}" under ${field}`);
-    }
+    const escapedOverlay = escapeRegExp(overlay);
+    const overlayMatch = new RegExp(`\\n\\s*(["']?)${escapedOverlay}\\1\\s*:\\s*\\{`).exec(
+      fieldBlock,
+    );
+    if (!overlayMatch) return null;
     const overlayOpen = fieldBlock.indexOf("{", overlayMatch.index);
     const overlayClose = findMatchingBrace(fieldBlock, overlayOpen);
     return {
@@ -593,176 +693,517 @@ function narrowBlockForBucket(
     };
   }
 
-  const field = depType === "dep" ? "packages" : "devDependencies";
-  // Prefer exact field names; avoid matching overlayPackages when looking for packages
-  const fieldMatch =
-    field === "packages"
-      ? /(?:^|\n)\s*packages\s*:\s*\{/.exec(recipeBlock)
-      : /(?:^|\n)\s*devDependencies\s*:\s*\{/.exec(recipeBlock);
-  if (!fieldMatch || fieldMatch.index == null) {
-    throw new Error(`Missing ${field} in recipe`);
-  }
+  const field = depType === "dependencies" ? "packages" : "devDependencies";
+  // Anchor to a line start so `packages` never matches `overlayPackages`.
+  const fieldMatch = new RegExp(`(?:^|\\n)\\s*${field}\\s*:\\s*\\{`).exec(recipeBlock);
+  if (!fieldMatch) return null;
   const fieldOpen = recipeBlock.indexOf("{", fieldMatch.index);
   const fieldClose = findMatchingBrace(recipeBlock, fieldOpen);
-  return {
-    block: recipeBlock.slice(fieldOpen, fieldClose + 1),
-    offset: fieldOpen,
-  };
+  return { block: recipeBlock.slice(fieldOpen, fieldClose + 1), offset: fieldOpen };
 }
 
-async function updateRecipeRegistry(body: UpdateBody): Promise<void> {
-  if (!body.recipeId) {
-    throw new Error("recipeId is required for recipe updates");
+/** `"name": "range"` / `'name': "range"` / `name: "range"` entries in one bucket. */
+function readBucketEntries(block: string): Record<string, string> {
+  const entries: Record<string, string> = {};
+  const pattern =
+    /(["'])((?:@[\w.-]+\/)?[\w.-]+)\1\s*:\s*"([^"]+)"|\b([A-Za-z_][\w-]*)\s*:\s*"([^"]+)"/g;
+  for (const match of block.matchAll(pattern)) {
+    const name = match[2] ?? match[4];
+    const version = match[3] ?? match[5];
+    if (name && version) entries[name] = version;
   }
+  return entries;
+}
 
-  if (!/^[a-z0-9-]+$/.test(body.recipeId) || !recipes[body.recipeId]) {
-    throw new Error(`Unknown recipe "${body.recipeId}"`);
-  }
+function bucketVersionPattern(dependency: string): RegExp {
+  const name = escapeRegExp(dependency);
+  return new RegExp(`((?:"${name}"|'${name}'|\\b${name})\\s*:\\s*")([^"]+)(")`);
+}
 
-  const absolute = path.join(ROOT, recipeRegistryFile(body.recipeId));
-  const source = await readFile(absolute, "utf8");
-  const { start, end } = findRecipeBlockRange(source, body.recipeId);
+function recipeOverlayKeys(recipe: RecipeConfig | undefined, depType: DepType): string[] {
+  const npm = recipe?.manifest.ecosystem === "node" ? recipe.manifest : undefined;
+  const field = depType === "dependencies" ? npm?.overlayPackages : npm?.overlayDevDependencies;
+  return Object.keys(field ?? {}).sort();
+}
+
+function listRecipeDeclarations(manifest: ManifestInfo): Array<{
+  depType: DepType;
+  overlay: string | null;
+  dependency: string;
+  declared: string;
+}> {
+  const recipe = RECIPE_LIST.find((item) => item.id === manifest.recipeId);
+  const source = fs.readFileSync(manifest.absolutePath, "utf8");
+  const { start, end } = findRecipeBlockRange(source, manifest.recipeId ?? manifest.id);
   const recipeBlock = source.slice(start, end + 1);
-  const { block, offset } = narrowBlockForBucket(recipeBlock, body.depType, body.overlay);
-  const { current } = extractVersionAssignment(block, body.packageName);
-  const written = preserveVersionPrefix(current, stripRangePrefix(body.newVersion));
-  const updatedBucket = replacePackageVersionInBlock(block, body.packageName, current, written);
-  const updatedRecipe =
-    recipeBlock.slice(0, offset) + updatedBucket + recipeBlock.slice(offset + block.length);
-  const next = source.slice(0, start) + updatedRecipe + source.slice(end + 1);
-  await writeFile(absolute, next, "utf8");
+
+  const out: Array<{
+    depType: DepType;
+    overlay: string | null;
+    dependency: string;
+    declared: string;
+  }> = [];
+  for (const depType of RECIPE_DEP_TYPES) {
+    for (const overlay of [null, ...recipeOverlayKeys(recipe, depType)]) {
+      const bucket = findBucket(recipeBlock, depType, overlay);
+      if (!bucket) continue;
+      for (const [dependency, declared] of Object.entries(readBucketEntries(bucket.block))) {
+        out.push({ depType, overlay, dependency, declared });
+      }
+    }
+  }
+  return out;
 }
 
-async function refreshRootLockfile(packageName: string): Promise<string> {
-  try {
-    const { stdout, stderr } = await execFileAsync("pnpm", ["up", packageName], {
-      cwd: ROOT,
-      env: process.env,
-      maxBuffer: 20 * 1024 * 1024,
-      shell: process.platform === "win32",
-    });
-    return [stdout, stderr].filter(Boolean).join("\n").trim();
-  } catch (error) {
-    const err = error as { stderr?: string; stdout?: string; message?: string };
-    const detail = [err.stderr, err.stdout, err.message].filter(Boolean).join("\n").trim();
-    throw new Error(`pnpm up ${packageName} failed${detail ? `:\n${detail}` : ""}`);
-  }
+function rowId(
+  manifestId: string,
+  depType: DepType,
+  overlay: string | null,
+  dependency: string,
+): string {
+  return `${manifestId}::${depType}${overlay ? `@${overlay}` : ""}::${dependency}`;
 }
 
-async function updatePackageJson(body: UpdateBody): Promise<{ lockfileSynced?: boolean }> {
-  if (!body.filePath || !body.packageName || !body.newVersion || !body.depType) {
-    throw new Error("filePath, packageName, newVersion, and depType are required");
-  }
-  if (body.depType !== "dep" && body.depType !== "dev") {
-    throw new Error('depType must be "dep" or "dev"');
+function listDeclarations(): DeclaredDependency[] {
+  const manifests = discoverManifests();
+  const lockResolved = readResolvedFromLockfile();
+  const rows: DeclaredDependency[] = [];
+
+  for (const manifest of manifests) {
+    if (manifest.kind === "recipe") {
+      for (const item of listRecipeDeclarations(manifest)) {
+        rows.push({
+          id: rowId(manifest.id, item.depType, item.overlay, item.dependency),
+          dependency: item.dependency,
+          manifestId: manifest.id,
+          packageName: manifest.name,
+          kind: manifest.kind,
+          depType: item.depType,
+          overlay: item.overlay,
+          declared: item.declared,
+          // Recipe versions are written into generated projects, not installed here.
+          resolved: null,
+          ecosystem: "node",
+          local: isSkippableSpec(item.declared),
+        });
+      }
+      continue;
+    }
+
+    const json = JSON.parse(fs.readFileSync(manifest.absolutePath, "utf8")) as Record<
+      string,
+      Record<string, string> | undefined
+    >;
+
+    for (const depType of DEP_TYPES) {
+      const block = json[depType];
+      if (!block) continue;
+      for (const [dependency, declared] of Object.entries(block)) {
+        rows.push({
+          id: rowId(manifest.id, depType, null, dependency),
+          dependency,
+          manifestId: manifest.id,
+          packageName: manifest.name,
+          kind: manifest.kind,
+          depType,
+          overlay: null,
+          declared,
+          resolved: lockResolved.get(`${manifest.id}::${dependency}`) ?? null,
+          ecosystem: "node",
+          local: isSkippableSpec(declared),
+        });
+      }
+    }
   }
 
-  if (body.recipeId) {
-    await updateRecipeRegistry(body);
-    return {};
+  return rows;
+}
+
+async function buildDependencyRows(options?: { refresh?: boolean }): Promise<DependencyRow[]> {
+  if (options?.refresh) {
+    registryCache.clear();
+  }
+  const declarations = listDeclarations();
+
+  // Warm cache once per unique dependency (using first declared sample).
+  const sampleDeclared = new Map<string, string>();
+  for (const item of declarations) {
+    if (!sampleDeclared.has(item.dependency)) {
+      sampleDeclared.set(item.dependency, item.declared);
+    }
+  }
+  await Promise.all(
+    [...sampleDeclared].map(async ([name, declared]) => {
+      await fetchRegistry(name, declared);
+    }),
+  );
+
+  lastRegistryCheckAt = new Date().toISOString();
+
+  const rows: DependencyRow[] = [];
+  for (const item of declarations) {
+    rows.push({ ...item, registry: await fetchRegistry(item.dependency, item.declared) });
+  }
+  return rows;
+}
+
+const CLASS_RANK: Record<UpdateClass, number> = {
+  deprecated: 0,
+  "major-available": 1,
+  "minor-available": 2,
+  "patch-available": 3,
+  "registry-check-failed": 4,
+  skipped: 5,
+  "up-to-date": 6,
+};
+
+function summarize(rows: DependencyRow[]) {
+  const unique = new Set(rows.map((row) => row.dependency));
+  const byDepClass = new Map<string, UpdateClass>();
+  for (const row of rows) {
+    const prev = byDepClass.get(row.dependency);
+    if (!prev || CLASS_RANK[row.registry.classification] < CLASS_RANK[prev]) {
+      byDepClass.set(row.dependency, row.registry.classification);
+    }
   }
 
-  const absolute = resolveSafePackageJsonPath(body.filePath);
-  const relativePath = toPosix(path.relative(ROOT, absolute));
-  const raw = await readFile(absolute, "utf8");
-  const pkg = JSON.parse(raw) as {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-    [key: string]: unknown;
+  let upToDate = 0;
+  let updatesAvailable = 0;
+  let deprecated = 0;
+  let failed = 0;
+  for (const classification of byDepClass.values()) {
+    if (classification === "up-to-date" || classification === "skipped") {
+      upToDate += 1;
+    } else if (classification === "deprecated") {
+      deprecated += 1;
+      updatesAvailable += 1;
+    } else if (classification === "registry-check-failed") {
+      failed += 1;
+    } else {
+      updatesAvailable += 1;
+    }
+  }
+
+  return {
+    total: unique.size,
+    outdated: updatesAvailable,
+    upToDate,
+    errors: failed,
+    uniqueDependencies: unique.size,
+    declarationCount: rows.length,
+    updatesAvailable,
+    deprecated,
+    registryFailures: failed,
+    lastRegistryCheckAt,
+    ecosystems: ["node"],
   };
+}
 
-  const field = body.depType === "dep" ? "dependencies" : "devDependencies";
-  const bucket = pkg[field];
-  if (!bucket || !(body.packageName in bucket)) {
+function validateUpdateRequest(input: unknown): UpdateRequest {
+  if (!input || typeof input !== "object") {
+    throw new Error("Invalid update payload");
+  }
+  const body = input as Record<string, unknown>;
+  const { manifestId, dependency, depType, targetVersion, overlay } = body;
+
+  if (typeof manifestId !== "string" || !manifestId) {
+    throw new Error("manifestId is required");
+  }
+  if (typeof dependency !== "string" || !dependency) {
+    throw new Error("dependency is required");
+  }
+  if (!DEP_TYPES.includes(depType as DepType)) {
+    throw new Error("depType is invalid");
+  }
+  if (
+    overlay !== undefined &&
+    overlay !== null &&
+    (typeof overlay !== "string" || !/^[\w-]+$/.test(overlay))
+  ) {
+    throw new Error("overlay is invalid");
+  }
+  if (typeof targetVersion !== "string" || !targetVersion.trim()) {
+    throw new Error("targetVersion is required");
+  }
+  if (targetVersion.includes("..") || targetVersion.includes("/") || /\s/.test(targetVersion)) {
+    throw new Error("targetVersion looks unsafe");
+  }
+
+  const manifest = assertApprovedManifest(manifestId);
+  if (manifest.kind === "recipe" && !RECIPE_DEP_TYPES.includes(depType as DepType)) {
+    throw new Error("Recipe modules only declare dependencies and devDependencies");
+  }
+  if (manifest.kind !== "recipe" && overlay) {
+    throw new Error("overlay is only valid for recipe manifests");
+  }
+
+  return {
+    manifestId,
+    dependency,
+    depType: depType as DepType,
+    overlay: typeof overlay === "string" ? overlay : null,
+    targetVersion: targetVersion.trim().replace(/^[~^]/, ""),
+    preserveRange: body.preserveRange !== false,
+  };
+}
+
+type UpdateResult = {
+  dryRun: boolean;
+  from: string;
+  to: string;
+  lockfileSynced: boolean;
+};
+
+async function applyRecipeUpdate(
+  manifest: ManifestInfo,
+  request: UpdateRequest,
+  options: { dryRun: boolean },
+): Promise<UpdateResult> {
+  const source = await fsp.readFile(manifest.absolutePath, "utf8");
+  const { start, end } = findRecipeBlockRange(source, manifest.recipeId ?? manifest.id);
+  const recipeBlock = source.slice(start, end + 1);
+  const bucket = findBucket(recipeBlock, request.depType, request.overlay);
+  const where = `${request.depType}${request.overlay ? ` (overlay ${request.overlay})` : ""}`;
+  if (!bucket) {
+    throw new Error(`${where} not declared in ${manifest.relativePath}`);
+  }
+  const pattern = bucketVersionPattern(request.dependency);
+  const match = pattern.exec(bucket.block);
+  if (!match) {
+    throw new Error(`${request.dependency} not found in ${where} of ${manifest.relativePath}`);
+  }
+
+  const from = match[2] ?? "";
+  const exact = request.targetVersion;
+  if (!parseSemVer(exact)) {
+    throw new Error(`Invalid target version: ${exact}`);
+  }
+  const to = request.preserveRange ? preserveRange(from, exact) : exact;
+
+  if (options.dryRun || from === to) {
+    return { dryRun: options.dryRun, from, to, lockfileSynced: false };
+  }
+
+  const updatedBucket = bucket.block.replace(pattern, `$1${to}$3`);
+  const updatedRecipe =
+    recipeBlock.slice(0, bucket.offset) +
+    updatedBucket +
+    recipeBlock.slice(bucket.offset + bucket.block.length);
+  await fsp.writeFile(
+    manifest.absolutePath,
+    source.slice(0, start) + updatedRecipe + source.slice(end + 1),
+    "utf8",
+  );
+  // Recipe versions are scaffold-time data: nothing in this workspace installs them.
+  return { dryRun: false, from, to, lockfileSynced: false };
+}
+
+async function applyUpdate(
+  request: UpdateRequest,
+  options: { dryRun: boolean },
+): Promise<UpdateResult> {
+  const manifest = assertApprovedManifest(request.manifestId);
+  if (manifest.kind === "recipe") {
+    return applyRecipeUpdate(manifest, request, options);
+  }
+
+  const original = await fsp.readFile(manifest.absolutePath, "utf8");
+  const json = JSON.parse(original) as Record<string, Record<string, string> | undefined>;
+  const block = json[request.depType];
+  if (!block || !(request.dependency in block)) {
+    throw new Error(`${request.dependency} not found in ${request.depType} of ${manifest.id}`);
+  }
+
+  const from = block[request.dependency] ?? "";
+  const exact = request.targetVersion;
+  if (!parseSemVer(exact)) {
+    throw new Error(`Invalid target version: ${exact}`);
+  }
+  const to = request.preserveRange ? preserveRange(from, exact) : exact;
+
+  if (options.dryRun) {
+    return { dryRun: true, from, to, lockfileSynced: false };
+  }
+  if (from === to) {
+    return { dryRun: false, from, to, lockfileSynced: false };
+  }
+
+  block[request.dependency] = to;
+  await fsp.writeFile(manifest.absolutePath, `${JSON.stringify(json, null, 2)}\n`, "utf8");
+
+  try {
+    // Root, apps/*, packages/*, and templates/node/* are workspace importers:
+    // refresh the lockfile from manifests without upgrading unrelated ranges.
+    await execFileAsync("pnpm", ["install"], {
+      cwd: ROOT,
+      timeout: 300_000,
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    return { dryRun: false, from, to, lockfileSynced: true };
+  } catch (error) {
+    await fsp.writeFile(manifest.absolutePath, original, "utf8");
     throw new Error(
-      `${body.packageName} not found in ${field} of ${toPosix(path.relative(ROOT, absolute))}`,
+      `Package manager update failed; restored ${manifest.relativePath}. ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
+}
 
-  const current = bucket[body.packageName] ?? "";
-  bucket[body.packageName] = preserveVersionPrefix(current, stripRangePrefix(body.newVersion));
-  await writeFile(absolute, `${JSON.stringify(pkg, null, 2)}\n`, "utf8");
+function findDeclaration(request: UpdateRequest): DeclaredDependency | undefined {
+  return listDeclarations().find(
+    (row) =>
+      row.manifestId === request.manifestId &&
+      row.dependency === request.dependency &&
+      row.depType === request.depType &&
+      row.overlay === request.overlay,
+  );
+}
 
-  if (relativePath === "package.json") {
-    await refreshRootLockfile(body.packageName);
-    return { lockfileSynced: true };
+async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): Promise<void> {
+  const method = req.method ?? "GET";
+  const pathname = url.pathname;
+
+  if (method === "GET" && pathname === "/api/packages") {
+    const packages = discoverManifests().map((item) => ({
+      id: item.id,
+      name: item.name,
+      label: item.label,
+      kind: item.kind,
+      tags: item.tags,
+      tagKind: item.tagKind,
+      relativePath: item.relativePath,
+    }));
+    sendJson(res, 200, { packages, scopes: [...SCOPES], categories: [...RECIPE_CATEGORIES] });
+    return;
   }
 
-  return {};
+  if (method === "GET" && pathname === "/api/dependencies") {
+    const refresh = url.searchParams.get("refresh") === "1";
+    const rows = await buildDependencyRows({ refresh });
+    sendJson(res, 200, { dependencies: rows, summary: summarize(rows), lastRegistryCheckAt });
+    return;
+  }
+
+  if (method === "GET" && pathname === "/api/summary") {
+    const rows = await buildDependencyRows();
+    sendJson(res, 200, summarize(rows));
+    return;
+  }
+
+  if (method === "POST" && pathname === "/api/refresh") {
+    registryCache.clear();
+    const rows = await buildDependencyRows({ refresh: true });
+    sendJson(res, 200, { dependencies: rows, summary: summarize(rows), lastRegistryCheckAt });
+    return;
+  }
+
+  if (method === "GET" && pathname === "/api/versions") {
+    const name = url.searchParams.get("name");
+    if (!name) {
+      sendJson(res, 400, { error: "name query param is required" });
+      return;
+    }
+    const sample = listDeclarations().find((item) => item.dependency === name)?.declared ?? "0.0.0";
+    const info = await fetchRegistry(name, sample);
+    sendJson(res, 200, { dependency: name, ...info });
+    return;
+  }
+
+  if (method === "POST" && pathname === "/api/update") {
+    const body = await readJsonBody(req);
+    const dryRun =
+      Boolean((body as { dryRun?: boolean }).dryRun) || url.searchParams.get("dryRun") === "1";
+    const request = validateUpdateRequest(body);
+    const result = await applyUpdate(request, { dryRun });
+    sendJson(res, 200, { ok: true, ...request, ...result });
+    return;
+  }
+
+  if (method === "POST" && pathname === "/api/update-bulk") {
+    const body = (await readJsonBody(req)) as { dryRun?: boolean; updates?: unknown[] };
+    const dryRun = Boolean(body.dryRun);
+    if (!Array.isArray(body.updates) || body.updates.length === 0) {
+      sendJson(res, 400, { error: "updates array is required" });
+      return;
+    }
+
+    const results = [];
+    for (const item of body.updates) {
+      const request = validateUpdateRequest(item);
+      // Refuse silent major upgrades unless target is explicit exact chosen by client.
+      const current = findDeclaration(request);
+      if (!current) {
+        throw new Error(`Declaration not found for ${request.dependency}`);
+      }
+      const currentParsed = parseSemVer(current.declared);
+      const targetParsed = parseSemVer(request.targetVersion);
+      if (
+        currentParsed &&
+        targetParsed &&
+        targetParsed.major > currentParsed.major &&
+        (item as { allowMajor?: boolean }).allowMajor !== true
+      ) {
+        throw new Error(
+          `Refusing major upgrade for ${request.dependency} (${currentParsed.raw} → ${targetParsed.raw}) without allowMajor`,
+        );
+      }
+      results.push({ ...request, ...(await applyUpdate(request, { dryRun })) });
+    }
+
+    sendJson(res, 200, { ok: true, dryRun, results });
+    return;
+  }
+
+  sendJson(res, 404, { error: `Unknown API route: ${pathname}` });
 }
 
-async function handleGetPackages(_req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const groups = await buildPackagesResponse();
-  sendJson(res, 200, {
-    groups,
-    scopes: [...SCOPES],
-    categories: [...RECIPE_CATEGORIES],
-  });
-}
-
-async function handlePostUpdate(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const body = (await readJsonBody(req)) as UpdateBody;
-  const result = await updatePackageJson(body);
-  sendJson(res, 200, { ok: true, ...result });
-}
-
-async function handleIndex(_req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const htmlPath = path.join(__dirname, "index.html");
-  const html = await readFile(htmlPath, "utf8");
-  const injected = html.replace(
-    "/*__ZEALAKIT_CONSTANTS__*/",
-    `window.__ZEALAKIT__ = ${JSON.stringify({
-      scopes: [...SCOPES],
-      categories: [...RECIPE_CATEGORIES],
-    })};`,
-  );
-  sendText(res, 200, injected, "text/html; charset=utf-8");
-}
-
-async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const method = req.method ?? "GET";
-  const url = new URL(req.url ?? "/", `http://${HOST}`);
-
+async function requestListener(req: IncomingMessage, res: ServerResponse): Promise<void> {
   try {
-    if (method === "GET" && url.pathname === "/") {
-      await handleIndex(req, res);
+    if (!isLocalHost(req)) {
+      sendJson(res, 403, { error: "Host not allowed" });
       return;
     }
-    if (method === "GET" && url.pathname === "/api/packages") {
-      await handleGetPackages(req, res);
+
+    const url = new URL(req.url ?? "/", `http://${HOST}`);
+
+    if ((req.method ?? "GET") === "GET" && url.pathname === "/") {
+      const html = await fsp.readFile(INDEX_HTML, "utf8");
+      sendText(res, 200, html, "text/html; charset=utf-8");
       return;
     }
-    if (method === "POST" && url.pathname === "/api/update") {
-      await handlePostUpdate(req, res);
+
+    if (url.pathname.startsWith("/api/")) {
+      await handleApi(req, res, url);
       return;
     }
+
     sendJson(res, 404, { error: "Not found" });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    sendJson(res, 500, { error: message });
+    sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
-async function listen(port: number): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = createServer((req, res) => {
-      void handleRequest(req, res);
-    });
+function listen(port: number): void {
+  const server = createServer((req, res) => {
+    void requestListener(req, res);
+  });
 
-    server.on("error", (error: NodeJS.ErrnoException) => {
-      if (error.code === "EADDRINUSE") {
-        server.close();
-        void listen(port + 1).then(resolve, reject);
-        return;
-      }
-      reject(error);
-    });
+  server.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code === "EADDRINUSE" && port < PREFERRED_PORT + 20) {
+      listen(port + 1);
+      return;
+    }
+    console.error(error);
+    process.exit(1);
+  });
 
-    server.listen(port, HOST, () => {
-      resolve(port);
-    });
+  server.listen(port, HOST, () => {
+    console.log(`[monitor] Zealakit Dependency Monitor → http://${HOST}:${port}`);
+    console.log(
+      "[monitor] Scope: root + apps/* + packages/* + templates/node/* + recipe registry (templates/go, tests/, .sandbox/ excluded)",
+    );
   });
 }
 
-const port = await listen(PREFERRED_PORT);
-console.log(`Dependency monitor: http://${HOST}:${port}`);
+listen(PREFERRED_PORT);

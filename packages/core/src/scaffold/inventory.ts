@@ -16,8 +16,22 @@ export type PlannedFileSource = {
   kind: FileSourceKind;
   origin: string;
   absolutePath: string;
-  digest: string;
+  /** Content digest, computed lazily: only needed when two recipes write the same path. */
+  readonly digest: string;
 };
+
+function makeSource(kind: FileSourceKind, origin: string, absolutePath: string): PlannedFileSource {
+  let cached: string | undefined;
+  return {
+    kind,
+    origin,
+    absolutePath,
+    get digest(): string {
+      cached ??= digestFile(absolutePath);
+      return cached;
+    },
+  };
+}
 
 export const TEMPLATE_SKIP_NAMES = new Set([
   "node_modules",
@@ -88,12 +102,7 @@ export function listTemplateFiles(templateId: string): Map<string, PlannedFileSo
       : relative === "_gitignore"
         ? ".gitignore"
         : relative;
-    result.set(targetRelative, {
-      kind: "template",
-      origin: templateId,
-      absolutePath,
-      digest: digestFile(absolutePath),
-    });
+    result.set(targetRelative, makeSource("template", templateId, absolutePath));
   }
   return result;
 }
@@ -127,12 +136,7 @@ export function listRecipeFiles(
           targetRelative = targetRelative.replace(/^src/, template.srcDir);
         }
       }
-      result.set(targetRelative, {
-        kind,
-        origin,
-        absolutePath,
-        digest: digestFile(absolutePath),
-      });
+      result.set(targetRelative, makeSource(kind, origin, absolutePath));
     }
   };
 

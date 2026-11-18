@@ -4,7 +4,7 @@ import {
   type ManifestFieldConflict,
   type PackagePlan,
   type ScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/ecosystem";
 
 function mergeField(
   field: ManifestFieldConflict["field"],
@@ -43,15 +43,16 @@ export function planPackageMerges(config: ScaffoldConfig): PackagePlan {
 
   for (const recipeId of config.recipeIds) {
     const recipe = getRecipe(recipeId);
-    if (!recipe) continue;
-    mergeField("dependencies", conflicts, depOwners, dependencies, recipeId, recipe.packages);
+    if (recipe?.manifest.ecosystem !== "node") continue;
+    const npm = recipe.manifest;
+    mergeField("dependencies", conflicts, depOwners, dependencies, recipeId, npm.packages);
     mergeField(
       "dependencies",
       conflicts,
       depOwners,
       dependencies,
       recipeId,
-      recipe.overlayPackages?.[overlayId],
+      npm.overlayPackages?.[overlayId],
     );
     mergeField(
       "devDependencies",
@@ -59,7 +60,7 @@ export function planPackageMerges(config: ScaffoldConfig): PackagePlan {
       devOwners,
       devDependencies,
       recipeId,
-      recipe.devDependencies,
+      npm.devDependencies,
     );
     mergeField(
       "devDependencies",
@@ -67,9 +68,9 @@ export function planPackageMerges(config: ScaffoldConfig): PackagePlan {
       devOwners,
       devDependencies,
       recipeId,
-      recipe.overlayDevDependencies?.[overlayId],
+      npm.overlayDevDependencies?.[overlayId],
     );
-    mergeField("scripts", conflicts, scriptOwners, scripts, recipeId, recipe.scripts);
+    mergeField("scripts", conflicts, scriptOwners, scripts, recipeId, npm.scripts);
   }
 
   return {

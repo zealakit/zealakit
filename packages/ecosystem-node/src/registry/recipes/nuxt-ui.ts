@@ -2,6 +2,7 @@ import { defineRecipe, nuxtModule } from "./define.js";
 
 export default defineRecipe({
   id: "nuxt-ui",
+  discovery: { capabilities: ["web-ui"], projectTypes: ["ui"] },
   name: "Nuxt UI",
   category: "ui",
   supportedScopes: ["client", "hybrid"],

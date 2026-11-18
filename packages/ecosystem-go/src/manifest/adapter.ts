@@ -3,12 +3,16 @@ import path from "node:path";
 import {
   assertStagingRealPath,
   emptyPackagePlan,
+  getTemplate,
+  getTemplateDevCommand,
   type ManifestAdapter,
+  type NextSteps,
   type PackagePlan,
   resolveStagingPath,
   type ScaffoldConfig,
   type ValidationResult,
-} from "@zealakit/core";
+} from "@zealakit/core/ecosystem";
+import { validateGoOutput } from "../validation/output.js";
 import { isValidGoProjectName } from "../validation/project-name.js";
 
 function modulePathForProject(projectName: string): string {
@@ -86,5 +90,16 @@ export const goManifestAdapter: ManifestAdapter = {
       };
     }
     return { valid: true, errors: [] };
+  },
+  validateOutput(targetDir: string, config: ScaffoldConfig): string[] {
+    return validateGoOutput(targetDir, config);
+  },
+  nextSteps(config: ScaffoldConfig): NextSteps {
+    const template = getTemplate(config.templateId);
+    const devCommand = template ? getTemplateDevCommand(template) : "go run .";
+    return {
+      commands: [devCommand],
+      tip: "Run `zealakit doctor` if the Go toolchain is missing.",
+    };
   },
 };

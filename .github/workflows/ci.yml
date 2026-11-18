@@ -1,7 +1,8 @@
 name: CI
 
 on:
-  # Manual only: automatic push/PR CI builds are disabled.
+  # Fast checks run on every PR; the heavy matrix/package jobs stay manual.
+  pull_request:
   workflow_dispatch:
 
 concurrency:
@@ -9,8 +10,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quick:
+    name: Check, typecheck, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check code quality
+        run: pnpm check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Dead-export check
+        run: pnpm check:exports
+
+      - name: Run unit tests
+        run: pnpm test:unit
+
   test:
     name: Node ${{ matrix.node-version }}
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -47,6 +84,7 @@ jobs:
 
   package:
     name: Package and external consumer
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: test

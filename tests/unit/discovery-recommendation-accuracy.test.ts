@@ -6,7 +6,7 @@ import {
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
   type RecipeMatchResult,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import {
   buildRecipeChoices,
   defaultSelectedRecipeIds,

@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "zustand",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "Zustand",
   category: "state",
   supportedScopes: ["client", "hybrid"],

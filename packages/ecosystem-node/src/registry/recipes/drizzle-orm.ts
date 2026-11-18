@@ -15,6 +15,11 @@ const wiring = serverOrmWiring({
 
 export default defineRecipe({
   id: "drizzle-orm",
+  discovery: {
+    capabilities: ["database"],
+    projectTypes: ["server-api", "ui"],
+    databases: ["postgresql", "mysql", "sqlite"],
+  },
   name: "Drizzle ORM",
   hint: "Lightweight SQL",
   category: "orm",

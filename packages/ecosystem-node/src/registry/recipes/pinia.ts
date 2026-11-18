@@ -2,6 +2,7 @@ import { defineRecipe, nuxtConfigKeys, nuxtModule } from "./define.js";
 
 export default defineRecipe({
   id: "pinia",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "Pinia",
   category: "state",
   supportedScopes: ["client", "hybrid"],

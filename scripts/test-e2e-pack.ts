@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PACKED_DOTFILES } from "@zealakit/core";
+import { PACKED_DOTFILES } from "@zealakit/core/internal";
 
 /**
  * Release smoke test for the published artifact: build → pack → tarball contents

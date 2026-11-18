@@ -3,7 +3,7 @@ import { HYBRID_ORM_WARNING, hybridOrmSelections } from "../orm-warnings.js";
 import { getRecipe, getTemplate, withDefaultRecipes } from "../registry/index.js";
 import { formatRecipeResolveError, resolveRecipeDependencies } from "../resolve-recipes.js";
 import type { ScaffoldConfig, ValidationResult } from "../types.js";
-import { validateScaffoldConfig } from "../validation/index.js";
+import { validateRecipeIds, validateScaffoldConfig } from "../validation/index.js";
 import { directoryHasFiles } from "../validation/target-dir.js";
 import { listRecipeFiles, listTemplateFiles, type PlannedFileSource } from "./inventory.js";
 import { emptyPackagePlan, getManifestAdapterForConfig, type PackagePlan } from "./manifest.js";
@@ -50,7 +50,9 @@ export type BuildPlanOptions = {
 };
 
 /**
- * Read-only preflight: resolve dependencies, validate compatibility/conflicts,
+ * Read-only preflight and the single entry point for the pipeline's front half:
+ * defaults → recipe-id validation → dependency resolution → config validation
+ * → file inventory. Resolve dependencies, validate compatibility/conflicts,
  * inventory files, and detect recipe×recipe content clashes. Never writes.
  *
  * Template ← recipe overwrites are expected (action `replace`). Conflicts only
@@ -65,11 +67,33 @@ export function buildScaffoldPlan(
   const blockers: string[] = [];
   const warnings: string[] = [];
   const targetDir = path.resolve(cwd, config.projectName);
+  const destinationExists = directoryHasFiles(targetDir);
 
   const template = getTemplate(config.templateId);
   const selectedRecipeIds = template
     ? withDefaultRecipes(template.scope, config.recipeIds)
     : config.recipeIds;
+
+  // An unknown id is a user configuration error, not a missing `dependsOn`:
+  // report it before dependency expansion so the two stay distinguishable.
+  const idsCheck = validateRecipeIds(selectedRecipeIds);
+  if (!idsCheck.valid) {
+    blockers.push(...idsCheck.errors);
+    pushCheck(checks, "recipe-ids", false, idsCheck.errors.join(" "));
+    return {
+      config,
+      targetDir,
+      destinationExists,
+      selectedIds: options.requestedRecipeIds ?? config.recipeIds,
+      autoInjected: [],
+      files: [],
+      packages: emptyPackagePlan(),
+      checks,
+      blockers: [...new Set(blockers)],
+      warnings,
+    };
+  }
+
   const resolved = resolveRecipeDependencies(selectedRecipeIds);
   if (!resolved.ok) {
     const message = formatRecipeResolveError(resolved.error);
@@ -78,7 +102,7 @@ export function buildScaffoldPlan(
     return {
       config,
       targetDir,
-      destinationExists: directoryHasFiles(targetDir),
+      destinationExists,
       selectedIds: options.requestedRecipeIds ?? config.recipeIds,
       autoInjected: [],
       files: [],
@@ -126,6 +150,11 @@ export function buildScaffoldPlan(
   }
 
   const files: PlannedFile[] = [];
+  const filesByPath = new Map<string, PlannedFile>();
+  const addFile = (file: PlannedFile): void => {
+    files.push(file);
+    filesByPath.set(file.path, file);
+  };
   const owners = new Map<string, OwnedFile>();
   let fileConflictCount = 0;
 
@@ -139,7 +168,7 @@ export function buildScaffoldPlan(
   if (template) {
     for (const [relative, source] of listTemplateFiles(template.id)) {
       owners.set(relative, { source, recipeId: undefined });
-      files.push({ path: relative, action: "create", sources: [`template:${template.id}`] });
+      addFile({ path: relative, action: "create", sources: [`template:${template.id}`] });
     }
 
     for (const recipeId of effective.recipeIds) {
@@ -149,11 +178,11 @@ export function buildScaffoldPlan(
 
         if (!existing) {
           owners.set(relative, { source, recipeId });
-          files.push({ path: relative, action: "create", sources: [label] });
+          addFile({ path: relative, action: "create", sources: [label] });
           continue;
         }
 
-        const planned = files.find((file) => file.path === relative);
+        const planned = filesByPath.get(relative);
         if (planned && !planned.sources.includes(label)) {
           planned.sources.push(label);
         }
@@ -189,12 +218,12 @@ export function buildScaffoldPlan(
       if (!recipe) continue;
       for (const transform of getRecipeTransforms(recipe, template.id)) {
         const action: FileAction = transform.append !== undefined ? "append" : "transform";
-        const existing = files.find((file) => file.path === transform.file);
+        const existing = filesByPath.get(transform.file);
         if (existing) {
           existing.action = action;
           existing.sources.push(`transform:${recipeId}`);
         } else {
-          files.push({
+          addFile({
             path: transform.file,
             action,
             sources: [`transform:${recipeId}`],
@@ -216,7 +245,7 @@ export function buildScaffoldPlan(
     checks,
     "destination",
     true,
-    directoryHasFiles(targetDir) ? "exists (overwrite required)" : "empty",
+    destinationExists ? "exists (overwrite required)" : "empty",
   );
 
   files.sort((a, b) => a.path.localeCompare(b.path));
@@ -224,7 +253,7 @@ export function buildScaffoldPlan(
   return {
     config: effective,
     targetDir,
-    destinationExists: directoryHasFiles(targetDir),
+    destinationExists,
     selectedIds,
     autoInjected,
     files,

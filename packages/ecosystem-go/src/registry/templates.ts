@@ -1,8 +1,17 @@
-import type { TemplateConfig } from "@zealakit/core";
+import type { TemplateConfig } from "@zealakit/core/ecosystem";
 
 export const templateList: TemplateConfig[] = [
   {
     id: "stdlib-api",
+    discovery: {
+      projectTypes: ["server-api"],
+      purposes: ["api-service", "developer-tool", "learning", "prototype"],
+      backend: { runtimes: ["go"], frameworks: ["stdlib"] },
+      capabilities: ["http-api"],
+      deploymentTargets: ["container", "vps"],
+      architectureLevels: ["structured", "minimal"],
+      trafficExpectations: ["medium", "high", "very-high"],
+    },
     name: "Go Standard Library API",
     label: "Go Standard Library API",
     scope: "server",
@@ -14,6 +23,15 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "gin-api",
+    discovery: {
+      projectTypes: ["server-api"],
+      purposes: ["api-service", "saas", "business", "developer-tool"],
+      backend: { runtimes: ["go"], frameworks: ["gin"] },
+      capabilities: ["http-api"],
+      deploymentTargets: ["container", "vps"],
+      architectureLevels: ["balanced"],
+      trafficExpectations: ["medium", "high", "very-high"],
+    },
     name: "Gin + Go",
     label: "Gin + Go",
     scope: "server",
@@ -25,6 +43,14 @@ export const templateList: TemplateConfig[] = [
   },
   {
     id: "stdlib-worker",
+    discovery: {
+      projectTypes: ["background-worker"],
+      purposes: ["api-service", "internal-tool", "developer-tool"],
+      backend: { runtimes: ["go"], frameworks: ["stdlib"] },
+      capabilities: ["background-processing"],
+      deploymentTargets: ["container", "vps"],
+      architectureLevels: ["minimal"],
+    },
     name: "Go Standard Library Worker",
     label: "Go Worker (stdlib, background processing)",
     scope: "infrastructure",

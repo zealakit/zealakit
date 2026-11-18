@@ -13,7 +13,7 @@ import {
   type DiscoveryValidationData,
   handleDiscoveryRequest,
   PACKAGE_ROOT,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 async function call(body: Record<string, unknown>): Promise<DiscoveryApiResponse> {
   return handleDiscoveryRequest({ schemaVersion: DISCOVERY_API_SCHEMA_VERSION, ...body });

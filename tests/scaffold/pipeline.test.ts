@@ -6,6 +6,7 @@ import path from "node:path";
 import { after, describe, it } from "node:test";
 import {
   buildScaffoldPlan,
+  executeScaffoldPlan,
   getAllTemplateIds,
   getManifestAdapter,
   getRecipe,
@@ -21,7 +22,7 @@ import {
   type TemplateConfig,
   validateGeneratedOutput,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { ScaffoldCommitError } from "../../packages/core/src/scaffold/commit.js";
 import { listRecipeFiles, listTemplateFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { planPackageMerges } from "../../packages/ecosystem-node/src/manifest/package-plan.js";
@@ -522,5 +523,48 @@ describe("failure injection through the real pipeline", () => {
     }
     assertStagesCleaned();
     assertCommitSiblingsClean(cwd);
+  });
+});
+
+describe("single plan pipeline", () => {
+  it("writes every file the plan promised", async () => {
+    const cwd = caseDir();
+    const config: ScaffoldConfig = {
+      projectName: "app-plan-matches",
+      templateId: "vite-react",
+      recipeIds: ["biome", "zustand"],
+    };
+    const plan = buildScaffoldPlan(config, cwd);
+    assert.deepEqual(plan.blockers, []);
+    const dir = await executeScaffoldPlan(plan, { overwrite: "refuse" });
+    const missing = plan.files.filter((file) => !fs.existsSync(path.join(dir, file.path)));
+    assert.deepEqual(
+      missing.map((file) => file.path),
+      [],
+    );
+  });
+
+  it("reports unknown recipe ids as ids, not as dependencies", () => {
+    const plan = buildScaffoldPlan(
+      { projectName: "app-unknown", templateId: "vite-react", recipeIds: ["definitely-missing"] },
+      caseDir(),
+    );
+    assert.equal(plan.checks.find((check) => check.id === "recipe-ids")?.ok, false);
+    assert.ok(plan.blockers.some((blocker) => blocker.includes("definitely-missing")));
+  });
+
+  it("refuses a non-empty destination when asked to", async () => {
+    const cwd = caseDir();
+    fs.mkdirSync(path.join(cwd, "app-existing"));
+    fs.writeFileSync(path.join(cwd, "app-existing", "keep.txt"), "x");
+    const plan = buildScaffoldPlan(
+      { projectName: "app-existing", templateId: "vite-react", recipeIds: [] },
+      cwd,
+    );
+    await assert.rejects(
+      () => executeScaffoldPlan(plan, { overwrite: "refuse" }),
+      ScaffoldValidationError,
+    );
+    assert.equal(fs.existsSync(path.join(cwd, "app-existing", "keep.txt")), true);
   });
 });

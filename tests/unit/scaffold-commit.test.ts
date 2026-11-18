@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { scaffoldProject } from "@zealakit/core";
+import { scaffoldProject } from "@zealakit/core/internal";
 import {
   type CommitFileSystem,
   commitStagedDirectory,

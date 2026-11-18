@@ -1,15 +1,14 @@
 import {
   clearDiscoveryFeedbackSessions,
   ExitCode,
-  failDiagnostic,
   formatDiscoveryFeedbackStats,
   formatDiscoveryFeedbackStatus,
   getDiscoveryFeedbackStats,
   getDiscoveryFeedbackStatus,
-  printInfo,
   setDiscoveryFeedbackEnabled,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import type { Command } from "commander";
+import { failDiagnostic, printInfo } from "../output.js";
 import { registerDiscoveryQueryCommand } from "./query.js";
 
 /** `zealakit discovery stats|feedback …` — offline local feedback only. */

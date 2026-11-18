@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import * as publicApi from "@zealakit/core";
 import {
   createZealakit,
   type EcosystemRegistration,
@@ -8,6 +9,7 @@ import {
   type Zealakit,
   ZealakitApiError,
 } from "@zealakit/core";
+import * as ecosystemApi from "@zealakit/core/ecosystem";
 import { goEcosystem, registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { nodeEcosystem, registerNodeEcosystem } from "@zealakit/ecosystem-node";
 
@@ -36,5 +38,35 @@ describe("programmatic API public exports", () => {
 
     const questions = await zealakit.discovery.getQuestions();
     assert.equal(questions.question?.id, "projectType");
+  });
+
+  it("locks the runtime surface of each entry point", () => {
+    assert.deepEqual(Object.keys(publicApi).sort(), [
+      "DISCOVERY_API_ERROR_CODES",
+      "DISCOVERY_API_SCHEMA_VERSION",
+      "DISCOVERY_OPERATIONS",
+      "ExitCode",
+      "ScaffoldCommitError",
+      "ScaffoldValidationError",
+      "ZealakitApiError",
+      "createZealakit",
+      "formatDiagnostic",
+      "handleDiscoveryRequest",
+    ]);
+    assert.deepEqual(Object.keys(ecosystemApi).sort(), [
+      "assertStagingRealPath",
+      "emptyPackagePlan",
+      "getNpmManifest",
+      "getRecipe",
+      "getRecipeAgentEntry",
+      "getRecipeDir",
+      "getTemplate",
+      "getTemplateDevCommand",
+      "getTemplateOverlayId",
+      "registerRecipe",
+      "registerTemplate",
+      "resolveStagingPath",
+      "setManifestAdapter",
+    ]);
   });
 });

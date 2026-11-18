@@ -1,4 +1,4 @@
-import { getRecipeCategories, recipes } from "../registry/index.js";
+import { getAllRecipes, getRecipeCategories } from "../registry/index.js";
 import type { RuleMetadata } from "./types.js";
 
 /**
@@ -9,7 +9,7 @@ import type { RuleMetadata } from "./types.js";
  * point at entities that were filtered out.
  */
 export function getRuleMetadata(visibleRecipeIds?: ReadonlySet<string>): RuleMetadata[] {
-  const all = Object.values(recipes);
+  const all = getAllRecipes();
   const visible = (recipeId: string): boolean =>
     visibleRecipeIds === undefined || visibleRecipeIds.has(recipeId);
   const ids = (list: typeof all): string[] =>

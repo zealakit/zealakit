@@ -1,7 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { insertAgentEntry, transformSource } from "@zealakit/core";
+import { insertAgentEntry, transformSource } from "@zealakit/core/internal";
 
 describe("transformSource", () => {
   it("appends a missing line once", () => {
@@ -35,6 +35,53 @@ describe("transformSource", () => {
 
   it("requires append or pattern + replacement", () => {
     assert.throws(() => transformSource("r", { file: "f" }, "a"), /needs either append/);
+  });
+});
+
+describe("marker and json transforms", () => {
+  it("inserts after the marker line using its indentation", () => {
+    const next = transformSource(
+      "r",
+      { file: "f", marker: "// zealakit-modules", insert: '"a",' },
+      "export default {\n  modules: [\n    // zealakit-modules\n  ],\n};\n",
+    );
+    assert.equal(
+      next,
+      'export default {\n  modules: [\n    // zealakit-modules\n    "a",\n  ],\n};\n',
+    );
+  });
+
+  it("supports inserting before the marker and fails loudly when it is missing", () => {
+    assert.equal(
+      transformSource("r", { file: "f", marker: "M", insert: "x", position: "before" }, "a\n  M\n"),
+      "a\n  x\n  M\n",
+    );
+    assert.throws(
+      () => transformSource("r", { file: "f", marker: "M", insert: "x" }, "nothing"),
+      /marker 'M' not found in f/,
+    );
+  });
+
+  it("edits JSON structurally regardless of formatting", () => {
+    const raw = '{"compilerOptions":{"strict":true,"paths":{"@/*":["./src/*"]}}}';
+    const next = transformSource(
+      "r",
+      {
+        file: "tsconfig.json",
+        json: (data) => {
+          (data.compilerOptions as Record<string, unknown>).experimentalDecorators = true;
+        },
+      },
+      raw,
+    );
+    assert.equal(
+      next,
+      '{\n  "compilerOptions": {\n    "strict": true,\n    "paths": {\n      "@/*": ["./src/*"]\n    },\n    "experimentalDecorators": true\n  }\n}\n',
+    );
+    assert.throws(
+      () => transformSource("r", { file: "x.json", json: () => {} }, "{ nope"),
+      /not valid JSON/,
+    );
   });
 });
 

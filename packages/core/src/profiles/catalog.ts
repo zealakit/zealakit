@@ -1,41 +1,39 @@
-import { RECIPE_PROFILES } from "./recipe-profiles/index.js";
-import { TEMPLATE_PROFILES } from "./template-profiles/index.js";
+import { getAllRecipeIds, getAllTemplateIds, getRecipe, getTemplate } from "../registry/index.js";
 import type { RecipeProfile, TemplateProfile } from "./types.js";
 
-function indexById<T extends { id: string }>(profiles: readonly T[]): Map<string, T> {
-  const map = new Map<string, T>();
-  for (const profile of profiles) {
-    if (map.has(profile.id)) {
-      throw new Error(`Duplicate profile id '${profile.id}'`);
-    }
-    map.set(profile.id, profile);
-  }
-  return map;
-}
-
-const templateProfiles = indexById(TEMPLATE_PROFILES);
-const recipeProfiles = indexById(RECIPE_PROFILES);
+/**
+ * Discovery profiles live on `TemplateConfig.discovery` / `RecipeConfig.discovery`
+ * inside each ecosystem package; core only reads them from the registry.
+ */
 
 export function getTemplateProfile(id: string): TemplateProfile | undefined {
-  return templateProfiles.get(id);
+  const discovery = getTemplate(id)?.discovery;
+  return discovery ? { id, ...discovery } : undefined;
 }
 
 export function getAllTemplateProfiles(): TemplateProfile[] {
-  return [...templateProfiles.values()];
+  return getAllTemplateIds().flatMap((id) => {
+    const profile = getTemplateProfile(id);
+    return profile ? [profile] : [];
+  });
 }
 
 export function getAllTemplateProfileIds(): string[] {
-  return [...templateProfiles.keys()];
+  return getAllTemplateProfiles().map((profile) => profile.id);
 }
 
 export function getRecipeProfile(id: string): RecipeProfile | undefined {
-  return recipeProfiles.get(id);
+  const discovery = getRecipe(id)?.discovery;
+  return discovery ? { id, ...discovery } : undefined;
 }
 
 export function getAllRecipeProfiles(): RecipeProfile[] {
-  return [...recipeProfiles.values()];
+  return getAllRecipeIds().flatMap((id) => {
+    const profile = getRecipeProfile(id);
+    return profile ? [profile] : [];
+  });
 }
 
 export function getAllRecipeProfileIds(): string[] {
-  return [...recipeProfiles.keys()];
+  return getAllRecipeProfiles().map((profile) => profile.id);
 }

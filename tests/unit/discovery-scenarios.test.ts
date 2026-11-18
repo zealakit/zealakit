@@ -5,7 +5,7 @@ import {
   matchDiscovery,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import {
   buildTemplateChoices,
   defaultSelectedRecipeIds,

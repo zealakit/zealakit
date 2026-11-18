@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PACKED_DOTFILES } from "@zealakit/core";
+import { PACKED_DOTFILES } from "@zealakit/core/internal";
 
 /**
  * npm never packs `.gitignore`, so templates ship a `_gitignore` twin that the
