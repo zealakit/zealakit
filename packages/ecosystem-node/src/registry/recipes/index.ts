@@ -3,6 +3,7 @@ import antd from "./antd.js";
 import axios from "./axios.js";
 import biome from "./biome.js";
 import clientSharedPieces from "./client-shared-pieces.js";
+import docker from "./docker.js";
 import drizzleOrm from "./drizzle-orm.js";
 import eslint from "./eslint.js";
 import hookformZod from "./hookform-zod.js";
@@ -16,8 +17,10 @@ import prisma from "./prisma.js";
 import shadcnUi from "./shadcn-ui.js";
 import shadcnVue from "./shadcn-vue.js";
 import storybook from "./storybook.js";
+import tanstackQuery from "./tanstack-query.js";
 import typeOrm from "./type-orm.js";
 import veeValidateZod from "./vee-validate-zod.js";
+import vitest from "./vitest.js";
 import zustand from "./zustand.js";
 
 /** Registration order = prompt option order. One module per recipe: `./<id>.ts`. */
@@ -32,12 +35,15 @@ export const RECIPE_LIST: RecipeConfig[] = [
   veeValidateZod,
   kyjs,
   axios,
+  tanstackQuery,
   antd,
   mui,
   shadcnUi,
   nuxtUi,
   shadcnVue,
   storybook,
+  vitest,
+  docker,
   typeOrm,
   mikroOrm,
   drizzleOrm,

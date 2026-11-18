@@ -229,30 +229,34 @@ zealakit info --json --recipe biome
 - **`storybook`** — 可与 UI 套件同时使用
 - **`client-shared-pieces`** — 在 Vite / Astro / Next / Nuxt 上自动添加
 
-| Recipe             | 分类        | 适用模板                             | 内容                        |
-| ------------------ | ----------- | ------------------------------------ | --------------------------- |
-| `biome`            | Linter      | 全部                                 | Lint + Format 脚本          |
-| `eslint`           | Linter      | 全部                                 | ESLint flat config          |
-| `zustand`          | State       | Vite React、Astro、Next              | Zustand 示例                |
-| `pinia`            | State       | Vite Vue、Nuxt                       | Pinia 示例                  |
-| `nanostores`       | State       | Vite、Astro、Next、Nuxt              | Nanostores 示例             |
-| `hookform-zod`     | Forms       | Vite React、Astro、Next              | React Hook Form + Zod       |
-| `vee-validate-zod` | Forms       | Vite Vue、Nuxt                       | VeeValidate + Zod           |
-| `kyjs`             | HTTP        | Vite、Astro、Next、Nuxt              | Ky 客户端                   |
-| `axios`            | HTTP        | Vite、Astro、Next、Nuxt              | Axios 客户端                |
-| `antd`             | UI          | Vite React、Astro、Next              | Ant Design                  |
-| `mui`              | UI          | Vite React、Astro、Next              | MUI                         |
-| `shadcn-ui`        | UI          | Vite React、Astro、Next              | Tailwind + shadcn/ui        |
-| `shadcn-vue`       | UI          | Vite Vue、Nuxt                       | Tailwind + shadcn-vue       |
-| `nuxt-ui`          | UI          | Vite Vue、Nuxt                       | Tailwind + Nuxt UI          |
-| `storybook`        | 文档 / 测试 | Vite、Astro、Next、Nuxt              | Storybook 配置与脚本        |
-| `type-orm`         | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | TypeORM + Agent skill       |
-| `mikro-orm`        | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | MikroORM + Agent skill      |
-| `drizzle-orm`      | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Drizzle + drizzle-kit 脚本  |
-| `prisma`           | ORM         | Nest、Hono、Next、Nuxt、Astro hybrid | Prisma schema + migrate     |
-| `postgres`         | Database    | Go 模板                              | `database/sql` + pgx 驱动   |
-| `mysql`            | Database    | Go 模板                              | `database/sql` + MySQL 驱动 |
-| `mongodb`          | Database    | Go 模板                              | 官方 MongoDB Go Driver v2   |
+| Recipe             | 分类           | 适用模板                             | 内容                                                       |
+| ------------------ | -------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `biome`            | Linter         | 全部                                 | Lint + Format 脚本                                         |
+| `eslint`           | Linter         | 全部                                 | ESLint flat config                                         |
+| `zustand`          | State          | Vite React、Astro、Next              | Zustand 示例                                               |
+| `pinia`            | State          | Vite Vue、Nuxt                       | Pinia 示例                                                 |
+| `nanostores`       | State          | Vite、Astro、Next、Nuxt              | Nanostores 示例                                            |
+| `hookform-zod`     | Forms          | Vite React、Astro、Next              | React Hook Form + Zod                                      |
+| `vee-validate-zod` | Forms          | Vite Vue、Nuxt                       | VeeValidate + Zod                                          |
+| `kyjs`             | HTTP           | Vite、Astro、Next、Nuxt              | Ky 客户端                                                  |
+| `axios`            | HTTP           | Vite、Astro、Next、Nuxt              | Axios 客户端                                               |
+| `antd`             | UI             | Vite React、Astro、Next              | Ant Design                                                 |
+| `mui`              | UI             | Vite React、Astro、Next              | MUI                                                        |
+| `shadcn-ui`        | UI             | Vite React、Astro、Next              | Tailwind + shadcn/ui                                       |
+| `shadcn-vue`       | UI             | Vite Vue、Nuxt                       | Tailwind + shadcn-vue                                      |
+| `nuxt-ui`          | UI             | Vite Vue、Nuxt                       | Tailwind + Nuxt UI                                         |
+| `storybook`        | 文档 / 测试    | Vite、Astro、Next、Nuxt              | Storybook 配置与脚本                                       |
+| `vitest`           | Testing        | Vite, Astro, Next, Nuxt              | Vitest + Testing Library, sample test                      |
+| `tanstack-query`   | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt    | Query provider + example hook                              |
+| `docker`           | Infrastructure | Nest, Hono, Next, Nuxt               | Dockerfile + compose (+ db service with an ORM)            |
+| `type-orm`         | ORM            | Nest、Hono、Next、Nuxt、Astro hybrid | TypeORM + Agent skill                                      |
+| `mikro-orm`        | ORM            | Nest、Hono、Next、Nuxt、Astro hybrid | MikroORM + Agent skill                                     |
+| `drizzle-orm`      | ORM            | Nest、Hono、Next、Nuxt、Astro hybrid | Drizzle + drizzle-kit 脚本                                 |
+| `prisma`           | ORM            | Nest、Hono、Next、Nuxt、Astro hybrid | Prisma schema + migrate                                    |
+| `postgres`         | Database       | Go 模板                              | `database/sql` + pgx 驱动                                  |
+| `mysql`            | Database       | Go 模板                              | `database/sql` + MySQL 驱动                                |
+| `mongodb`          | Database       | Go 模板                              | 官方 MongoDB Go Driver v2                                  |
+| `docker-go`        | Infrastructure | Go templates                         | Dockerfile + compose (+ db service with a database recipe) |
 
 ORM Recipe 不绑定具体数据库驱动。脚手架完成后自行安装驱动（`pg`、`mysql2` 等），并参考 `.agents/skills/<orm>/` 中的说明。
 

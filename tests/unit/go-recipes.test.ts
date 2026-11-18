@@ -55,7 +55,7 @@ describe("Go recipe registration", () => {
     const goIds = getInfo()
       .data.recipes.filter((recipe) => recipe.ecosystem === "go")
       .map((recipe) => recipe.id);
-    assert.deepEqual(goIds, ["postgres", "mysql", "mongodb"]);
+    assert.deepEqual(goIds, ["postgres", "mysql", "mongodb", "docker-go"]);
   });
 
   for (const expected of goRecipes) {

@@ -24,6 +24,7 @@ export {
 export { assertStagingRealPath, getRecipeDir, resolveStagingPath } from "./scaffold/paths.js";
 export type {
   EcosystemId,
+  FinalizeContext,
   GoRecipeManifest,
   NpmRecipeManifest,
   RecipeConfig,

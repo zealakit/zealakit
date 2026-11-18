@@ -229,30 +229,34 @@ Ngoại lệ:
 - **`storybook`** — có thể dùng kèm UI kit
 - **`client-shared-pieces`** — tự thêm trên Vite, Astro, Next và Nuxt
 
-| Recipe             | Nhóm           | Template                             | Nội dung                      |
-| ------------------ | -------------- | ------------------------------------ | ----------------------------- |
-| `biome`            | Linter         | Tất cả                               | Script lint + format          |
-| `eslint`           | Linter         | Tất cả                               | ESLint flat config            |
-| `zustand`          | State          | Vite React, Astro, Next              | Ví dụ store Zustand           |
-| `pinia`            | State          | Vite Vue, Nuxt                       | Ví dụ store Pinia             |
-| `nanostores`       | State          | Vite, Astro, Next, Nuxt              | Ví dụ Nanostores              |
-| `hookform-zod`     | Forms          | Vite React, Astro, Next              | React Hook Form + Zod         |
-| `vee-validate-zod` | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod             |
-| `kyjs`             | HTTP           | Vite, Astro, Next, Nuxt              | Client Ky                     |
-| `axios`            | HTTP           | Vite, Astro, Next, Nuxt              | Client Axios                  |
-| `antd`             | UI             | Vite React, Astro, Next              | Ant Design                    |
-| `mui`              | UI             | Vite React, Astro, Next              | MUI                           |
-| `shadcn-ui`        | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui          |
-| `shadcn-vue`       | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue         |
-| `nuxt-ui`          | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI            |
-| `storybook`        | Docs / testing | Vite, Astro, Next, Nuxt              | Config + script Storybook     |
-| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM + skill agent         |
-| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM + skill agent        |
-| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + script drizzle-kit  |
-| `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate       |
-| `postgres`         | Database       | Template Go                          | `database/sql` + driver pgx   |
-| `mysql`            | Database       | Template Go                          | `database/sql` + driver MySQL |
-| `mongodb`          | Database       | Template Go                          | MongoDB Go Driver v2          |
+| Recipe             | Nhóm           | Template                             | Nội dung                                                   |
+| ------------------ | -------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `biome`            | Linter         | Tất cả                               | Script lint + format                                       |
+| `eslint`           | Linter         | Tất cả                               | ESLint flat config                                         |
+| `zustand`          | State          | Vite React, Astro, Next              | Ví dụ store Zustand                                        |
+| `pinia`            | State          | Vite Vue, Nuxt                       | Ví dụ store Pinia                                          |
+| `nanostores`       | State          | Vite, Astro, Next, Nuxt              | Ví dụ Nanostores                                           |
+| `hookform-zod`     | Forms          | Vite React, Astro, Next              | React Hook Form + Zod                                      |
+| `vee-validate-zod` | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod                                          |
+| `kyjs`             | HTTP           | Vite, Astro, Next, Nuxt              | Client Ky                                                  |
+| `axios`            | HTTP           | Vite, Astro, Next, Nuxt              | Client Axios                                               |
+| `antd`             | UI             | Vite React, Astro, Next              | Ant Design                                                 |
+| `mui`              | UI             | Vite React, Astro, Next              | MUI                                                        |
+| `shadcn-ui`        | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui                                       |
+| `shadcn-vue`       | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue                                      |
+| `nuxt-ui`          | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI                                         |
+| `storybook`        | Docs / testing | Vite, Astro, Next, Nuxt              | Config + script Storybook                                  |
+| `vitest`           | Testing        | Vite, Astro, Next, Nuxt              | Vitest + Testing Library, sample test                      |
+| `tanstack-query`   | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt    | Query provider + example hook                              |
+| `docker`           | Infrastructure | Nest, Hono, Next, Nuxt               | Dockerfile + compose (+ db service with an ORM)            |
+| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM + skill agent                                      |
+| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM + skill agent                                     |
+| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + script drizzle-kit                               |
+| `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate                                    |
+| `postgres`         | Database       | Template Go                          | `database/sql` + driver pgx                                |
+| `mysql`            | Database       | Template Go                          | `database/sql` + driver MySQL                              |
+| `mongodb`          | Database       | Template Go                          | MongoDB Go Driver v2                                       |
+| `docker-go`        | Infrastructure | Go templates                         | Dockerfile + compose (+ db service with a database recipe) |
 
 Recipe ORM không gắn cứng driver. Sau khi scaffold, cài driver DB (`pg`, `mysql2`, …) và làm theo skill trong `.agents/skills/<orm>/`.
 

@@ -65,8 +65,9 @@ export function nextUiProviders({ registry, theme }: NextUiProviders): RecipeFil
     },
     {
       file: "src/app/layout.tsx",
-      pattern: /<body>\{children\}<\/body>/,
-      replacement: `<body><${registry.name}>{children}</${registry.name}></body>`,
+      // Wrap the JSX `{children}` itself so other recipes can wrap it too, in any order.
+      pattern: /\{children\}/,
+      replacement: `<${registry.name}>{children}</${registry.name}>`,
     },
     {
       file: "src/app/[locale]/layout.tsx",

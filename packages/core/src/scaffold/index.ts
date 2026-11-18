@@ -41,9 +41,9 @@ export {
 export { buildScaffoldPlan, planIsReady, type ScaffoldPlan } from "./plan.js";
 export { validateGeneratedOutput } from "./validate-output.js";
 
-function runFinalizers(recipes: RecipeConfig[], targetDir: string): void {
+function runFinalizers(recipes: RecipeConfig[], targetDir: string, config: ScaffoldConfig): void {
   for (const recipe of recipes) {
-    recipe.finalize?.(targetDir);
+    recipe.finalize?.(targetDir, { config });
   }
 }
 
@@ -94,7 +94,7 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
   // full walk after all copies (before finalizers write) is enough.
   assertStagingSymlinksSafe(targetDir);
 
-  runFinalizers(recipes, targetDir);
+  runFinalizers(recipes, targetDir, plan.config);
   getManifestAdapterForConfig(plan.config).applyMerges(targetDir, plan.config);
   if (plan.manifest) {
     writeProjectManifest(plan, targetDir);

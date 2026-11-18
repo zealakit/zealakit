@@ -79,6 +79,12 @@ export type GoRecipeManifest = {
 
 export type RecipeManifest = NpmRecipeManifest | GoRecipeManifest;
 
+/** What a recipe `finalize` hook can see besides the staging directory. */
+export type FinalizeContext = {
+  /** The effective scaffold config (all recipes, defaults and dependencies included). */
+  config: ScaffoldConfig;
+};
+
 export type RecipeConfig = {
   id: string;
   name: string;
@@ -127,7 +133,7 @@ export type RecipeConfig = {
    * Receives the staging root. Hooks are trusted kit code: keep every write
    * inside that root (`resolveStagingPath` / `assertStagingRealPath`).
    */
-  finalize?: (targetDir: string) => void;
+  finalize?: (targetDir: string, context: FinalizeContext) => void;
 };
 
 export type ScaffoldConfig = {

@@ -1,0 +1,1 @@
+- **Docker:** [.agents/skills/docker/SKILL.md](.agents/skills/docker/SKILL.md) — multi-stage image and `compose.yaml`

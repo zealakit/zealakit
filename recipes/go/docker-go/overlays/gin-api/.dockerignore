@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+!.env.example
+Dockerfile
+compose.yaml
+bin
+*.test
+coverage.out
