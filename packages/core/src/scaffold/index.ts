@@ -102,6 +102,45 @@ function materialize(plan: ScaffoldPlan, targetDir: string): void {
   ensureCursorAgentsSymlink(targetDir);
 }
 
+export type StagedProject = {
+  /** Absolute path of the staged project. */
+  dir: string;
+  /** Remove the staging directory (best effort, idempotent). */
+  dispose: () => void;
+};
+
+/**
+ * Materialize a ready plan into a fresh temp dir and validate it, without
+ * committing anywhere. Used by `executeScaffoldPlan` and by `add`.
+ */
+export function stagePlan(plan: ScaffoldPlan): StagedProject {
+  if (!planIsReady(plan)) {
+    throw new ScaffoldValidationError(plan.blockers.join("\n"), plan.blockers);
+  }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-stage-"));
+  const dispose = (): void => {
+    try {
+      fse.removeSync(dir);
+    } catch {
+      // Staging cleanup is best-effort: never mask the original failure.
+    }
+  };
+  try {
+    materialize(plan, dir);
+    const output = validateGeneratedOutput(dir, plan.config);
+    if (!output.ok) {
+      throw new ScaffoldValidationError(
+        `Post-generation validation failed:\n${output.errors.join("\n")}`,
+        output.errors,
+      );
+    }
+    return { dir, dispose };
+  } catch (error) {
+    dispose();
+    throw error;
+  }
+}
+
 export type ExecutePlanOptions = {
   /**
    * `refuse` throws when the destination already has files; `allow` replaces it
@@ -127,27 +166,12 @@ export async function executeScaffoldPlan(
     throw new ScaffoldValidationError(message, [message]);
   }
 
-  const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-stage-"));
+  const staged = stagePlan(plan);
   try {
-    materialize(plan, stageDir);
-
-    const output = validateGeneratedOutput(stageDir, plan.config);
-    if (!output.ok) {
-      throw new ScaffoldValidationError(
-        `Post-generation validation failed:\n${output.errors.join("\n")}`,
-        output.errors,
-      );
-    }
-
-    commitStagedDirectory(stageDir, plan.targetDir);
+    commitStagedDirectory(staged.dir, plan.targetDir);
     return plan.targetDir;
   } catch (error) {
-    // Staging cleanup is best-effort: never mask the original failure.
-    try {
-      fse.removeSync(stageDir);
-    } catch {
-      // Leave the staging dir for diagnostics; the original error is rethrown.
-    }
+    staged.dispose();
     throw error;
   }
 }

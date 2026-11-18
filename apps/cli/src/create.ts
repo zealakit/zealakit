@@ -314,7 +314,7 @@ async function runCreate(
 
   // One plan: defaults, id validation, dependency resolution and config
   // validation happen here, and the same plan is previewed or executed.
-  const plan = buildScaffoldPlan(resolved.config, process.cwd(), {
+  const plan = buildScaffoldPlan({ ...resolved.config, packageManager }, process.cwd(), {
     requestedRecipeIds: resolved.config.recipeIds,
     manifest: options.manifest !== false,
   });

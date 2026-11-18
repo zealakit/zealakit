@@ -161,6 +161,18 @@ npx zealakit@latest create [tên-project] [options]
 | `-h, --help`                 | Xem trợ giúp                                                                                 |
 | `-V, --version`              | Xem phiên bản                                                                                |
 
+### `zealakit add`
+
+Thêm recipe vào project đã tạo (cần `zealakit.json`):
+
+```bash
+zealakit add zustand tanstack-query     # xem diff rồi xác nhận
+zealakit add vitest --dry-run           # chỉ xem trước
+zealakit add github-actions -y --json   # không tương tác, đầu ra JSON
+```
+
+`add` tạo lại project bằng kit đang cài, có và không có recipe mới, rồi chỉ áp dụng phần khác biệt — project nguyên bản sẽ giống hệt `create -w <tất cả recipe>`. Dependency và script được merge vào `package.json`; file bạn đã sửa **không bao giờ bị ghi đè âm thầm** (hiển thị là conflict kèm patch để tự áp dụng, hoặc dùng `--overwrite-files`; bản gốc được backup). Từ chối chạy khi git tree chưa sạch trừ khi có `--force`. `zealakit doctor` chạy trong project sẽ kiểm tra thêm manifest, symlink `.cursor`, file recipe, `.env` và dependency.
+
 ### `zealakit.json` và preset
 
 Mỗi project được tạo ra đều ghi `zealakit.json` (`kitVersion`, `template`, `recipes` đã resolve, `requestedRecipes`, `createdAt`); schema đi kèm package (`schema/zealakit.schema.json`), tắt bằng `--no-manifest`. Cài đặt hoặc git thất bại không làm hỏng việc tạo project (file đã được ghi, chỉ in cảnh báo, exit code vẫn là `0`).
@@ -229,34 +241,38 @@ Ngoại lệ:
 - **`storybook`** — có thể dùng kèm UI kit
 - **`client-shared-pieces`** — tự thêm trên Vite, Astro, Next và Nuxt
 
-| Recipe             | Nhóm           | Template                             | Nội dung                                                   |
-| ------------------ | -------------- | ------------------------------------ | ---------------------------------------------------------- |
-| `biome`            | Linter         | Tất cả                               | Script lint + format                                       |
-| `eslint`           | Linter         | Tất cả                               | ESLint flat config                                         |
-| `zustand`          | State          | Vite React, Astro, Next              | Ví dụ store Zustand                                        |
-| `pinia`            | State          | Vite Vue, Nuxt                       | Ví dụ store Pinia                                          |
-| `nanostores`       | State          | Vite, Astro, Next, Nuxt              | Ví dụ Nanostores                                           |
-| `hookform-zod`     | Forms          | Vite React, Astro, Next              | React Hook Form + Zod                                      |
-| `vee-validate-zod` | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod                                          |
-| `kyjs`             | HTTP           | Vite, Astro, Next, Nuxt              | Client Ky                                                  |
-| `axios`            | HTTP           | Vite, Astro, Next, Nuxt              | Client Axios                                               |
-| `antd`             | UI             | Vite React, Astro, Next              | Ant Design                                                 |
-| `mui`              | UI             | Vite React, Astro, Next              | MUI                                                        |
-| `shadcn-ui`        | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui                                       |
-| `shadcn-vue`       | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue                                      |
-| `nuxt-ui`          | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI                                         |
-| `storybook`        | Docs / testing | Vite, Astro, Next, Nuxt              | Config + script Storybook                                  |
-| `vitest`           | Testing        | Vite, Astro, Next, Nuxt              | Vitest + Testing Library, sample test                      |
-| `tanstack-query`   | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt    | Query provider + example hook                              |
-| `docker`           | Infrastructure | Nest, Hono, Next, Nuxt               | Dockerfile + compose (+ db service with an ORM)            |
-| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM + skill agent                                      |
-| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM + skill agent                                     |
-| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + script drizzle-kit                               |
-| `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate                                    |
-| `postgres`         | Database       | Template Go                          | `database/sql` + driver pgx                                |
-| `mysql`            | Database       | Template Go                          | `database/sql` + driver MySQL                              |
-| `mongodb`          | Database       | Template Go                          | MongoDB Go Driver v2                                       |
-| `docker-go`        | Infrastructure | Go templates                         | Dockerfile + compose (+ db service with a database recipe) |
+| Recipe              | Nhóm           | Template                             | Nội dung                                                   |
+| ------------------- | -------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `biome`             | Linter         | Tất cả                               | Script lint + format                                       |
+| `eslint`            | Linter         | Tất cả                               | ESLint flat config                                         |
+| `zustand`           | State          | Vite React, Astro, Next              | Ví dụ store Zustand                                        |
+| `pinia`             | State          | Vite Vue, Nuxt                       | Ví dụ store Pinia                                          |
+| `nanostores`        | State          | Vite, Astro, Next, Nuxt              | Ví dụ Nanostores                                           |
+| `hookform-zod`      | Forms          | Vite React, Astro, Next              | React Hook Form + Zod                                      |
+| `vee-validate-zod`  | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod                                          |
+| `kyjs`              | HTTP           | Vite, Astro, Next, Nuxt              | Client Ky                                                  |
+| `axios`             | HTTP           | Vite, Astro, Next, Nuxt              | Client Axios                                               |
+| `antd`              | UI             | Vite React, Astro, Next              | Ant Design                                                 |
+| `mui`               | UI             | Vite React, Astro, Next              | MUI                                                        |
+| `shadcn-ui`         | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui                                       |
+| `shadcn-vue`        | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue                                      |
+| `nuxt-ui`           | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI                                         |
+| `storybook`         | Docs / testing | Vite, Astro, Next, Nuxt              | Config + script Storybook                                  |
+| `vitest`            | Testing        | Vite, Astro, Next, Nuxt              | Vitest + Testing Library, sample test                      |
+| `tanstack-query`    | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt    | Query provider + example hook                              |
+| `better-auth`       | Auth           | Next, Nuxt, Hono, Astro hybrid       | Better Auth server + client + route handler                |
+| `nest-auth`         | Auth           | Nest                                 | JWT login endpoint + bearer-token guard                    |
+| `github-actions`    | CI             | All Node templates                   | CI workflow from your other recipes                        |
+| `docker`            | Infrastructure | Nest, Hono, Next, Nuxt               | Dockerfile + compose (+ db service with an ORM)            |
+| `type-orm`          | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM + skill agent                                      |
+| `mikro-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM + skill agent                                     |
+| `drizzle-orm`       | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + script drizzle-kit                               |
+| `prisma`            | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate                                    |
+| `postgres`          | Database       | Template Go                          | `database/sql` + driver pgx                                |
+| `mysql`             | Database       | Template Go                          | `database/sql` + driver MySQL                              |
+| `mongodb`           | Database       | Template Go                          | MongoDB Go Driver v2                                       |
+| `docker-go`         | Infrastructure | Go templates                         | Dockerfile + compose (+ db service with a database recipe) |
+| `github-actions-go` | CI             | Go templates                         | `go vet` / `go test` / `go build` workflow                 |
 
 Recipe ORM không gắn cứng driver. Sau khi scaffold, cài driver DB (`pg`, `mysql2`, …) và làm theo skill trong `.agents/skills/<orm>/`.
 

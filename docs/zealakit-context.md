@@ -721,7 +721,7 @@ Ownership:
 | `nest`               | server | —           | DDD/hexagonal, dev `npm run start:dev` |
 | `hono`               | server | —           | lightweight API                        |
 
-- Recipe (24): `vitest`, `tanstack-query`, `docker`, `docker-go` (thêm ở beta.4), `biome`, `eslint`, `zustand`, `pinia`, `nanostores`, `client-shared-pieces`, `hookform-zod`, `vee-validate-zod`, `kyjs`, `axios`, `antd`, `mui`, `shadcn-ui`, `nuxt-ui`, `shadcn-vue`, `storybook`, `type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`.
+- Recipe (29): `better-auth`, `nest-auth`, `github-actions`, `github-actions-go`, `vitest`, `tanstack-query`, `docker`, `docker-go` (thêm ở beta.4), `biome`, `eslint`, `zustand`, `pinia`, `nanostores`, `client-shared-pieces`, `hookform-zod`, `vee-validate-zod`, `kyjs`, `axios`, `antd`, `mui`, `shadcn-ui`, `nuxt-ui`, `shadcn-vue`, `storybook`, `type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`.
 - ORM recipe: `supportedScopes: ["server", "hybrid"]`, `exclusive: true`, profile `projectTypes: ["server-api", "ui"]` (UI bao gồm hybrid).
 - `client-shared-pieces` là recipe `default` cho client/hybrid.
 - `defineRecipe` tự set `path: node/<id>` và `ecosystem: "node"`.

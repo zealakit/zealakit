@@ -23,7 +23,12 @@ const NODE_RECIPE_MODULES_DIR = path.join(
   "packages/ecosystem-node/src/registry/recipes",
 );
 const GO_RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-go/src/registry/recipes");
-const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts", "shared.ts"]);
+const NON_RECIPE_MODULES = new Set([
+  "index.ts",
+  "define.ts",
+  "shared.ts",
+  "github-actions-workflow.ts",
+]);
 
 const familyKeys = new Set([
   ...getAllTemplateIds(),

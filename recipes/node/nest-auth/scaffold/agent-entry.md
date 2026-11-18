@@ -1,0 +1,1 @@
+- **Auth (JWT):** [.agents/skills/nest-auth/SKILL.md](.agents/skills/nest-auth/SKILL.md) — login endpoint, bearer-token guard, protected routes

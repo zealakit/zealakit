@@ -1,4 +1,5 @@
 import type { EcosystemId, RecipeCategory, Scope, UiFramework } from "./constants.js";
+import type { PackageManager } from "./package-manager.js";
 import type { RecipeProfile, TemplateProfile } from "./profiles/types.js";
 
 export type { EcosystemId, RecipeCategory, Scope, UiFramework };
@@ -141,6 +142,8 @@ export type ScaffoldConfig = {
   templateId: string;
   recipeIds: string[];
   targetDir?: string;
+  /** Package manager the project will use; recipes (e.g. CI) may tailor output to it. */
+  packageManager?: PackageManager;
 };
 
 export type ValidationResult = {

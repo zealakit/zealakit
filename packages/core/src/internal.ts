@@ -121,6 +121,17 @@ export {
   validateProfiles,
 } from "./profiles/index.js";
 export {
+  type AddPlan,
+  applyAddPlan,
+  planAddRecipes,
+} from "./project/add.js";
+export {
+  checkProject,
+  compareKitVersions,
+  type ProjectReport,
+} from "./project/checks.js";
+export { unifiedDiff } from "./project/diff.js";
+export {
   buildProjectManifest,
   parseProjectManifest,
   readProjectManifest,

@@ -13,6 +13,7 @@ import {
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 import { Command, CommanderError } from "commander";
+import { registerAddCommand } from "./add.js";
 import { attachCreateOptions, runCreateAction } from "./create.js";
 import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
@@ -120,15 +121,18 @@ program
     "--min-go-version <version>",
     "Require Go >= version (e.g. 1.22.0); missing/incompatible then exits non-zero",
   )
-  .action(async (options: { json?: boolean; minGoVersion?: string }) => {
+  .option("--cwd <dir>", "Project directory to check as well (default: current directory)")
+  .action(async (options: { json?: boolean; minGoVersion?: string; cwd?: string }) => {
     await runDoctor({
       json: options.json === true,
       minGoVersion: options.minGoVersion,
+      cwd: options.cwd,
     });
   });
 
 registerDiscoveryCommands(program);
 registerPresetCommands(program);
+registerAddCommand(program);
 
 /** Commander exits directly per command; override nested ones so parse errors map to usage. */
 function overrideCommanderExit(command: Command): void {

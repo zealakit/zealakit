@@ -20,7 +20,7 @@ function lstatOrUndefined(target: string): fs.Stats | undefined {
  * `.cursor` must be a relative symlink to `.agents`; the link must not escape
  * the generated project (checked both lexically and after resolving symlinks).
  */
-function validateAgentConfiguration(targetDir: string, errors: string[]): void {
+export function validateAgentConfiguration(targetDir: string, errors: string[]): void {
   const agentsDir = path.join(targetDir, ".agents");
   const cursorPath = path.join(targetDir, ".cursor");
   const cursorStat = lstatOrUndefined(cursorPath);

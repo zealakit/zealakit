@@ -54,6 +54,20 @@ const ORM_STEP_HYBRID: SelectStep = {
     "\nWarning: hybrid templates (Next, Nuxt, Astro hybrid, etc.) are not a pure backend. ORM support is limited — use only for small projects; prefer a dedicated backend framework for production APIs.",
 };
 
+const AUTH_STEP: SelectStep = {
+  kind: "select",
+  category: "auth",
+  message: "Select authentication:",
+  noneLabel: "No authentication",
+};
+
+const CI_STEP: SelectStep = {
+  kind: "select",
+  category: "ci",
+  message: "Select CI:",
+  noneLabel: "No CI workflow",
+};
+
 const CLIENT_CORE_STEPS: PromptStep[] = [
   {
     kind: "select",
@@ -87,23 +101,25 @@ const CLIENT_CORE_STEPS: PromptStep[] = [
   },
 ];
 
-const CLIENT_STEPS: PromptStep[] = CLIENT_CORE_STEPS;
+const CLIENT_STEPS: PromptStep[] = [...CLIENT_CORE_STEPS, CI_STEP];
 
 /** Hybrid = client stack + optional ORM (with caveat). ORM sits before linter. */
 const HYBRID_STEPS: PromptStep[] = [
   ...CLIENT_CORE_STEPS.slice(0, 4),
   ORM_STEP_HYBRID,
+  AUTH_STEP,
   ...CLIENT_CORE_STEPS.slice(4),
+  CI_STEP,
 ];
 
-const SERVER_STEPS: PromptStep[] = [ORM_STEP_SERVER, LINTER_STEP];
+const SERVER_STEPS: PromptStep[] = [ORM_STEP_SERVER, AUTH_STEP, LINTER_STEP, CI_STEP];
 
 /** Interactive flow per template scope (also exported by `zealakit info`). */
 export const STEPS_BY_SCOPE: Record<Scope, PromptStep[]> = {
   client: CLIENT_STEPS,
   hybrid: HYBRID_STEPS,
   server: SERVER_STEPS,
-  infrastructure: [],
+  infrastructure: [CI_STEP],
 };
 
 /** Recipes the step offers on `template`; an empty list means the step is skipped. */

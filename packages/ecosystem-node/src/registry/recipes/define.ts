@@ -1,7 +1,10 @@
-import type {
-  NpmRecipeManifest,
-  RecipeConfig,
-  RecipeFileTransform,
+import fs from "node:fs";
+import {
+  assertStagingRealPath,
+  type NpmRecipeManifest,
+  type RecipeConfig,
+  type RecipeFileTransform,
+  resolveStagingPath,
 } from "@zealakit/core/ecosystem";
 
 const NODE_RECIPE_PREFIX = "node/";
@@ -130,8 +133,9 @@ export function serverOrmWiring({ skill, nest, hono }: ServerOrmWiring): {
       },
       {
         file: "src/bootstrap/app.module.ts",
-        pattern: /imports: \[FeatureAModule, FeatureBModule\],/,
-        replacement: `imports: [\n    // ${nest.module},\n    FeatureAModule,\n    FeatureBModule,\n  ],`,
+        // Anchor on the opening bracket so other recipes can add modules in any order.
+        pattern: /imports: \[/,
+        replacement: `imports: [\n    // ${nest.module},\n    `,
       },
     ],
     hono: [
@@ -147,4 +151,14 @@ export function serverOrmWiring({ skill, nest, hono }: ServerOrmWiring): {
       },
     ],
   };
+}
+
+/** Append an env section to `.env.example` once (no-op when the file or the marker exists). */
+export function appendEnvExample(targetDir: string, marker: string, section: string): void {
+  const file = resolveStagingPath(targetDir, ".env.example");
+  if (!fs.existsSync(file)) return;
+  assertStagingRealPath(targetDir, file);
+  const raw = fs.readFileSync(file, "utf-8");
+  if (raw.includes(marker)) return;
+  fs.writeFileSync(file, `${raw.trimEnd()}\n\n${section.trimEnd()}\n`, "utf-8");
 }

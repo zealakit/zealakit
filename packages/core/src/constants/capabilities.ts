@@ -1,6 +1,6 @@
 /**
  * Capabilities Discovery can match to templates/recipes that exist today.
- * Auth, queues, payments, etc. wait until recipes ship.
+ * Queues, payments, etc. wait until recipes ship.
  */
 export const CAPABILITIES = [
   "http-api",
@@ -8,6 +8,7 @@ export const CAPABILITIES = [
   "database",
   "external-api",
   "background-processing",
+  "auth",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
