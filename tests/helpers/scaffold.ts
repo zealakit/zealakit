@@ -5,15 +5,17 @@ import os from "node:os";
 import path from "node:path";
 import { after } from "node:test";
 import {
+  getNpmManifest,
   getRecipe,
   getRecipeAgentEntry,
   getTemplate,
   getTemplateOverlayId,
+  readProjectManifest,
   resolveRecipeDependencies,
   scaffoldProject,
   validateScaffoldConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-test-"));
 after(() => fs.rmSync(workRoot, { recursive: true, force: true }));
@@ -54,7 +56,12 @@ function toApp(dir: string, templateId: string, recipeIds: string[]): Scaffolded
 export function resolveRecipeIds(templateId: string, picked: string[]): string[] {
   const template = getTemplate(templateId);
   assert.ok(template, `unknown template ${templateId}`);
-  const withDefaults = withDefaultRecipes(template.scope, picked);
+  // `requiresAnyOf` recipes (goose, sqlc) get the first required recipe unless one is already picked.
+  const companions = picked.flatMap((id) => {
+    const needs = getRecipe(id)?.requiresAnyOf;
+    return needs && !needs.some((need) => picked.includes(need)) ? [needs[0] as string] : [];
+  });
+  const withDefaults = withDefaultRecipes(template.scope, [...companions, ...picked]);
   const resolved = resolveRecipeDependencies(withDefaults);
   assert.equal(resolved.ok, true, "recipe dependency resolution should succeed in tests");
   return resolved.ok ? resolved.recipeIds : withDefaults;
@@ -94,6 +101,11 @@ export function assertScaffoldInvariants(app: ScaffoldedApp): void {
 
   assert.equal(pkg.name, path.basename(app.dir), "package.json name should be the project name");
 
+  const projectManifest = readProjectManifest(app.dir);
+  assert.ok(projectManifest?.ok, "zealakit.json must exist and parse");
+  assert.equal(projectManifest.manifest.template, app.templateId);
+  assert.deepEqual(projectManifest.manifest.recipes, app.recipeIds);
+
   for (const leaked of ["overlays", "shared", "scaffold", "pnpm-workspace.yaml"]) {
     assert.ok(!app.exists(leaked), `${leaked} must not be copied into the app`);
   }
@@ -113,13 +125,11 @@ export function assertScaffoldInvariants(app: ScaffoldedApp): void {
   for (const recipeId of app.recipeIds) {
     const recipe = getRecipe(recipeId);
     assert.ok(recipe);
-    Object.assign(expectedDeps, recipe.packages, recipe.overlayPackages?.[overlayId]);
-    Object.assign(
-      expectedDevDeps,
-      recipe.devDependencies,
-      recipe.overlayDevDependencies?.[overlayId],
-    );
-    Object.assign(expectedScripts, recipe.scripts);
+    const npm = getNpmManifest(recipe);
+    assert.ok(npm);
+    Object.assign(expectedDeps, npm.packages, npm.overlayPackages?.[overlayId]);
+    Object.assign(expectedDevDeps, npm.devDependencies, npm.overlayDevDependencies?.[overlayId]);
+    Object.assign(expectedScripts, npm.scripts);
 
     const entry = getRecipeAgentEntry(recipeId);
     for (const file of ["AGENTS.md", "CLAUDE.md"]) {

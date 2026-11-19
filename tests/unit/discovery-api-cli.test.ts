@@ -11,7 +11,7 @@ import {
   type DiscoveryApiErrorCode,
   ExitCode,
   PACKAGE_ROOT,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { exitCodeForDiscoveryResponse } from "../../apps/cli/src/discovery/query.js";
 import { noColorEnv } from "../helpers/env.js";
 

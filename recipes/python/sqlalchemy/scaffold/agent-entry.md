@@ -1,0 +1,1 @@
+- **SQLAlchemy:** [.agents/skills/sqlalchemy/SKILL.md](.agents/skills/sqlalchemy/SKILL.md) — ORM models, session, repository adapter

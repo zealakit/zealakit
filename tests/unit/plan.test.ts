@@ -5,7 +5,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { buildScaffoldPlan, PACKAGE_ROOT, planIsReady, withDefaultRecipes } from "@zealakit/core";
+import {
+  buildScaffoldPlan,
+  PACKAGE_ROOT,
+  planIsReady,
+  withDefaultRecipes,
+} from "@zealakit/core/internal";
 import { noColorEnv } from "../helpers/env.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-plan-"));
@@ -98,7 +103,7 @@ describe("zealakit --dry-run", () => {
   it("prints a preview and writes nothing", () => {
     const name = `dry-run-cli-${Date.now()}`;
     const target = path.join(PACKAGE_ROOT, name);
-    const result = runDryRun([name, "-t", "vite-react", "-w", "biome", "--dry-run"]);
+    const result = runDryRun(["create", name, "-t", "vite-react", "-w", "biome", "--dry-run"]);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /Generation Preview/);
     assert.match(result.stdout, /Ready to scaffold/);
@@ -108,6 +113,7 @@ describe("zealakit --dry-run", () => {
 
   it("exits 3 when the plan has blockers", () => {
     const result = runDryRun([
+      "create",
       "dry-run-bad",
       "-t",
       "vite-react",

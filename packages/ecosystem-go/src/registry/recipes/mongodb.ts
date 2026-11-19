@@ -1,5 +1,5 @@
 import path from "node:path";
-import { getRecipeDir } from "@zealakit/core";
+import { getRecipeDir } from "@zealakit/core/ecosystem";
 import { defineGoRecipe } from "./define.js";
 import { addGoRequires, appendEnvSection, mergeGoSum } from "./shared.js";
 
@@ -9,15 +9,13 @@ const GO_MODULES = {
 
 export default defineGoRecipe({
   id: "mongodb",
+  discovery: { capabilities: [], projectTypes: ["server-api", "background-worker"] },
   name: "MongoDB",
   hint: "official MongoDB Go Driver v2",
   category: "infrastructure",
   supportedScopes: ["server", "infrastructure"],
   exclusive: true,
-  packages: {},
   goModules: { ...GO_MODULES },
-  devDependencies: {},
-  scripts: {},
   finalize(targetDir) {
     addGoRequires(targetDir, GO_MODULES, "MongoDB");
     mergeGoSum(targetDir, path.join(getRecipeDir("mongodb"), "scaffold", "go.sum"));

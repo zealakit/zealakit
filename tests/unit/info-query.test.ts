@@ -6,9 +6,12 @@ import { describe, it } from "node:test";
 import {
   CAPABILITIES,
   ECOSYSTEMS,
+  getAllRecipeIds,
+  getAllTemplateIds,
   getCapabilityMetadata,
   getEcosystemMetadata,
   getInfo,
+  getNpmManifest,
   getProjectTypeMetadata,
   getRecipe,
   getRecipeCategoryMetadata,
@@ -24,27 +27,26 @@ import {
   PROJECT_TYPES,
   queryMetadata,
   RECIPE_CATEGORIES,
+  type RecipeConfig,
   recipeSupportsScope,
-  recipes,
   resolveRecipeProfile,
   resolveTemplateProfile,
   SCOPES,
-  templates,
   UI_FRAMEWORKS,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 describe("metadata retrieval", () => {
   it("lists every registered template and recipe in registry order", () => {
-    assert.deepEqual(getTemplateIds(), Object.keys(templates));
-    assert.deepEqual(getRecipeIds(), Object.keys(recipes));
+    assert.deepEqual(getTemplateIds(), getAllTemplateIds());
+    assert.deepEqual(getRecipeIds(), getAllRecipeIds());
     assert.deepEqual(
       getTemplateMetadata().map((template) => template.id),
-      Object.keys(templates),
+      getAllTemplateIds(),
     );
     assert.deepEqual(
       getRecipeMetadata().map((recipe) => recipe.id),
-      Object.keys(recipes),
+      getAllRecipeIds(),
     );
   });
 
@@ -137,7 +139,7 @@ describe("metadata retrieval", () => {
     recipe.discovery?.conflicts.push("__mutated__");
 
     assert.ok(!resolveTemplateProfile(template.id)?.capabilities.includes("database"));
-    assert.deepEqual(getRecipe(recipe.id)?.packages, {});
+    assert.deepEqual(getNpmManifest(getRecipe(recipe.id) as RecipeConfig)?.packages, {});
     assert.ok(!resolveRecipeProfile(recipe.id)?.conflicts.includes("__mutated__"));
   });
 });
@@ -482,11 +484,11 @@ describe("serialization and architecture", () => {
   it("keeps registry ids as the single source of truth", () => {
     assert.deepEqual(
       getTemplateMetadata().map((template) => template.id),
-      Object.keys(templates),
+      getAllTemplateIds(),
     );
     assert.deepEqual(
       getRecipeMetadata().map((recipe) => recipe.id),
-      Object.keys(recipes),
+      getAllRecipeIds(),
     );
   });
 });

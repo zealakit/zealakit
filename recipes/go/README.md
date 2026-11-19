@@ -5,6 +5,11 @@
 | `postgres` | `database/sql` + `github.com/jackc/pgx/v5/stdlib` | `DATABASE_URL`, `DB_*` |
 | `mysql` | `database/sql` + `github.com/go-sql-driver/mysql` | `DATABASE_URL` (MySQL DSN), `DB_*` |
 | `mongodb` | `go.mongodb.org/mongo-driver/v2` | `MONGODB_URI`, `MONGODB_DATABASE`, `MONGODB_*` |
+| `goose` | goose SQL migrations + `cmd/migrate` | needs `postgres` or `mysql` (`requiresAnyOf`) |
+| `sqlc` | `sqlc.yaml` + example queries (ORM category) | needs `postgres` or `mysql`; run `sqlc generate` |
+| `redis` | `github.com/redis/go-redis/v9` | `REDIS_URL`, `REDIS_DIAL_TIMEOUT` |
+| `docker-go` | multi-stage `Dockerfile` + `compose.yaml` | adds a `db` service for the database recipe |
+| `github-actions-go` | CI workflow (`go vet`, `go test`, `go build`) | — |
 
 Select one database recipe when scaffolding:
 

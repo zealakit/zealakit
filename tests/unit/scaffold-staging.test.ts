@@ -17,7 +17,7 @@ import {
   type RecipeConfig,
   resolveStagingPath,
   type ScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { goManifestAdapter } from "@zealakit/ecosystem-go";
 import { walkFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
@@ -49,9 +49,7 @@ function recipeWith(transforms: NonNullable<RecipeConfig["fileTransforms"]>): Re
     name: "Test recipe",
     category: "utils",
     supportedScopes: "all",
-    packages: {},
-    devDependencies: {},
-    scripts: {},
+    manifest: { ecosystem: "node", packages: {}, devDependencies: {}, scripts: {} },
     fileTransforms: transforms,
   };
 }
@@ -331,13 +329,15 @@ describe("agent docs and .cursor symlink", () => {
   });
 });
 
+const finalizeContext = { config: { projectName: "app", templateId: "vite-react", recipeIds: [] } };
+
 describe("recipe finalize staging isolation", () => {
   it("finalizes biome.json inside staging", () => {
     const stage = tempDir("stage");
     writeFile(stage, "biome.json", '{"root":false,"formatter":{"indentWidth":2}}');
     const finalize = getRecipe("biome")?.finalize;
     assert.ok(finalize);
-    finalize(stage);
+    finalize(stage, finalizeContext);
     const config = JSON.parse(readFile(stage, "biome.json")) as Record<string, unknown>;
     assert.equal(config.root, undefined);
     assert.deepEqual(config.formatter, { indentWidth: 2 });
@@ -351,7 +351,7 @@ describe("recipe finalize staging isolation", () => {
     const finalize = getRecipe("biome")?.finalize;
     assert.ok(finalize);
 
-    assert.throws(() => finalize(stage), /escapes the staging/);
+    assert.throws(() => finalize(stage, finalizeContext), /escapes the staging/);
     assert.equal(readFile(outside, "biome.json"), '{"root":false}');
   });
 });

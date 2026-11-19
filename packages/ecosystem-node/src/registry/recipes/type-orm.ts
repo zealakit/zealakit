@@ -15,6 +15,11 @@ const wiring = serverOrmWiring({
 
 export default defineRecipe({
   id: "type-orm",
+  discovery: {
+    capabilities: ["database"],
+    projectTypes: ["server-api", "ui"],
+    databases: ["postgresql", "mysql", "sqlite"],
+  },
   name: "TypeORM",
   category: "orm",
   supportedScopes: ["server", "hybrid"],

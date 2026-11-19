@@ -1,9 +1,7 @@
 import {
   CAPABILITIES,
-  type CliOptions,
   ECOSYSTEMS,
   ExitCode,
-  failDiagnostic,
   getRecipeIds,
   getTemplateIds,
   PROJECT_TYPES,
@@ -11,17 +9,26 @@ import {
   SCOPES,
   UI_FRAMEWORKS,
   validateProfiles,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
+import { registerPythonEcosystem } from "@zealakit/ecosystem-python";
 import { Command, CommanderError } from "commander";
+import { registerAddCommand } from "./add.js";
 import { attachCreateOptions, runCreateAction } from "./create.js";
 import { registerDiscoveryCommands } from "./discovery/commands.js";
 import { runDoctor } from "./doctor.js";
 import { type InfoCommandOptions, runInfo } from "./info.js";
 import { readKitManifest } from "./manifest.js";
+import { registerMcpCommand } from "./mcp.js";
+import type { CliOptions } from "./options.js";
+import { registerOutdatedCommand } from "./outdated.js";
+import { failDiagnostic } from "./output.js";
+import { registerPresetCommands } from "./preset-commands.js";
+import { registerRecipeCommands } from "./recipe-commands.js";
 
 registerNodeEcosystem();
+registerPythonEcosystem();
 registerGoEcosystem();
 
 // Fail fast on authored Discovery metadata drift at application startup.
@@ -32,7 +39,7 @@ if (!profiles.valid) {
       title: "Invalid Discovery profiles",
       reason: profiles.errors.join("\n"),
       resolution:
-        "Fix the profile registry in packages/core/src/profiles/ or the ecosystem registration.",
+        "Fix the `discovery` metadata on the template/recipe definitions in the ecosystem packages.",
     },
     ExitCode.INTERNAL,
   );
@@ -43,7 +50,7 @@ const program = new Command();
 program
   .name("zealakit")
   .description(
-    "Recipe-based project scaffolding. Prefer `zealakit create` (supports --discover and --template).",
+    "Recipe-based project scaffolding. Start with `zealakit create` (supports --discover and --template).",
   )
   .version(readKitManifest().version)
   .enablePositionalOptions();
@@ -58,34 +65,35 @@ attachCreateOptions(
 )
   .option(
     "--json",
-    "With --discover: read one Discovery/scaffold JSON request from stdin and print one JSON response",
+    "Machine-readable output: with --discover read one JSON request from stdin; otherwise non-interactive (needs -y, -w, --preset or --dry-run) and print one JSON result on stdout",
   )
   .action(async (projectName: string | undefined, options: CliOptions) => {
     await runCreateAction(projectName, options);
   });
 
-// Backward-compatible root scaffold (`zealakit [name] -t …`) plus --info alias.
-attachCreateOptions(program)
+// The root scaffold form (`zealakit [name] -t …`) was removed; `--info` stays as an alias.
+program
   .option("--info", "Print kit metadata (alias of `zealakit info`)")
   .option("--json", "With --info: print only machine-readable JSON")
-  .action(async (projectName: string | undefined, options: CliOptions) => {
+  .argument("[removed...]")
+  .usage("[options] [command]")
+  .allowUnknownOption()
+  .action((args: string[], options: { info?: boolean; json?: boolean }) => {
     if (options.info) {
-      // Filters live on `zealakit info`; the root alias stays flag-compatible.
       process.exitCode = runInfo({ json: options.json === true });
       return;
     }
-    if (options.json) {
+    if (args.length > 0 || process.argv.slice(2).length > 0) {
       failDiagnostic(
         {
-          title: "Invalid usage",
-          reason: "Flag --json requires --info.",
-          resolution: "Use `zealakit info --json` or `zealakit --info --json`.",
+          title: "Unknown command",
+          reason: `'zealakit ${process.argv.slice(2).join(" ")}' is not a command. The root scaffold form \`zealakit [name] -t …\` was removed in this beta.`,
+          resolution: "Run: zealakit create <project-name> [options]   (see `zealakit --help`)",
         },
         ExitCode.USAGE,
       );
     }
-
-    await runCreateAction(projectName, options);
+    program.help();
   });
 
 program
@@ -119,14 +127,21 @@ program
     "--min-go-version <version>",
     "Require Go >= version (e.g. 1.22.0); missing/incompatible then exits non-zero",
   )
-  .action(async (options: { json?: boolean; minGoVersion?: string }) => {
+  .option("--cwd <dir>", "Project directory to check as well (default: current directory)")
+  .action(async (options: { json?: boolean; minGoVersion?: string; cwd?: string }) => {
     await runDoctor({
       json: options.json === true,
       minGoVersion: options.minGoVersion,
+      cwd: options.cwd,
     });
   });
 
 registerDiscoveryCommands(program);
+registerPresetCommands(program);
+registerAddCommand(program);
+registerOutdatedCommand(program);
+registerRecipeCommands(program);
+registerMcpCommand(program);
 
 /** Commander exits directly per command; override nested ones so parse errors map to usage. */
 function overrideCommanderExit(command: Command): void {

@@ -280,6 +280,9 @@ function buildRecipeMetadata(
     ? resolveRecipeProfile(recipe.id)
     : undefined;
   const categories = getRecipeCategories(recipe);
+  const npm = recipe.manifest.ecosystem === "node" ? recipe.manifest : undefined;
+  const go = recipe.manifest.ecosystem === "go" ? recipe.manifest : undefined;
+  const py = recipe.manifest.ecosystem === "python" ? recipe.manifest : undefined;
 
   return {
     id: recipe.id,
@@ -296,12 +299,12 @@ function buildRecipeMetadata(
     templates: compatibleTemplates,
     incompatibleTemplates,
     conflictsWith: conflictsFor(recipe, state.recipeIds),
-    packages: sortRecord(recipe.packages),
-    goModules: sortRecord(recipe.goModules),
-    devDependencies: sortRecord(recipe.devDependencies),
-    overlayPackages: sortNestedRecord(recipe.overlayPackages),
-    overlayDevDependencies: sortNestedRecord(recipe.overlayDevDependencies),
-    scripts: sortRecord(recipe.scripts),
+    packages: sortRecord(npm?.packages ?? py?.dependencies),
+    goModules: sortRecord(go?.goModules),
+    devDependencies: sortRecord(npm?.devDependencies ?? py?.devDependencies),
+    overlayPackages: sortNestedRecord(npm?.overlayPackages),
+    overlayDevDependencies: sortNestedRecord(npm?.overlayDevDependencies),
+    scripts: sortRecord(npm?.scripts),
     transformedFiles: sortTransformedFiles(recipe.fileTransforms),
     hasAgentEntry: getRecipeAgentEntry(recipe.id) !== undefined,
     ...(discovery ? { discovery: cloneRecipeProfile(discovery) } : {}),

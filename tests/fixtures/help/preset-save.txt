@@ -1,0 +1,13 @@
+Usage: zealakit preset save [options] <name>
+
+Save a preset to /Users/huynguyen/.config/zealakit/config.json
+
+Options:
+  -t, --template <template>  Template id
+  -w, --with <recipes>       Comma-separated recipe ids
+  --pm <manager>             Package manager
+  --install                  Install dependencies by default
+  --no-install               Do not install by default
+  --git                      Initialize git by default
+  --no-git                   Do not initialize git by default
+  -h, --help                 display help for command

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/zealakit@1.0.0-beta.4/schema/zealakit.schema.json",
+  "schemaVersion": 1,
+  "kitVersion": "1.0.0-beta.4",
+  "ecosystem": "go",
+  "template": "stdlib-api",
+  "recipes": [
+    "postgres"
+  ],
+  "requestedRecipes": [
+    "postgres"
+  ],
+  "createdAt": "2026-11-18T00:00:00.000Z"
+}

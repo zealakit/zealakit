@@ -1,0 +1,12 @@
+Usage: zealakit doctor [options]
+
+Check Zealakit runtime and optional Go toolchain availability
+
+Options:
+  --json                      Print only machine-readable JSON (stdout contains
+                              nothing else)
+  --min-go-version <version>  Require Go >= version (e.g. 1.22.0);
+                              missing/incompatible then exits non-zero
+  --cwd <dir>                 Project directory to check as well (default:
+                              current directory)
+  -h, --help                  display help for command

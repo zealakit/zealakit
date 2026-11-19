@@ -8,7 +8,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
    - Node: `templates/node/<id>/`
    - Go: `templates/go/<id>/`
 2. If the UI library is new (react/vue/svelte family), add it to `UI_FRAMEWORKS` in `packages/core/src/constants/ui-frameworks.ts`. Do not put Nest/Hono/Gin there (`BACKEND_FRAMEWORKS` instead).
-3. Add a Discovery profile entry in `packages/core/src/profiles/template-profiles/index.ts`.
+3. Add a `discovery` profile on the template definition in its ecosystem package (`registry/templates.ts`).
 4. Register in the matching ecosystem package:
    - Node → `packages/ecosystem-node/src/registry/templates.ts` (`path: "node/<id>"`, usually omit `ecosystem`)
    - Go → `packages/ecosystem-go/src/registry/templates.ts` (`path: "go/<id>"`, `ecosystem: "go"`)
@@ -35,7 +35,7 @@ Use this when adding or changing templates/recipes in the **kit repo**.
 3. Optional `scaffold/agent-entry.md` — markdown list lines linked into generated `AGENTS.md` / `CLAUDE.md`.
 4. Optional `.agents/skills|rules` — copied into the generated project (consumer guidance), not kit maintainer docs. Keep recipe `.cursor` → `.agents` symlink (no duplicate content under `.cursor`).
 5. Prompts pick the recipe up automatically for its category (no prompt code changes). A new **category** needs a step in `STEPS_BY_SCOPE` in `apps/cli/src/prompt-steps.ts`.
-6. Add a Discovery profile in `packages/core/src/profiles/recipe-profiles/index.ts` (capabilities only — do not duplicate category/scopes/`dependsOn`).
+6. Add a `discovery` profile on the recipe definition (`defineRecipe({ … discovery })`; capabilities only — do not duplicate category/scopes/`dependsOn`).
 7. Add expectations to the relevant `tests/scaffold/<template>.test.ts` files; the matrix already checks deps, scripts, agent entries, and leaks.
 8. If introducing a new category, scope, framework, or discovery enum value, update `packages/core/src/constants/` first.
 

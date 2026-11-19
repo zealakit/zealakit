@@ -1,15 +1,15 @@
 import "../register.js";
 import { describe, it } from "node:test";
-import type { RecipeConfig, TemplateConfig } from "@zealakit/core";
+import type { RecipeConfig, TemplateConfig } from "@zealakit/core/internal";
 import {
+  getAllRecipes,
+  getAllTemplateIds,
   getCompatibleRecipes,
   getRecipeCategories,
   getTemplate,
   isRecipeCompatible,
   RECIPE_CATEGORIES,
-  recipes,
-  templates,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { assertScaffoldInvariants, expectRejected, scaffold } from "../helpers/scaffold.js";
 
 /**
@@ -35,7 +35,7 @@ function fullStackWith(anchor: RecipeConfig, template: TemplateConfig): string[]
     for (const c of getRecipeCategories(choice)) taken.add(c);
   }
 
-  for (const recipe of Object.values(recipes)) {
+  for (const recipe of getAllRecipes()) {
     if (!recipe.exclusive && !recipe.default && isRecipeCompatible(recipe, template)) {
       picked.push(recipe);
     }
@@ -44,11 +44,11 @@ function fullStackWith(anchor: RecipeConfig, template: TemplateConfig): string[]
   return [...new Set(picked.map((recipe) => recipe.id))];
 }
 
-for (const templateId of Object.keys(templates)) {
+for (const templateId of getAllTemplateIds()) {
   const template = getTemplate(templateId);
   if (!template) continue;
-  // Matrix is npm/recipe-oriented; Go templates have dedicated suites.
-  if ((template.ecosystem ?? "node") === "go") continue;
+  // Matrix is npm/recipe-oriented; Go and Python templates have dedicated suites.
+  if ((template.ecosystem ?? "node") !== "node") continue;
 
   describe(`matrix: ${templateId}`, () => {
     it(`${templateId}: base template (defaults only)`, async () => {
@@ -56,7 +56,7 @@ for (const templateId of Object.keys(templates)) {
     });
 
     const stacks = new Set<string>();
-    for (const recipe of Object.values(recipes)) {
+    for (const recipe of getAllRecipes()) {
       if (recipe.default) continue;
 
       if (!isRecipeCompatible(recipe, template)) {

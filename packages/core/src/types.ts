@@ -1,4 +1,6 @@
 import type { EcosystemId, RecipeCategory, Scope, UiFramework } from "./constants.js";
+import type { PackageManager } from "./package-manager.js";
+import type { RecipeProfile, TemplateProfile } from "./profiles/types.js";
 
 export type { EcosystemId, RecipeCategory, Scope, UiFramework };
 
@@ -30,6 +32,13 @@ export type TemplateConfig = {
    * Selects the ManifestAdapter used during scaffold.
    */
   ecosystem?: EcosystemId;
+  /** Discovery metadata (authored next to the template; `id` is implied). */
+  discovery?: Omit<TemplateProfile, "id">;
+  /**
+   * Set to `false` for templates Discovery must not recommend (no profile needed).
+   * They stay available with `-t <id>`, `info`, `add` and the API.
+   */
+  discoverable?: boolean;
 };
 
 export type RecipeFileTransform = {
@@ -40,6 +49,64 @@ export type RecipeFileTransform = {
   replacement?: string;
   /** Append this text if missing — does not overwrite existing content */
   append?: string;
+  /**
+   * Insert `insert` on its own line(s) next to the line containing `marker`
+   * (e.g. `// zealakit-modules`), matching that line's indentation. Prefer this
+   * over a regex: template drift outside the marker cannot break it.
+   */
+  marker?: string;
+  insert?: string;
+  /** Where to insert relative to the marker line (default `after`). */
+  position?: "after" | "before";
+  /**
+   * Structural JSON edit: receives the parsed document and mutates it. Use for
+   * `*.json` files instead of regexes against formatting.
+   */
+  json?: (data: Record<string, unknown>) => void;
+};
+
+/** npm contributions (Node ecosystem). */
+export type NpmRecipeManifest = {
+  ecosystem: "node";
+  packages: Record<string, string>;
+  devDependencies: Record<string, string>;
+  scripts: Record<string, string>;
+  /** Extra packages merged for a specific overlay family (e.g. `next`, `vite-react`) */
+  overlayPackages?: Record<string, Record<string, string>>;
+  /** Extra devDependencies merged for a specific overlay family */
+  overlayDevDependencies?: Record<string, Record<string, string>>;
+};
+
+/** Go module requirements (module path → version) for Go recipes. */
+export type GoRecipeManifest = {
+  ecosystem: "go";
+  goModules: Record<string, string>;
+};
+
+/** Python requirements (distribution name → version specifier, e.g. `">=2.0"`). */
+export type PythonRecipeManifest = {
+  ecosystem: "python";
+  dependencies: Record<string, string>;
+  /** `[dependency-groups] dev` entries. */
+  devDependencies: Record<string, string>;
+};
+
+export type RecipeManifest = NpmRecipeManifest | GoRecipeManifest | PythonRecipeManifest;
+
+/** What a recipe `finalize` hook can see besides the staging directory. */
+export type FinalizeContext = {
+  /** The effective scaffold config (all recipes, defaults and dependencies included). */
+  config: ScaffoldConfig;
+};
+
+/** Provenance of a recipe loaded from outside the kit (data-only: no code runs). */
+export type ExternalRecipeInfo = {
+  /** What the user typed (`./path` or `github:owner/repo/path#ref`). */
+  source: string;
+  /** Git ref requested, when any. */
+  ref?: string;
+  /** Resolved commit SHA for GitHub sources. */
+  sha?: string;
 };
 
 export type RecipeConfig = {
@@ -69,6 +136,12 @@ export type RecipeConfig = {
    */
   dependsOn?: string[];
   /**
+   * At least one of these recipes must also be selected (e.g. a migration tool
+   * needs one of several database recipes). Unlike `dependsOn` nothing is
+   * auto-added: the user picks which one.
+   */
+  requiresAnyOf?: string[];
+  /**
    * Directory under `recipes/` (e.g. `node/mui`). Defaults to `id` when omitted.
    */
   path?: string;
@@ -77,22 +150,12 @@ export type RecipeConfig = {
    * to the `recipes/<ecosystem>/` path prefix for unregistered configs.
    */
   ecosystem?: EcosystemId;
-  /**
-   * npm dependency contributions (Node ecosystem).
-   * Kept on the shared recipe type for migration compatibility.
-   */
-  packages: Record<string, string>;
-  /** Extra packages merged for a specific overlay family (e.g. `next`, `vite-react`) */
-  overlayPackages?: Record<string, Record<string, string>>;
-  /** Extra devDependencies merged for a specific overlay family */
-  overlayDevDependencies?: Record<string, Record<string, string>>;
-  /**
-   * Go module requirements (module path → version) for Go recipes.
-   * Consumed by the recipe's own Go wiring and exposed through Info.
-   */
-  goModules?: Record<string, string>;
-  devDependencies: Record<string, string>;
-  scripts: Record<string, string>;
+  /** Set for recipes loaded from `recipe.json` outside the kit. */
+  external?: ExternalRecipeInfo;
+  /** Discovery metadata (authored next to the recipe; `id` is implied). */
+  discovery?: Omit<RecipeProfile, "id">;
+  /** Ecosystem-specific package/module contributions; each adapter reads its own branch. */
+  manifest: RecipeManifest;
   /** Regex replacements applied per overlay (or template id) after the recipe overlay is copied */
   fileTransforms?: Record<string, RecipeFileTransform[]>;
   /**
@@ -102,7 +165,7 @@ export type RecipeConfig = {
    * Receives the staging root. Hooks are trusted kit code: keep every write
    * inside that root (`resolveStagingPath` / `assertStagingRealPath`).
    */
-  finalize?: (targetDir: string) => void;
+  finalize?: (targetDir: string, context: FinalizeContext) => void;
 };
 
 export type ScaffoldConfig = {
@@ -110,18 +173,8 @@ export type ScaffoldConfig = {
   templateId: string;
   recipeIds: string[];
   targetDir?: string;
-};
-
-export type CliOptions = {
-  projectName?: string;
-  template?: string;
-  with?: string;
-  yes?: boolean;
-  dryRun?: boolean;
-  info?: boolean;
-  json?: boolean;
-  /** Enter Project Discovery mode (interactive recommendations). */
-  discover?: boolean;
+  /** Package manager the project will use; recipes (e.g. CI) may tailor output to it. */
+  packageManager?: PackageManager;
 };
 
 export type ValidationResult = {

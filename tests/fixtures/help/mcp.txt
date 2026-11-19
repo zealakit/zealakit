@@ -1,0 +1,8 @@
+Usage: zealakit mcp [options]
+
+Run an MCP server on stdio so AI agents can plan, create, add and check projects
+
+Options:
+  --root <dir>  Directory the agent may read and write (default: current
+                directory)
+  -h, --help    display help for command

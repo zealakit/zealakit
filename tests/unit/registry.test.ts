@@ -4,28 +4,35 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
+  getAllRecipes,
+  getAllTemplateIds,
+  getAllTemplates,
+  getNpmManifest,
   getRecipeCategories,
   getRecipeDir,
   getTemplateDir,
   getTemplateOverlayId,
   PACKAGE_ROOT,
   RECIPE_CATEGORIES,
-  recipes,
   SCOPES,
-  templates,
   UI_FRAMEWORKS,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const NODE_RECIPE_MODULES_DIR = path.join(
   PACKAGE_ROOT,
   "packages/ecosystem-node/src/registry/recipes",
 );
 const GO_RECIPE_MODULES_DIR = path.join(PACKAGE_ROOT, "packages/ecosystem-go/src/registry/recipes");
-const NON_RECIPE_MODULES = new Set(["index.ts", "define.ts", "shared.ts"]);
+const NON_RECIPE_MODULES = new Set([
+  "index.ts",
+  "define.ts",
+  "shared.ts",
+  "github-actions-workflow.ts",
+]);
 
 const familyKeys = new Set([
-  ...Object.keys(templates),
-  ...Object.keys(templates).map(getTemplateOverlayId),
+  ...getAllTemplateIds(),
+  ...getAllTemplateIds().map(getTemplateOverlayId),
 ]);
 
 function assertAgentsSymlink(dir: string): void {
@@ -39,13 +46,13 @@ describe("template registry", () => {
   it("advertises only UI frameworks backed by a registered template", () => {
     for (const framework of UI_FRAMEWORKS) {
       assert.ok(
-        Object.values(templates).some((template) => template.uiFramework === framework),
+        getAllTemplates().some((template) => template.uiFramework === framework),
         `no registered template uses UI framework '${framework}'`,
       );
     }
   });
 
-  for (const template of Object.values(templates)) {
+  for (const template of getAllTemplates()) {
     it(`template ${template.id} is well-formed`, () => {
       assert.ok((SCOPES as readonly string[]).includes(template.scope));
       if (template.uiFramework) {
@@ -55,6 +62,11 @@ describe("template registry", () => {
       const ecosystem = template.ecosystem ?? "node";
       if (ecosystem === "go") {
         assert.ok(fs.existsSync(path.join(dir, "go.mod")), `go.mod missing for ${template.id}`);
+      } else if (ecosystem === "python") {
+        assert.ok(
+          fs.existsSync(path.join(dir, "pyproject.toml")),
+          `pyproject.toml missing for ${template.id}`,
+        );
       } else {
         assert.ok(
           fs.existsSync(path.join(dir, "package.json")),
@@ -79,7 +91,7 @@ describe("recipe registry", () => {
         .map((file) => file.replace(/\.ts$/, ""))
         .sort();
     const recipeIdsIn = (ecosystem: string): string[] =>
-      Object.values(recipes)
+      getAllRecipes()
         .filter((recipe) => (recipe.ecosystem ?? "node") === ecosystem)
         .map((recipe) => recipe.id)
         .sort();
@@ -88,7 +100,7 @@ describe("recipe registry", () => {
     assert.deepEqual(modulesIn(GO_RECIPE_MODULES_DIR), recipeIdsIn("go"));
   });
 
-  for (const recipe of Object.values(recipes)) {
+  for (const recipe of getAllRecipes()) {
     it(`recipe ${recipe.id} is well-formed`, () => {
       assert.ok(fs.existsSync(getRecipeDir(recipe.id)), `recipes/${recipe.id}/ missing`);
       assertAgentsSymlink(getRecipeDir(recipe.id));
@@ -100,10 +112,11 @@ describe("recipe registry", () => {
         assert.ok((UI_FRAMEWORKS as readonly string[]).includes(framework), framework);
       }
 
+      const npm = getNpmManifest(recipe);
       const keyed = {
         fileTransforms: recipe.fileTransforms,
-        overlayPackages: recipe.overlayPackages,
-        overlayDevDependencies: recipe.overlayDevDependencies,
+        overlayPackages: npm?.overlayPackages,
+        overlayDevDependencies: npm?.overlayDevDependencies,
       };
       for (const [field, map] of Object.entries(keyed)) {
         for (const key of Object.keys(map ?? {})) {

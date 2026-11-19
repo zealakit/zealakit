@@ -7,7 +7,7 @@ import {
   getVisibleQuestions,
   NO_PREFERENCE,
   pruneDiscoveryAnswers,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import pc from "picocolors";
 
 async function ask<T>(prompt: Promise<T>): Promise<Exclude<T, symbol> | null> {

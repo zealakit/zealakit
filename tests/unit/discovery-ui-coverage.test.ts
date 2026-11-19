@@ -6,7 +6,7 @@ import {
   matchDiscovery,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { buildTemplateChoices } from "../../apps/cli/src/discovery/present.js";
 
 const UI_TEMPLATES = [

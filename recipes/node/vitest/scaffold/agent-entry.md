@@ -1,0 +1,1 @@
+- **Vitest:** [.agents/skills/vitest/SKILL.md](.agents/skills/vitest/SKILL.md) — unit/component tests (`test` / `test:watch`)

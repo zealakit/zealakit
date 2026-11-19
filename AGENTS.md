@@ -18,7 +18,7 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 | Node ecosystem                                         | `packages/ecosystem-node/`                                                                                                                 |
 | Go ecosystem                                           | `packages/ecosystem-go/`                                                                                                                   |
 | Templates                                              | `templates/node/` + `templates/go/{stdlib-api,gin-api,stdlib-worker}`                                                                      |
-| Recipes                                                | `recipes/node/` (Go recipes not yet)                                                                                                       |
+| Recipes                                                | `recipes/node/` + `recipes/go/{postgres,mysql,mongodb}`                                                                                    |
 | Tests                                                  | `tests/` (`pnpm test`), pack smoke `scripts/test-e2e-pack.ts`                                                                              |
 | Dep monitor                                            | `monitor/` (`pnpm monitor`)                                                                                                                |
 | Scopes / categories / discovery enums                  | `packages/core/src/constants/` (facade `constants.ts`)                                                                                     |
@@ -29,5 +29,7 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 | Project types (Discovery)                              | `packages/core/src/constants/project-types.ts` — distinct from template `Scope`                                                            |
 
 Published package is the **root** `zealakit` npm package (`dist` + `templates` + `recipes`). Workspace packages are private and bundled into `dist/`.
+
+`@zealakit/core` has three entry points: `.` (public API), `./ecosystem` (what ecosystem packages register against), `./internal` (CLI/tests; `pnpm check:exports` fails on names nobody imports).
 
 Path alias `@/*` applies inside **templates**, not the kit packages.

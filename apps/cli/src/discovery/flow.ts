@@ -24,7 +24,7 @@ import {
   type ScaffoldConfig,
   validateDiscoveryAnswers,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
 import {

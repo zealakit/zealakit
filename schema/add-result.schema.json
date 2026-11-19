@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit add --json",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "ok",
+        "added",
+        "autoInjected",
+        "alreadyApplied",
+        "changes",
+        "packageChanges",
+        "warnings"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "autoInjected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alreadyApplied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "kind"],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": ["create", "modify", "conflict"]
+              }
+            }
+          }
+        },
+        "packageChanges": {
+          "type": "object",
+          "required": ["dependencies", "devDependencies", "scripts"]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["ok", "error"],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "messages"],
+          "properties": {
+            "code": {
+              "enum": ["usage", "validation", "internal"]
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

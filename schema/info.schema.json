@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit info --json",
+  "description": "Envelope of `zealakit info --json`. Inner `data` arrays carry template/recipe metadata; only the envelope and top-level data keys are part of the contract.",
+  "type": "object",
+  "required": ["schemaVersion", "command", "filters", "data"],
+  "properties": {
+    "schemaVersion": {
+      "type": "number"
+    },
+    "command": {
+      "const": "info"
+    },
+    "filters": {
+      "type": ["object", "array"]
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "cli",
+        "defaults",
+        "ecosystems",
+        "scopes",
+        "projectTypes",
+        "uiFrameworks",
+        "capabilities",
+        "categories",
+        "templates",
+        "recipes",
+        "rules"
+      ],
+      "properties": {
+        "cli": {
+          "type": "object"
+        },
+        "defaults": {
+          "type": "object"
+        },
+        "ecosystems": {
+          "type": "array"
+        },
+        "scopes": {
+          "type": "array"
+        },
+        "projectTypes": {
+          "type": "array"
+        },
+        "uiFrameworks": {
+          "type": "array"
+        },
+        "capabilities": {
+          "type": "array"
+        },
+        "categories": {
+          "type": "array"
+        },
+        "templates": {
+          "type": "array"
+        },
+        "recipes": {
+          "type": "array"
+        },
+        "rules": {
+          "type": ["object", "array"]
+        }
+      }
+    }
+  }
+}

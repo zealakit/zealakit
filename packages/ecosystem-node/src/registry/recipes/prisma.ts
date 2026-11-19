@@ -15,6 +15,11 @@ const wiring = serverOrmWiring({
 
 export default defineRecipe({
   id: "prisma",
+  discovery: {
+    capabilities: ["database"],
+    projectTypes: ["server-api", "ui"],
+    databases: ["postgresql", "mysql", "sqlite"],
+  },
   name: "Prisma",
   hint: "Schema-first ORM",
   category: "orm",

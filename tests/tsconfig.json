@@ -9,6 +9,8 @@
     "../packages/core/src/**/*.ts",
     "../packages/ecosystem-node/src/**/*.ts",
     "../packages/ecosystem-go/src/**/*.ts",
+    "../packages/ecosystem-python/src/**/*.ts",
     "../apps/cli/src/**/*.ts"
-  ]
+  ],
+  "exclude": ["./fixtures/**"]
 }

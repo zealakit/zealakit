@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "axios",
+  discovery: { capabilities: ["external-api"], projectTypes: ["ui"] },
   name: "Axios",
   category: "fetcher",
   supportedScopes: ["client", "hybrid"],

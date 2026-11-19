@@ -1,0 +1,1 @@
+- **TanStack Query:** [.agents/skills/tanstack-query/SKILL.md](.agents/skills/tanstack-query/SKILL.md) — server-state fetching, caching, and mutations

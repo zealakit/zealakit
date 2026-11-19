@@ -13,7 +13,7 @@ import {
   resolveTemplateProfile,
   validateScaffoldConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const template = getTemplate("vite-svelte");
 const profile = getTemplateProfile("vite-svelte");

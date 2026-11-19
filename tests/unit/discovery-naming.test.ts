@@ -6,7 +6,7 @@ import {
   DISCOVERY_QUESTIONS,
   type ProjectRequirements,
   type ScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import { formatDiscoverySummary } from "../../apps/cli/src/discovery/present.js";
 

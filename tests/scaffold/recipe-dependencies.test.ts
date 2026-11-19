@@ -11,7 +11,7 @@ import {
   type ScaffoldConfig,
   scaffoldProject,
   validateGeneratedOutput,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 /**
  * Synthetic recipes registered in this file only (Node runs test files in
@@ -32,9 +32,7 @@ function syntheticRecipe(
     category: "utils",
     supportedScopes: "all",
     dependsOn,
-    packages,
-    devDependencies: {},
-    scripts,
+    manifest: { ecosystem: "node", packages, devDependencies: {}, scripts },
     path: recipePath,
   };
 }

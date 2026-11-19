@@ -1,7 +1,11 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { matchDiscovery, type ProjectRequirements, TEMPLATE_SCORE_WEIGHTS } from "@zealakit/core";
+import {
+  matchDiscovery,
+  type ProjectRequirements,
+  TEMPLATE_SCORE_WEIGHTS,
+} from "@zealakit/core/internal";
 
 type ReqInput =
   | (Omit<Extract<ProjectRequirements, { projectType: "ui" }>, "scopes" | "capabilities"> & {

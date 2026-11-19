@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "eslint",
+  discovery: { capabilities: [], alwaysRelevant: true },
   name: "ESLint",
   hint: "Flat Config",
   category: "linter",

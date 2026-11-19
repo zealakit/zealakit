@@ -7,11 +7,11 @@ import {
   type InfoResponse,
   type InfoSchemaVersion,
   type MetadataQueryResult,
-  printError,
   queryMetadata,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import pc from "picocolors";
 import { readKitManifest } from "./manifest.js";
+import { printError } from "./output.js";
 
 export type { InfoResponse, InfoSchemaVersion };
 export { INFO_SCHEMA_VERSION };

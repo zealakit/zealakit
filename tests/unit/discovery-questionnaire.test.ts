@@ -13,7 +13,7 @@ import {
   pruneDiscoveryAnswers,
   resolveDiscoveryRequirements,
   validateDiscoveryAnswers,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 describe("discovery questionnaire branching", () => {
   it("root question lists all four project types with plain-language labels", () => {

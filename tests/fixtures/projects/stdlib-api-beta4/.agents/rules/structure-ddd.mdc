@@ -1,0 +1,17 @@
+---
+description: DDD / hexagonal layer rules for this Go API
+alwaysApply: true
+---
+
+# Structure DDD
+
+Follow `.agents/skills/structure-ddd/SKILL.md` when adding features or placing files.
+
+Hard rules:
+
+- Layer-first paths under `internal/` (`domain`, `application`, `presentation`, `infrastructure`, `bootstrap`)
+- Dependency direction: `presentation → application → domain ← infrastructure`
+- Domain has **zero** `net/http` / DB imports
+- Wire concretes only in `internal/bootstrap` / `cmd`
+- Handlers stay thin; no business rules in presentation
+- Do not introduce Gin, Fiber, Echo, Chi, or other web frameworks unless explicitly requested

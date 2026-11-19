@@ -1,13 +1,34 @@
-import type { RecipeConfig, RecipeFileTransform } from "@zealakit/core";
+import fs from "node:fs";
+import {
+  assertStagingRealPath,
+  type NpmRecipeManifest,
+  type RecipeConfig,
+  type RecipeFileTransform,
+  resolveStagingPath,
+} from "@zealakit/core/ecosystem";
 
 const NODE_RECIPE_PREFIX = "node/";
 
-/** Identity helper for typed recipe modules (monitor locates the object after `defineRecipe(`). */
-export function defineRecipe(recipe: RecipeConfig): RecipeConfig {
+/** Authoring shape: npm fields stay flat; `defineRecipe` folds them into `manifest`. */
+export type NodeRecipeInput = Omit<RecipeConfig, "manifest"> &
+  Partial<Omit<NpmRecipeManifest, "ecosystem">>;
+
+/** Typed recipe modules (monitor locates the object after `defineRecipe(`). */
+export function defineRecipe(input: NodeRecipeInput): RecipeConfig {
+  const { packages, devDependencies, scripts, overlayPackages, overlayDevDependencies, ...rest } =
+    input;
   return {
-    ...recipe,
-    path: recipe.path ?? `${NODE_RECIPE_PREFIX}${recipe.id}`,
-    ecosystem: recipe.ecosystem ?? "node",
+    ...rest,
+    path: rest.path ?? `${NODE_RECIPE_PREFIX}${rest.id}`,
+    ecosystem: rest.ecosystem ?? "node",
+    manifest: {
+      ecosystem: "node",
+      packages: packages ?? {},
+      devDependencies: devDependencies ?? {},
+      scripts: scripts ?? {},
+      ...(overlayPackages ? { overlayPackages } : {}),
+      ...(overlayDevDependencies ? { overlayDevDependencies } : {}),
+    },
   };
 }
 
@@ -47,8 +68,9 @@ export function nextUiProviders({ registry, theme }: NextUiProviders): RecipeFil
     },
     {
       file: "src/app/layout.tsx",
-      pattern: /<body>\{children\}<\/body>/,
-      replacement: `<body><${registry.name}>{children}</${registry.name}></body>`,
+      // Wrap the JSX `{children}` itself so other recipes can wrap it too, in any order.
+      pattern: /\{children\}/,
+      replacement: `<${registry.name}>{children}</${registry.name}>`,
     },
     {
       file: "src/app/[locale]/layout.tsx",
@@ -65,11 +87,7 @@ export function nextUiProviders({ registry, theme }: NextUiProviders): RecipeFil
 
 /** Register a module in `nuxt.config.ts` (template keeps a `// zealakit-modules` marker). */
 export function nuxtModule(name: string): RecipeFileTransform {
-  return {
-    file: "nuxt.config.ts",
-    pattern: /\/\/ zealakit-modules/,
-    replacement: `// zealakit-modules\n    "${name}",`,
-  };
+  return { file: "nuxt.config.ts", marker: "// zealakit-modules", insert: `"${name}",` };
 }
 
 /** Insert top-level keys before the closing `});` of `nuxt.config.ts`. */
@@ -81,11 +99,15 @@ export function nuxtConfigKeys(block: string): RecipeFileTransform {
   };
 }
 
+/** Structural edit: independent of tsconfig formatting or option order. */
 export const ENABLE_TS_DECORATORS: RecipeFileTransform = {
   file: "tsconfig.json",
-  pattern: /"isolatedModules": true,/,
-  replacement:
-    '"isolatedModules": true,\n    "experimentalDecorators": true,\n    "emitDecoratorMetadata": true,',
+  json: (data) => {
+    const options = (data.compilerOptions ?? {}) as Record<string, unknown>;
+    data.compilerOptions = options;
+    options.experimentalDecorators = true;
+    options.emitDecoratorMetadata = true;
+  },
 };
 
 type ServerOrmWiring = {
@@ -111,8 +133,9 @@ export function serverOrmWiring({ skill, nest, hono }: ServerOrmWiring): {
       },
       {
         file: "src/bootstrap/app.module.ts",
-        pattern: /imports: \[FeatureAModule, FeatureBModule\],/,
-        replacement: `imports: [\n    // ${nest.module},\n    FeatureAModule,\n    FeatureBModule,\n  ],`,
+        // Anchor on the opening bracket so other recipes can add modules in any order.
+        pattern: /imports: \[/,
+        replacement: `imports: [\n    // ${nest.module},\n    `,
       },
     ],
     hono: [
@@ -128,4 +151,14 @@ export function serverOrmWiring({ skill, nest, hono }: ServerOrmWiring): {
       },
     ],
   };
+}
+
+/** Append an env section to `.env.example` once (no-op when the file or the marker exists). */
+export function appendEnvExample(targetDir: string, marker: string, section: string): void {
+  const file = resolveStagingPath(targetDir, ".env.example");
+  if (!fs.existsSync(file)) return;
+  assertStagingRealPath(targetDir, file);
+  const raw = fs.readFileSync(file, "utf-8");
+  if (raw.includes(marker)) return;
+  fs.writeFileSync(file, `${raw.trimEnd()}\n\n${section.trimEnd()}\n`, "utf-8");
 }

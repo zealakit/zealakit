@@ -143,17 +143,85 @@ Diagnostic signals from `discovery stats` are hints only — they do **not** aut
 npx zealakit@latest create [project-name] [options]
 ```
 
-| Option                 | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `--discover`           | Project Discovery — recommend a template/recipes from your requirements |
-| `-t, --template <id>`  | Choose a base template yourself (default: `vite-react`)                 |
-| `-w, --with <recipes>` | Comma-separated recipe IDs (e.g. `biome,zustand`)                       |
-| `-y, --yes`            | Non-interactive mode (requires a project name)                          |
-| `--dry-run`            | Preview the plan without writing files                                  |
-| `-h, --help`           | Show help                                                               |
-| `-V, --version`        | Show version                                                            |
+| Option                       | Description                                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--discover`                 | Project Discovery — recommend a template/recipes from your requirements                                               |
+| `-t, --template <id>`        | Choose a base template yourself (default: `vite-react`)                                                               |
+| `-w, --with <recipes>`       | Comma-separated recipe IDs (e.g. `biome,zustand`)                                                                     |
+| `-y, --yes`                  | Non-interactive; refuses a non-empty target (needs a project name)                                                    |
+| `--force`                    | Overwrite a non-empty target directory without asking                                                                 |
+| `--pm <manager>`             | `npm`, `pnpm`, `yarn` or `bun` for install and next steps (default: detected)                                         |
+| `--install` / `--no-install` | Install dependencies after generating (`go mod tidy` for Go). Asked when interactive; off with `-y`                   |
+| `--git` / `--no-git`         | `git init` and an initial commit. Asked when interactive; off with `-y`                                               |
+| `--no-manifest`              | Do not write `zealakit.json` into the project                                                                         |
+| `--preset <name>`            | Apply a saved preset; explicit flags override it                                                                      |
+| `--save-preset <name>`       | Save the chosen template and recipes as a user preset                                                                 |
+| `--json`                     | Non-interactive only (needs `-y`, `-w`, `--preset` or `--dry-run`): one JSON result on stdout, human output on stderr |
+| `--dry-run`                  | Preview the plan without writing files                                                                                |
+| `-h, --help`                 | Show help                                                                                                             |
+| `-V, --version`              | Show version                                                                                                          |
 
-Other commands: `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+### `zealakit add`
+
+Add recipes to a project you already generated (it needs `zealakit.json`):
+
+```bash
+zealakit add zustand tanstack-query          # preview the diff, then confirm
+zealakit add vitest --dry-run                # preview only
+zealakit add github-actions -y --json        # non-interactive, machine-readable
+```
+
+`add` regenerates the project with the installed kit, with and without the new recipes, and applies only the difference — so a pristine project ends up identical to `create -w <all recipes>`. Dependencies and scripts are merged into your `package.json`; agent docs get the new entries inserted. Files you edited are **never silently overwritten**: they are listed as conflicts with the kit's patch to apply by hand (or pass `--overwrite-files`; originals are backed up and restored on failure). It refuses to run on a dirty git tree unless you pass `--force`. Options: `--cwd`, `--dry-run`, `-y`, `--force`, `--overwrite-files`, `--install`, `--pm`, `--json`.
+
+### External recipes, stacks and agents
+
+- **External recipes** — `-w ./my-recipe` or `-w github:owner/repo/path#ref`; data-only, confirmed before use. See [`docs/external-recipes.md`](docs/external-recipes.md); author them with `zealakit recipe init|validate`.
+- **Stacks** — one workspace, several apps: `zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` creates `apps/web`, `apps/api` (each a normal zealakit project), `packages/contracts` and a root `zealakit.json` with `schemaVersion: 2`. Use `zealakit add <recipe> --app web`; `doctor` and `outdated` cover every app. Node templates only; root-level recipes and Discovery stack recommendations are not available yet.
+- **MCP** — `zealakit mcp --root <dir>` lets AI agents plan/create/add with confirmation gates. See [`docs/mcp.md`](docs/mcp.md).
+- **Programmatic API** — `import { createZealakit } from "zealakit/api"`; see [`docs/programmatic-api.md`](docs/programmatic-api.md).
+
+The old root form `zealakit [name] -t …` has been **removed**: use `zealakit create`.
+
+### `zealakit outdated`
+
+Compares the dependency ranges your project got from its template and recipes with what the installed kit would write today (`package | project | kit | source | status`, or `--json`), and tells you when the project was generated by an older kit. Report only: it never edits your files.
+
+### `zealakit doctor` in a project
+
+Run it inside a generated project (or with `--cwd`) to also check `zealakit.json`, the kit version, the `.cursor → .agents` link, missing recipe files, `.env` against `.env.example`, and installed dependencies. Failures exit `3`; warnings do not.
+
+### `zealakit.json`
+
+Every generated project records how it was made (`kitVersion`, `template`, resolved `recipes`, the `requestedRecipes`, `createdAt`). Its schema ships in the package (`schema/zealakit.schema.json`). Disable it with `--no-manifest`.
+
+An install or git failure never fails the scaffold: the project is already on disk, a warning is printed, and the exit code stays `0`.
+
+### Presets
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+zealakit preset list        # also reads ./zealakit.config.json: { "presets": { … } }
+```
+
+Config lives in `~/.config/zealakit/config.json` (`$ZEALAKIT_CONFIG_DIR` overrides the folder), `./zealakit.config.json`, and any file passed with `--config <file>`; later ones win. Besides `presets`, a config can set `defaults` for every `create`:
+
+```json
+{
+  "defaults": { "pm": "pnpm", "git": true, "install": true },
+  "presets": {
+    "team-next": { "template": "next", "recipes": ["biome", "mui", "vitest", "github-actions"] }
+  }
+}
+```
+
+Interactive runs end with "Save these choices as a preset?" (default no). The older `presets.json` is still read.
+
+The CLI surface, JSON outputs and `zealakit.json` are pinned by contract tests and JSON Schemas in `schema/` — see [`docs/stability.md`](docs/stability.md).
+
+Python templates are managed with [uv](https://docs.astral.sh/uv/) (`uv sync`, `uv run …`); `zealakit doctor` reports whether it is installed, and `--install` runs `uv sync`. Python templates are not part of the Discovery questionnaire yet; choose them with `-t fastapi-api` / `-t python-worker`.
+
+Other commands: `zealakit add`, `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
 ### Metadata queries (`zealakit info`)
 
@@ -184,20 +252,22 @@ Filters combine with AND semantics; unknown values exit `2` with diagnostics on 
 
 ## Templates
 
-| ID                   | Kind       | Stack                              | Dev command         |
-| -------------------- | ---------- | ---------------------------------- | ------------------- |
-| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
-| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
-| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`       |
-| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
-| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
-| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
-| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
-| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
-| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
-| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`          |
-| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`          |
-| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
+| ID                   | Kind       | Stack                              | Dev command                                          |
+| -------------------- | ---------- | ---------------------------------- | ---------------------------------------------------- |
+| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`                                        |
+| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`                                        |
+| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`                                        |
+| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`                                        |
+| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`                                        |
+| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`                                        |
+| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`                                        |
+| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev`                                  |
+| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`                                        |
+| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`                                           |
+| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`                                           |
+| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`                                           |
+| `fastapi-api`        | Server     | FastAPI + uv + pytest + ruff       | `uv run uvicorn app.main:app --reload --app-dir src` |
+| `python-worker`      | Infra      | Python asyncio worker (uv)         | `uv run python -m app.main`                          |
 
 Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles; Go recipes include PostgreSQL (`database/sql` + pgx), MySQL (`database/sql` + go-sql-driver/mysql), and MongoDB (official Go Driver v2).
 
@@ -209,33 +279,49 @@ Choose **at most one** recipe per exclusive category (linter, state, UI kit, HTT
 
 Exceptions:
 
-- **`storybook`** — can be combined with a UI kit
+- **`storybook`**, **`vitest`**, **`tanstack-query`**, **`docker`** — non-exclusive; combine with anything compatible (`tanstack-query` also sits beside Ky/Axios)
 - **`client-shared-pieces`** — added automatically on Vite, Astro, Next, and Nuxt
 
-| Recipe             | Category       | Templates                            | Adds                            |
-| ------------------ | -------------- | ------------------------------------ | ------------------------------- |
-| `biome`            | Linter         | All                                  | Lint + format scripts           |
-| `eslint`           | Linter         | All                                  | ESLint flat config              |
-| `zustand`          | State          | Vite React, Astro, Next              | Zustand store example           |
-| `pinia`            | State          | Vite Vue, Nuxt                       | Pinia store example             |
-| `nanostores`       | State          | Vite, Astro, Next, Nuxt              | Nanostores example              |
-| `hookform-zod`     | Forms          | Vite React, Astro, Next              | React Hook Form + Zod           |
-| `vee-validate-zod` | Forms          | Vite Vue, Nuxt                       | VeeValidate + Zod               |
-| `kyjs`             | HTTP           | Vite, Astro, Next, Nuxt              | Ky client                       |
-| `axios`            | HTTP           | Vite, Astro, Next, Nuxt              | Axios client                    |
-| `antd`             | UI             | Vite React, Astro, Next              | Ant Design setup                |
-| `mui`              | UI             | Vite React, Astro, Next              | MUI setup                       |
-| `shadcn-ui`        | UI             | Vite React, Astro, Next              | Tailwind + shadcn/ui            |
-| `shadcn-vue`       | UI             | Vite Vue, Nuxt                       | Tailwind + shadcn-vue           |
-| `nuxt-ui`          | UI             | Vite Vue, Nuxt                       | Tailwind + Nuxt UI              |
-| `storybook`        | Docs / testing | Vite, Astro, Next, Nuxt              | Storybook config + scripts      |
-| `type-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | TypeORM wiring + agent skill    |
-| `mikro-orm`        | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | MikroORM wiring + agent skill   |
-| `drizzle-orm`      | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Drizzle + drizzle-kit scripts   |
-| `prisma`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid | Prisma schema + migrate scripts |
-| `postgres`         | Database       | Go templates                         | `database/sql` + pgx driver     |
-| `mysql`            | Database       | Go templates                         | `database/sql` + MySQL driver   |
-| `mongodb`          | Database       | Go templates                         | Official MongoDB Go Driver v2   |
+| Recipe                  | Category       | Templates                               | Adds                                                        |
+| ----------------------- | -------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `biome`                 | Linter         | All                                     | Lint + format scripts                                       |
+| `eslint`                | Linter         | All                                     | ESLint flat config                                          |
+| `zustand`               | State          | Vite React, Astro, Next                 | Zustand store example                                       |
+| `pinia`                 | State          | Vite Vue, Nuxt                          | Pinia store example                                         |
+| `nanostores`            | State          | Vite, Astro, Next, Nuxt                 | Nanostores example                                          |
+| `hookform-zod`          | Forms          | Vite React, Astro, Next                 | React Hook Form + Zod                                       |
+| `vee-validate-zod`      | Forms          | Vite Vue, Nuxt                          | VeeValidate + Zod                                           |
+| `kyjs`                  | HTTP           | Vite, Astro, Next, Nuxt                 | Ky client                                                   |
+| `axios`                 | HTTP           | Vite, Astro, Next, Nuxt                 | Axios client                                                |
+| `antd`                  | UI             | Vite React, Astro, Next                 | Ant Design setup                                            |
+| `mui`                   | UI             | Vite React, Astro, Next                 | MUI setup                                                   |
+| `shadcn-ui`             | UI             | Vite React, Astro, Next                 | Tailwind + shadcn/ui                                        |
+| `shadcn-vue`            | UI             | Vite Vue, Nuxt                          | Tailwind + shadcn-vue                                       |
+| `nuxt-ui`               | UI             | Vite Vue, Nuxt                          | Tailwind + Nuxt UI                                          |
+| `storybook`             | Docs / testing | Vite, Astro, Next, Nuxt                 | Storybook config + scripts                                  |
+| `vitest`                | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                       |
+| `tanstack-query`        | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                               |
+| `better-auth`           | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler                 |
+| `nest-auth`             | Auth           | Nest                                    | JWT login endpoint + bearer-token guard                     |
+| `github-actions`        | CI             | All Node templates                      | CI workflow from your other recipes                         |
+| `docker`                | Infrastructure | Nest, Hono, Next, Nuxt                  | Dockerfile + compose (db service with an ORM)               |
+| `type-orm`              | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | TypeORM wiring + agent skill                                |
+| `mikro-orm`             | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | MikroORM wiring + agent skill                               |
+| `drizzle-orm`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Drizzle + drizzle-kit scripts                               |
+| `prisma`                | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Prisma schema + migrate scripts                             |
+| `postgres`              | Database       | Go templates                            | `database/sql` + pgx driver                                 |
+| `mysql`                 | Database       | Go templates                            | `database/sql` + MySQL driver                               |
+| `mongodb`               | Database       | Go templates                            | Official MongoDB Go Driver v2                               |
+| `docker-go`             | Infrastructure | Go templates                            | Dockerfile + compose (db service with a database recipe)    |
+| `sqlalchemy`            | ORM            | FastAPI                                 | SQLAlchemy 2 + repository adapter (SQLite default)          |
+| `alembic`               | Migrations     | FastAPI (needs `sqlalchemy`)            | Alembic config + first migration                            |
+| `postgres-python`       | Infrastructure | Python templates                        | psycopg 3 + `DATABASE_URL`                                  |
+| `docker-python`         | Infrastructure | Python templates                        | uv Dockerfile + compose (db service with `postgres-python`) |
+| `github-actions-python` | CI             | Python templates                        | `uv sync`, ruff, pytest workflow                            |
+| `github-actions-go`     | CI             | Go templates                            | `go vet` / `go test` / `go build` workflow                  |
+| `goose`                 | Migrations     | Go templates (needs `postgres`/`mysql`) | Embedded SQL migrations + `cmd/migrate`                     |
+| `sqlc`                  | ORM            | Go templates (needs `postgres`/`mysql`) | `sqlc.yaml` + example queries                               |
+| `redis`                 | Infrastructure | Go templates                            | go-redis client + `REDIS_URL`                               |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 

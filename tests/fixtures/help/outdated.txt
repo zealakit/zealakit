@@ -1,0 +1,9 @@
+Usage: zealakit outdated [options]
+
+Compare this project's template/recipe dependency ranges with the installed kit
+(report only)
+
+Options:
+  --cwd <dir>  Project directory (default: current directory)
+  --json       Machine-readable output
+  -h, --help   display help for command

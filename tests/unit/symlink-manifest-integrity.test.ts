@@ -6,11 +6,12 @@ import path from "node:path";
 import { after, describe, it } from "node:test";
 import {
   ensureCursorAgentsSymlink,
+  getNpmManifest,
   getRecipe,
   type ScaffoldConfig,
   scaffoldProject,
   validateGeneratedOutput,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-integrity-test-"));
@@ -246,15 +247,15 @@ describe("manifest merge integrity", () => {
     assert.ok(biome && zustand);
 
     const devDependencies = pkg.devDependencies as Record<string, string>;
-    for (const [name, version] of Object.entries(biome.devDependencies)) {
+    for (const [name, version] of Object.entries(getNpmManifest(biome)?.devDependencies ?? {})) {
       assert.equal(devDependencies[name], version, name);
     }
     const dependencies = pkg.dependencies as Record<string, string>;
-    for (const [name, version] of Object.entries(zustand.packages)) {
+    for (const [name, version] of Object.entries(getNpmManifest(zustand)?.packages ?? {})) {
       assert.equal(dependencies[name], version, name);
     }
     const scripts = pkg.scripts as Record<string, string>;
-    for (const [name, command] of Object.entries(biome.scripts)) {
+    for (const [name, command] of Object.entries(getNpmManifest(biome)?.scripts ?? {})) {
       assert.equal(scripts[name], command, name);
     }
   });
@@ -273,10 +274,10 @@ describe("manifest merge integrity", () => {
     const pkg = parseManifest(stage);
     const dependencies = pkg.dependencies as Record<string, string>;
     const scripts = pkg.scripts as Record<string, string>;
-    for (const [name, version] of Object.entries(zustand.packages)) {
+    for (const [name, version] of Object.entries(getNpmManifest(zustand)?.packages ?? {})) {
       assert.equal(dependencies[name], version, name);
     }
-    assert.equal(scripts.check, biome.scripts.check);
+    assert.equal(scripts.check, getNpmManifest(biome)?.scripts.check);
   });
 
   it("fails deterministically on conflicting recipe contributions", () => {

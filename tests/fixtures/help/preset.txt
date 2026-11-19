@@ -1,0 +1,13 @@
+Usage: zealakit preset [options] [command]
+
+Manage saved create presets (user-level plus ./zealakit.config.json)
+
+Options:
+  -h, --help             display help for command
+
+Commands:
+  list [options]         List available presets
+  save [options] <name>  Save a preset to
+                         /Users/huynguyen/.config/zealakit/config.json
+  remove <name>          Remove a user-level preset
+  help [command]         display help for command

@@ -1,4 +1,4 @@
-import { planIsReady, type ScaffoldPlan } from "@zealakit/core";
+import { planIsReady, type ScaffoldPlan } from "@zealakit/core/internal";
 import pc from "picocolors";
 
 /** Human-readable dry-run preview; matches the existing CLI picocolors style. */

@@ -4,7 +4,7 @@ import {
   type ManifestFieldConflict,
   resolveStagingPath,
   type ScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/ecosystem";
 import { planPackageMerges } from "./package-plan.js";
 
 type JsonObject = Record<string, unknown>;

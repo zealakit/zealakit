@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit create --stack --json",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "ok",
+        "outputDirectory",
+        "packageManager",
+        "stack",
+        "warnings",
+        "postGenerate",
+        "nextSteps"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "outputDirectory": {
+          "type": "string"
+        },
+        "packageManager": {
+          "enum": ["npm", "pnpm", "yarn", "bun"]
+        },
+        "stack": {
+          "type": "object"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "postGenerate": {
+          "type": "object",
+          "required": ["install", "git"]
+        },
+        "nextSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["ok", "error"],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "messages"]
+        }
+      }
+    }
+  ]
+}

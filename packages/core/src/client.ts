@@ -1,5 +1,4 @@
 import { ECOSYSTEMS } from "./constants.js";
-import { ScaffoldValidationError } from "./diagnostics.js";
 import {
   DISCOVERY_API_SCHEMA_VERSION,
   type DiscoveryApiErrorCode,
@@ -19,10 +18,13 @@ import {
   type RecipeMetadata,
   type TemplateMetadata,
 } from "./info/index.js";
-import { scaffoldProject } from "./scaffold/index.js";
+import type { PackageManager } from "./package-manager.js";
+import { type AddPlan, type ApplyAddResult, applyAddPlan, planAddRecipes } from "./project/add.js";
+import { checkProject, type ProjectReport } from "./project/checks.js";
+import { executeScaffoldPlan } from "./scaffold/index.js";
 import { buildScaffoldPlan, type ScaffoldPlan } from "./scaffold/plan.js";
 import type { EcosystemId, ScaffoldConfig } from "./types.js";
-import { validateScaffoldInput } from "./validation/index.js";
+import { computeOutdated, type OutdatedReport } from "./versions/outdated.js";
 
 /**
  * Explicit ecosystem registration for programmatic consumers.
@@ -82,6 +84,22 @@ export type ScaffoldClient = {
   create: (config: ScaffoldConfig, options?: { cwd?: string }) => Promise<ScaffoldExecutionResult>;
 };
 
+/** Operations on a project that was already generated (it has a `zealakit.json`). */
+export type ProjectClient = {
+  /** Plan adding recipes; read-only. Inspect `blockers` and `changes` before applying. */
+  planAdd: (
+    projectDir: string,
+    recipeIds: string[],
+    options?: { packageManager?: PackageManager },
+  ) => AddPlan;
+  /** Write a plan's changes (conflicting files are kept unless `overwriteFiles`). */
+  applyAdd: (plan: AddPlan, options?: { overwriteFiles?: boolean }) => ApplyAddResult;
+  /** Health checks (manifest, agent docs, recipe files, env, dependencies). */
+  check: (projectDir: string) => ProjectReport;
+  /** Compare dependency ranges with what the installed kit would generate. */
+  outdated: (projectDir: string) => OutdatedReport;
+};
+
 export type ScaffoldExecutionResult = {
   outputDirectory: string;
   projectName: string;
@@ -95,6 +113,7 @@ export type Zealakit = {
   metadata: MetadataQuery;
   discovery: DiscoveryQuery;
   scaffold: ScaffoldClient;
+  project: ProjectClient;
 };
 
 function validateEcosystems(ecosystems: readonly EcosystemRegistration[]): EcosystemId[] {
@@ -169,19 +188,23 @@ export function createZealakit(options: ZealakitOptions = {}): Zealakit {
         return unwrap<DiscoveryValidationData>(response, "validate");
       },
     },
+    project: {
+      planAdd: (projectDir, recipeIds, addOptions) =>
+        planAddRecipes(projectDir, recipeIds, addOptions),
+      applyAdd: (plan, applyOptions) => applyAddPlan(plan, applyOptions),
+      check: (projectDir) => checkProject(projectDir),
+      outdated: (projectDir) => computeOutdated(projectDir),
+    },
     scaffold: {
       plan(config, planOptions = {}) {
         return buildScaffoldPlan(config, planOptions.cwd ?? process.cwd());
       },
       async create(config, createOptions = {}) {
         const cwd = createOptions.cwd ?? process.cwd();
-        // Same non-interactive safety check the CLI uses (`yes` refuses non-empty
-        // targets without prompting) before the staging/commit pipeline writes.
-        const validation = await validateScaffoldInput(config, cwd, { yes: true });
-        if (!validation.valid) {
-          throw new ScaffoldValidationError(validation.errors.join("\n"), validation.errors);
-        }
-        const outputDirectory = await scaffoldProject(config, cwd);
+        // One plan drives validation and execution. Programmatic callers never
+        // get a prompt: a non-empty target is refused.
+        const plan = buildScaffoldPlan(config, cwd);
+        const outputDirectory = await executeScaffoldPlan(plan, { overwrite: "refuse" });
         return {
           outputDirectory,
           projectName: config.projectName,

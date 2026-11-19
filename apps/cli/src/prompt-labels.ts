@@ -4,7 +4,7 @@ import {
   type Scope,
   type TemplateConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 /** Compact hint under a template option (scope · uiFramework · default). */
 export function templateOptionHint(template: TemplateConfig): string {

@@ -6,9 +6,7 @@ export {
   getRecipeProfile,
   getTemplateProfile,
 } from "./catalog.js";
-export { RECIPE_PROFILES } from "./recipe-profiles/index.js";
 export { resolveRecipeProfile, resolveTemplateProfile } from "./resolve.js";
-export { TEMPLATE_PROFILES } from "./template-profiles/index.js";
 export type {
   RecipeProfile,
   ResolvedRecipeProfile,

@@ -6,7 +6,7 @@ import {
   formatDiagnostic,
   recipeConflictDiagnostic,
   unknownTemplateDiagnostic,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 describe("formatDiagnostic", () => {
   it("renders title, selected, reason, and resolution", () => {

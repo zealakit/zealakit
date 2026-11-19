@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PACKED_DOTFILES } from "@zealakit/core";
+import { PACKED_DOTFILES } from "@zealakit/core/internal";
 
 /**
  * Release smoke test for the published artifact: build → pack → tarball contents
@@ -134,6 +134,9 @@ function verifyTarballContents(tarballPath: string): string[] {
   for (const readme of ["README.md", "README_VI.md", "README_CN.md"]) {
     if (!packed.has(readme)) errors.push(`tarball is missing ${readme}`);
   }
+  if (!packed.has("schema/zealakit.schema.json")) {
+    errors.push("tarball is missing schema/zealakit.schema.json");
+  }
   if (packed.has("README_DEV.md")) errors.push("tarball must not include README_DEV.md");
   for (const file of tracked) {
     const base = path.posix.basename(file);
@@ -257,7 +260,7 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "--dry-run previews without writing",
-    args: ["smoke-dry-run", "-t", "vite-react", "-w", "biome", "--dry-run"],
+    args: ["create", "smoke-dry-run", "-t", "vite-react", "-w", "biome", "--dry-run"],
     check: (result, appDir) => [
       ...expectExit(result, true),
       ...expectNoApp(appDir),
@@ -267,7 +270,15 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "vite-react + biome,zustand,hookform-zod,kyjs",
-    args: ["smoke-client", "-t", "vite-react", "-w", "biome,zustand,hookform-zod,kyjs", "-y"],
+    args: [
+      "create",
+      "smoke-client",
+      "-t",
+      "vite-react",
+      "-w",
+      "biome,zustand,hookform-zod,kyjs",
+      "-y",
+    ],
     check: (result, appDir) => {
       const errors = [
         ...expectExit(result, true),
@@ -277,6 +288,9 @@ const SMOKE_CASES: SmokeCase[] = [
       if (!cursor || !fs.existsSync(cursor) || fs.readlinkSync(cursor) !== ".agents") {
         errors.push(".cursor should be a symlink to .agents");
       }
+      if (appDir && !fs.existsSync(path.join(appDir, "zealakit.json"))) {
+        errors.push("zealakit.json should be written into the project");
+      }
       if (appDir && fs.existsSync(path.join(appDir, "_gitignore"))) {
         errors.push("_gitignore should be renamed to .gitignore");
       }
@@ -285,7 +299,7 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "stdlib-api + postgres",
-    args: ["smoke-go-postgres", "-t", "stdlib-api", "-w", "postgres", "-y"],
+    args: ["create", "smoke-go-postgres", "-t", "stdlib-api", "-w", "postgres", "-y"],
     check: (result, appDir) => {
       const errors = [
         ...expectExit(result, true),
@@ -312,7 +326,7 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "vite-svelte + biome,storybook",
-    args: ["smoke-svelte", "-t", "vite-svelte", "-w", "biome,storybook", "-y"],
+    args: ["create", "smoke-svelte", "-t", "vite-svelte", "-w", "biome,storybook", "-y"],
     check: (result, appDir) => [
       ...expectExit(result, true),
       ...expectFiles(appDir, [
@@ -332,7 +346,7 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "nuxt + shadcn-vue,pinia",
-    args: ["smoke-nuxt", "-t", "nuxt", "-w", "shadcn-vue,pinia", "-y"],
+    args: ["create", "smoke-nuxt", "-t", "nuxt", "-w", "shadcn-vue,pinia", "-y"],
     check: (result, appDir) => [
       ...expectExit(result, true),
       ...expectFiles(appDir, [".gitignore", "app/components/ui/button/Button.vue"]),
@@ -340,15 +354,59 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "nest + type-orm prints start:dev",
-    args: ["smoke-nest", "-t", "nest", "-w", "type-orm,biome", "-y"],
+    args: ["create", "smoke-nest", "-t", "nest", "-w", "type-orm,biome", "-y", "--pm", "npm"],
     check: (result) => [
       ...expectExit(result, true),
       ...(result.output.includes("npm run start:dev") ? [] : ["should print npm run start:dev"]),
     ],
   },
   {
+    name: "--pm pnpm adapts next steps",
+    args: ["create", "smoke-pnpm", "-t", "nest", "-y", "--pm", "pnpm"],
+    check: (result) => [
+      ...expectExit(result, true),
+      ...(result.output.includes("pnpm install") && result.output.includes("pnpm start:dev")
+        ? []
+        : ["should print pnpm install and pnpm start:dev"]),
+    ],
+  },
+  {
+    name: "fastapi-api + sqlalchemy,alembic",
+    args: ["create", "smoke-py", "-t", "fastapi-api", "-w", "sqlalchemy,alembic", "-y"],
+    check: (result, appDir) => [
+      ...expectExit(result, true),
+      ...expectFiles(appDir, [
+        "pyproject.toml",
+        ".gitignore",
+        "alembic.ini",
+        "src/app/main.py",
+        "zealakit.json",
+      ]),
+      ...(result.output.includes("uv sync") ? [] : ["should print uv sync"]),
+    ],
+  },
+  {
+    name: "mcp answers initialize and tools/list",
+    args: ["mcp", "--root", "."],
+    input: `${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })}\n${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" })}\n`,
+    check: (result) => [
+      ...expectExit(result, true),
+      ...(result.output.includes('"name":"zealakit"') && result.output.includes('"list_templates"')
+        ? []
+        : ["mcp server did not answer initialize/tools/list"]),
+    ],
+  },
+  {
+    name: "the removed root scaffold form is rejected",
+    args: ["smoke-root", "-t", "vite-react", "-y"],
+    check: (result, appDir) => [
+      ...(result.exitCode === 2 ? [] : [`expected exit 2, got ${result.exitCode}`]),
+      ...expectNoApp(appDir),
+    ],
+  },
+  {
     name: "linter conflict is rejected",
-    args: ["smoke-conflict", "-t", "vite-react", "-w", "biome,eslint", "-y"],
+    args: ["create", "smoke-conflict", "-t", "vite-react", "-w", "biome,eslint", "-y"],
     check: (result, appDir) => [
       ...expectExit(result, false),
       ...expectNoApp(appDir),
@@ -357,10 +415,79 @@ const SMOKE_CASES: SmokeCase[] = [
   },
   {
     name: "vue-only recipe on next is rejected before writing files",
-    args: ["smoke-next-pinia", "-t", "next", "-w", "pinia", "-y"],
+    args: ["create", "smoke-next-pinia", "-t", "next", "-w", "pinia", "-y"],
     check: (result, appDir) => [...expectExit(result, false), ...expectNoApp(appDir)],
   },
 ];
+
+/** Installs nothing new: uses the already-installed tarball to run and type-check `zealakit/api`. */
+async function verifyPublishedApi(): Promise<string[]> {
+  const dir = path.join(INSTALL_DIR, "api-check");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "check.mjs"),
+    `import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createZealakit, goEcosystem, nodeEcosystem, ScaffoldValidationError } from "zealakit/api";
+
+const zealakit = createZealakit({ ecosystems: [nodeEcosystem, goEcosystem] });
+assert.ok(zealakit.metadata.getTemplates().length > 0);
+const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-api-"));
+const config = { projectName: "api-app", templateId: "vite-react", recipeIds: ["biome"] };
+assert.equal(zealakit.scaffold.plan(config, { cwd }).blockers.length, 0);
+const created = await zealakit.scaffold.create(config, { cwd });
+assert.ok(fs.existsSync(path.join(created.outputDirectory, "zealakit.json")));
+await assert.rejects(() => zealakit.scaffold.create(config, { cwd }), ScaffoldValidationError);
+const added = zealakit.project.planAdd(created.outputDirectory, ["zustand"]);
+assert.deepEqual(added.blockers, []);
+assert.ok(zealakit.project.check(created.outputDirectory).isZealakitProject);
+fs.rmSync(cwd, { recursive: true, force: true });
+console.log("api ok");
+`,
+  );
+  fs.writeFileSync(
+    path.join(dir, "check.ts"),
+    `import { createZealakit, nodeEcosystem, type Zealakit, type ScaffoldConfig } from "zealakit/api";
+
+const zealakit: Zealakit = createZealakit({ ecosystems: [nodeEcosystem] });
+const config: ScaffoldConfig = { projectName: "x", templateId: "vite-react", recipeIds: [] };
+const plan = zealakit.scaffold.plan(config);
+const blockers: string[] = plan.blockers;
+const added = zealakit.project.planAdd(".", ["zustand"]);
+const kinds: Array<"create" | "modify" | "conflict"> = added.changes.map((change) => change.kind);
+export { blockers, kinds };
+`,
+  );
+  fs.writeFileSync(
+    path.join(dir, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        module: "esnext",
+        moduleResolution: "bundler",
+        target: "es2022",
+        strict: true,
+        noEmit: true,
+        skipLibCheck: true,
+        types: [],
+      },
+      files: ["check.ts"],
+    }),
+  );
+
+  const errors: string[] = [];
+  const runResult = await run(process.execPath, [path.join(dir, "check.mjs")], dir);
+  if (runResult.exitCode !== 0 || !runResult.output.includes("api ok")) {
+    errors.push(`runtime check failed:\n${runResult.output.slice(-800)}`);
+  }
+  const tsc = path.join(PROJECT_ROOT, "node_modules", ".bin", "tsc");
+  const typeResult = await run(tsc, ["-p", path.join(dir, "tsconfig.json")], dir);
+  if (typeResult.exitCode !== 0) {
+    errors.push(`type check failed:\n${typeResult.output.slice(-800)}`);
+  }
+  return errors;
+}
 
 async function main(): Promise<void> {
   let tarballPath: string | undefined;
@@ -388,15 +515,17 @@ async function main(): Promise<void> {
         SMOKE_CASES.map(async (smoke) => {
           const appName =
             smoke.appDirName ??
-            (smoke.args.includes("--json") || smoke.args[0]?.startsWith("-")
+            (smoke.args.includes("--json") || smoke.args[1]?.startsWith("-")
               ? undefined
-              : smoke.args[0]);
+              : smoke.args[1]);
           const result = await run(bin, smoke.args, APPS_DIR, smoke.input);
           const appDir = appName ? path.join(APPS_DIR, appName) : undefined;
           return { name: smoke.name, errors: smoke.check(result, appDir) };
         }),
       )),
     );
+
+    results.push({ name: "zealakit/api from the tarball", errors: await verifyPublishedApi() });
 
     for (const { name, errors } of results) {
       console.log(`${errors.length === 0 ? green("✔") : red("✖")} ${name}`);

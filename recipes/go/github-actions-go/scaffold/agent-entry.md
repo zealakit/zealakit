@@ -1,0 +1,1 @@
+- **CI:** [.agents/skills/github-actions/SKILL.md](.agents/skills/github-actions/SKILL.md) — the generated workflow and how to extend it

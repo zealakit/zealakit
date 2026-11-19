@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "hookform-zod",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "React Hook Form + Zod",
   hint: "Recommended",
   category: "form",

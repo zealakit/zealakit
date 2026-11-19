@@ -3,7 +3,7 @@ import {
   registerRecipe,
   registerTemplate,
   setManifestAdapter,
-} from "@zealakit/core";
+} from "@zealakit/core/ecosystem";
 import { nodeManifestAdapter } from "./manifest/adapter.js";
 import { RECIPE_LIST } from "./registry/recipes/index.js";
 import { templateList } from "./registry/templates.js";

@@ -10,6 +10,8 @@ export const RECIPE_CATEGORIES = [
   "utils",
   "testing",
   "documentation",
+  "auth",
+  "ci",
 ] as const;
 
 export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];

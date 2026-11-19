@@ -1,6 +1,6 @@
 # Zealakit — Source Context (dùng để dán vào ChatGPT)
 
-> **Snapshot:** repo `zealakit` v1.0.0-beta.3 · pnpm monorepo · Node.js >= 22.12 · TypeScript ESM strict.
+> **Snapshot:** repo `zealakit` v1.0.0-beta.4 · pnpm monorepo · Node.js >= 22.12 · TypeScript ESM strict.
 > Tài liệu này mô tả **source code thực tế** trong `apps/`, `packages/`, `templates/`, `recipes/`.
 > Lưu ý: repo **không có thư mục `src/` ở root**. Source nằm trong `apps/cli/src`, `packages/*/src`.
 > `dist/` là output build của `tsup` — không sửa tay.
@@ -53,13 +53,11 @@ chọn template → chọn recipe → copy files
 ```
 CLI create
   → resolve config (flags hoặc prompt)
-  → withDefaultRecipes(scope, ids)
-  → validateRecipeIds
-  → resolveRecipeDependencies (dependsOn, cycle, missing)
-  → [--dry-run] buildScaffoldPlan + in preview
-  → validateScaffoldInput (config + target dir)
-  → scaffoldProject
-       → buildScaffoldPlan
+  → buildScaffoldPlan (một lần: withDefaultRecipes → validateRecipeIds →
+      resolveRecipeDependencies → validateScaffoldConfig → inventory)
+  → [--dry-run] in preview rồi dừng
+  → CLI xác nhận ghi đè thư mục đích (-y từ chối, --force cho phép)
+  → executeScaffoldPlan(plan)
        → materialize vào thư mục staging tạm (os.tmpdir)
        → validateGeneratedOutput
        → commitStagedDirectory (rename/backup/rollback)
@@ -461,10 +459,14 @@ Flags của `create`:
 
 - `-t, --template <id>`
 - `-w, --with <recipes>` — comma-separated
-- `-y, --yes`
+- `-y, --yes` — không prompt; từ chối thư mục đích không rỗng
+- `--force` — ghi đè thư mục đích không rỗng không cần hỏi
+- `--pm <npm|pnpm|yarn|bun>`, `--install/--no-install`, `--git/--no-git` — bước sau khi tạo (mặc định hỏi khi interactive, tắt khi `-y`)
+- `--no-manifest` — không ghi `zealakit.json`
+- `--preset <name>`, `--save-preset <name>` — xem `zealakit preset list|save|remove`
 - `--dry-run`
 - `--discover`
-- `--json` (chỉ hợp lệ với `--discover`)
+- `--json` — với `--discover` đọc request từ stdin; không có `--discover` thì non-interactive (cần `-y`/`-w`/`--preset`/`--dry-run`) và in một kết quả JSON
 
 Ràng buộc:
 
@@ -719,7 +721,7 @@ Ownership:
 | `nest`               | server | —           | DDD/hexagonal, dev `npm run start:dev` |
 | `hono`               | server | —           | lightweight API                        |
 
-- Recipe (20): `biome`, `eslint`, `zustand`, `pinia`, `nanostores`, `client-shared-pieces`, `hookform-zod`, `vee-validate-zod`, `kyjs`, `axios`, `antd`, `mui`, `shadcn-ui`, `nuxt-ui`, `shadcn-vue`, `storybook`, `type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`.
+- Recipe (29): `better-auth`, `nest-auth`, `github-actions`, `github-actions-go`, `vitest`, `tanstack-query`, `docker`, `docker-go` (thêm ở beta.4), `biome`, `eslint`, `zustand`, `pinia`, `nanostores`, `client-shared-pieces`, `hookform-zod`, `vee-validate-zod`, `kyjs`, `axios`, `antd`, `mui`, `shadcn-ui`, `nuxt-ui`, `shadcn-vue`, `storybook`, `type-orm`, `mikro-orm`, `drizzle-orm`, `prisma`.
 - ORM recipe: `supportedScopes: ["server", "hybrid"]`, `exclusive: true`, profile `projectTypes: ["server-api", "ui"]` (UI bao gồm hybrid).
 - `client-shared-pieces` là recipe `default` cho client/hybrid.
 - `defineRecipe` tự set `path: node/<id>` và `ecosystem: "node"`.
@@ -841,7 +843,7 @@ pnpm test <filter...>   # lọc theo test name
 | Thêm template                | `packages/ecosystem-<eco>/src/registry/templates.ts` + `templates/<eco>/<id>/`                          |
 | Thêm recipe                  | `packages/ecosystem-node/src/registry/recipes/<id>.ts` + export trong `index.ts` + `recipes/node/<id>/` |
 | Thêm overlay cho recipe      | `recipes/node/<id>/overlays/<overlayId>/`                                                               |
-| Thêm Discovery profile       | `packages/core/src/profiles/template-profiles/index.ts` hoặc `recipe-profiles/index.ts`                 |
+| Thêm Discovery profile       | trường `discovery` trên định nghĩa template/recipe (trong package ecosystem)                            |
 | Thêm enum/domain value       | `packages/core/src/constants/<name>.ts` + export ở `constants/index.ts`                                 |
 | Đổi scoring/ranking          | `packages/core/src/discovery/matching/` (weights, scoring, constraints, ranking)                        |
 | Thêm câu hỏi Discovery       | `packages/core/src/discovery/questionnaire/questions.ts` + types + resolve                              |

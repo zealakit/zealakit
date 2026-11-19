@@ -6,7 +6,7 @@ import {
   type DiscoveryApiResponse,
   ExitCode,
   handleDiscoveryRequest,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import type { Command } from "commander";
 
 export type DiscoveryQueryOptions = {

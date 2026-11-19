@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zealakit recipe.json",
+  "description": "Data form of a recipe. External recipes are data only: no code, hooks or symlinks.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "category", "supportedScopes"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "hint": {
+      "type": "string"
+    },
+    "category": {
+      "type": ["string", "array"]
+    },
+    "supportedScopes": {
+      "type": ["string", "array"]
+    },
+    "ecosystem": {
+      "enum": ["node", "go", "python"]
+    },
+    "uiFrameworks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclusive": {
+      "type": "boolean"
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiresAnyOf": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "npm": {
+      "type": "object"
+    },
+    "go": {
+      "type": "object"
+    },
+    "transforms": {
+      "type": "object"
+    }
+  }
+}

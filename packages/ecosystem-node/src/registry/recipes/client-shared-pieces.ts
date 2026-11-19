@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "client-shared-pieces",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "Client shared pieces",
   category: "utils",
   supportedScopes: ["client", "hybrid"],

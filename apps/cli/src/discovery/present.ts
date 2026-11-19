@@ -7,7 +7,7 @@ import {
   type RecipeMatchResult,
   resolveTemplateProfile,
   type TemplateMatchResult,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 export type TemplateChoice = {
   value: string;

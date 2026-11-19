@@ -1,0 +1,33 @@
+Usage: zealakit [options] [command]
+
+Recipe-based project scaffolding. Start with `zealakit create` (supports
+--discover and --template).
+
+Options:
+  -V, --version                    output the version number
+  --info                           Print kit metadata (alias of `zealakit info`)
+  --json                           With --info: print only machine-readable JSON
+  -h, --help                       display help for command
+
+Commands:
+  create [options] [project-name]  Create a new project. Modes: interactive
+                                   prompts, --discover (recommendations), or
+                                   --template <id>.
+  info [options]                   Print kit metadata: templates, recipes,
+                                   ecosystems, categories, Discovery profiles
+  doctor [options]                 Check Zealakit runtime and optional Go
+                                   toolchain availability
+  discovery                        Local Project Discovery feedback and
+                                   stateless JSON queries (offline; no network
+                                   uploads)
+  preset                           Manage saved create presets (user-level plus
+                                   ./zealakit.config.json)
+  add [options] <recipes...>       Add recipes to an existing project (reads
+                                   zealakit.json; previews a diff first)
+  outdated [options]               Compare this project's template/recipe
+                                   dependency ranges with the installed kit
+                                   (report only)
+  recipe                           Author external recipes (data-only folders
+                                   with recipe.json)
+  mcp [options]                    Run an MCP server on stdio so AI agents can
+                                   plan, create, add and check projects

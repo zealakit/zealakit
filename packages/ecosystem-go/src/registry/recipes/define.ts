@@ -1,10 +1,16 @@
-import type { RecipeConfig } from "@zealakit/core";
+import type { RecipeConfig } from "@zealakit/core/ecosystem";
 
-/** Identity helper for typed Go recipe modules. */
-export function defineGoRecipe(recipe: RecipeConfig): RecipeConfig {
+export type GoRecipeInput = Omit<RecipeConfig, "manifest"> & {
+  goModules?: Record<string, string>;
+};
+
+/** Typed Go recipe modules; `goModules` is folded into `manifest`. */
+export function defineGoRecipe(input: GoRecipeInput): RecipeConfig {
+  const { goModules, ...rest } = input;
   return {
-    ...recipe,
-    path: recipe.path ?? `go/${recipe.id}`,
-    ecosystem: recipe.ecosystem ?? "go",
+    ...rest,
+    path: rest.path ?? `go/${rest.id}`,
+    ecosystem: rest.ecosystem ?? "go",
+    manifest: { ecosystem: "go", goModules: goModules ?? {} },
   };
 }

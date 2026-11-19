@@ -10,7 +10,7 @@ import {
   validateRecipeIds,
   validateScaffoldConfig,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 
 function incompatibility(recipeId: string, templateId: string): string | undefined {

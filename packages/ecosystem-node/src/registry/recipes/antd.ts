@@ -2,6 +2,7 @@ import { defineRecipe, nextUiProviders, viteReactAppProvider } from "./define.js
 
 export default defineRecipe({
   id: "antd",
+  discovery: { capabilities: ["web-ui"], projectTypes: ["ui"] },
   name: "Ant Design",
   category: "ui",
   supportedScopes: ["client", "hybrid"],

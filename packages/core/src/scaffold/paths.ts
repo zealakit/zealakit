@@ -23,13 +23,24 @@ function findPackageRoot(startDir: string): string {
 }
 
 export const PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
+function readKitVersion(): string {
+  const { version } = JSON.parse(
+    fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf-8"),
+  ) as { version?: string };
+  return version ?? "0.0.0";
+}
+
+/** Version of the installed zealakit package (written into `zealakit.json`). */
+export const KIT_VERSION = readKitVersion();
 export const TEMPLATES_DIR = path.join(PACKAGE_ROOT, "templates");
 export const RECIPES_DIR = path.join(PACKAGE_ROOT, "recipes");
 
 export const RECIPE_OVERLAYS_DIR = "overlays";
 export const RECIPE_SHARED_DIR = "shared";
 export const RECIPE_SCAFFOLD_DIR = "scaffold";
+/** Names at a recipe root that are never copied into projects (folders and `recipe.json`). */
 export const RECIPE_META_DIRS = new Set([
+  "recipe.json",
   RECIPE_OVERLAYS_DIR,
   RECIPE_SHARED_DIR,
   RECIPE_SCAFFOLD_DIR,
@@ -48,6 +59,8 @@ export function getRecipeDir(recipeId: string): string {
   if (!recipe) {
     throw new Error(`Recipe does not exist: ${recipeId}`);
   }
+  // External recipes live outside the kit; their `path` is an absolute directory.
+  if (recipe.path && path.isAbsolute(recipe.path)) return recipe.path;
   return path.join(RECIPES_DIR, recipe.path ?? recipe.id);
 }
 

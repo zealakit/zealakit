@@ -1,47 +1,83 @@
-import type { RecipeCategory, RecipeConfig, Scope, TemplateConfig } from "../types.js";
+import type {
+  NpmRecipeManifest,
+  RecipeCategory,
+  RecipeConfig,
+  Scope,
+  TemplateConfig,
+} from "../types.js";
 
-/** Mutable catalogs filled by ecosystem registration. */
-export const templates: Record<string, TemplateConfig> = {};
-export const recipes: Record<string, RecipeConfig> = {};
+/** Template and recipe catalog. Registration order = prompt option order. */
+export class Registry {
+  private readonly templateMap = new Map<string, TemplateConfig>();
+  private readonly recipeMap = new Map<string, RecipeConfig>();
 
-/** Registration order = prompt option order. */
-const recipeOrder: string[] = [];
+  registerTemplate(template: TemplateConfig): void {
+    this.templateMap.set(template.id, template);
+  }
+
+  registerRecipe(recipe: RecipeConfig): void {
+    this.recipeMap.set(recipe.id, recipe);
+  }
+
+  clear(): void {
+    this.templateMap.clear();
+    this.recipeMap.clear();
+  }
+
+  getTemplate(id: string): TemplateConfig | undefined {
+    return this.templateMap.get(id);
+  }
+
+  getRecipe(id: string): RecipeConfig | undefined {
+    return this.recipeMap.get(id);
+  }
+
+  templates(): TemplateConfig[] {
+    return [...this.templateMap.values()];
+  }
+
+  recipes(): RecipeConfig[] {
+    return [...this.recipeMap.values()];
+  }
+}
+
+/** Process-wide registry that ecosystem packages register into. */
+const registry = new Registry();
 
 export function registerTemplate(template: TemplateConfig): void {
-  templates[template.id] = template;
+  registry.registerTemplate(template);
 }
 
 export function registerRecipe(recipe: RecipeConfig): void {
-  if (!(recipe.id in recipes)) {
-    recipeOrder.push(recipe.id);
-  }
-  recipes[recipe.id] = recipe;
+  registry.registerRecipe(recipe);
 }
 
 export function clearRegistry(): void {
-  for (const key of Object.keys(templates)) {
-    delete templates[key];
-  }
-  for (const key of Object.keys(recipes)) {
-    delete recipes[key];
-  }
-  recipeOrder.length = 0;
+  registry.clear();
 }
 
 export function getTemplate(id: string): TemplateConfig | undefined {
-  return templates[id];
+  return registry.getTemplate(id);
+}
+
+export function getAllTemplates(): TemplateConfig[] {
+  return registry.templates();
 }
 
 export function getAllTemplateIds(): string[] {
-  return Object.keys(templates);
+  return getAllTemplates().map((template) => template.id);
 }
 
 export function getRecipe(id: string): RecipeConfig | undefined {
-  return recipes[id];
+  return registry.getRecipe(id);
+}
+
+export function getAllRecipes(): RecipeConfig[] {
+  return registry.recipes();
 }
 
 export function getAllRecipeIds(): string[] {
-  return [...recipeOrder];
+  return getAllRecipes().map((recipe) => recipe.id);
 }
 
 export function getRecipeCategories(recipe: RecipeConfig): RecipeCategory[] {
@@ -53,10 +89,7 @@ export function recipeHasCategory(recipe: RecipeConfig, category: RecipeCategory
 }
 
 export function getRecipesByCategory(category: RecipeCategory): RecipeConfig[] {
-  return recipeOrder
-    .map((id) => recipes[id])
-    .filter((recipe): recipe is RecipeConfig => Boolean(recipe))
-    .filter((recipe) => recipeHasCategory(recipe, category));
+  return getAllRecipes().filter((recipe) => recipeHasCategory(recipe, category));
 }
 
 export function recipeSupportsScope(recipe: RecipeConfig, scope: Scope): boolean {
@@ -65,9 +98,7 @@ export function recipeSupportsScope(recipe: RecipeConfig, scope: Scope): boolean
 
 /** Prepend default recipes for the scope; keeps user order and drops duplicates. */
 export function withDefaultRecipes(scope: Scope, recipeIds: string[]): string[] {
-  const defaults = recipeOrder
-    .map((id) => recipes[id])
-    .filter((recipe): recipe is RecipeConfig => Boolean(recipe))
+  const defaults = getAllRecipes()
     .filter((recipe) => recipe.default && recipeSupportsScope(recipe, scope))
     .map((recipe) => recipe.id);
 
@@ -84,4 +115,9 @@ export function getTemplateDevCommand(template: TemplateConfig): string {
 export function getTemplateOverlayId(templateId: string): string {
   const template = getTemplate(templateId);
   return template?.overlay ?? templateId;
+}
+
+/** The npm manifest branch of a recipe, or `undefined` for other ecosystems. */
+export function getNpmManifest(recipe: RecipeConfig): NpmRecipeManifest | undefined {
+  return recipe.manifest.ecosystem === "node" ? recipe.manifest : undefined;
 }

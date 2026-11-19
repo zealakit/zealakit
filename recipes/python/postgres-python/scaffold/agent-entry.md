@@ -1,0 +1,1 @@
+- **PostgreSQL:** [.agents/skills/postgres-python/SKILL.md](.agents/skills/postgres-python/SKILL.md) — psycopg driver and `DATABASE_URL`

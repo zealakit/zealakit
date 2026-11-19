@@ -6,6 +6,7 @@ import path from "node:path";
 import { after, describe, it } from "node:test";
 import {
   buildScaffoldPlan,
+  executeScaffoldPlan,
   getAllTemplateIds,
   getManifestAdapter,
   getRecipe,
@@ -21,7 +22,7 @@ import {
   type TemplateConfig,
   validateGeneratedOutput,
   withDefaultRecipes,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 import { ScaffoldCommitError } from "../../packages/core/src/scaffold/commit.js";
 import { listRecipeFiles, listTemplateFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { planPackageMerges } from "../../packages/ecosystem-node/src/manifest/package-plan.js";
@@ -56,6 +57,16 @@ function caseDir(): string {
   const dir = path.join(testRoot, `case-${++counter}`);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+/** `zealakit.json` carries `createdAt`; everything else must be byte-identical. */
+function withoutTimestamp(tree: Record<string, string>): Record<string, string> {
+  const copy = { ...tree };
+  const manifest = copy["zealakit.json"];
+  if (manifest) {
+    copy["zealakit.json"] = manifest.replace(/"createdAt": "[^"]*"/, '"createdAt": "<ts>"');
+  }
+  return copy;
 }
 
 function writeFile(dir: string, relativePath: string, content: string): void {
@@ -197,6 +208,9 @@ describe("end-to-end generation for every registered template", () => {
         assert.match(goMod, /^module\s+\S+/m);
         assert.ok(goMod.includes(config.projectName));
         assert.equal(fs.existsSync(path.join(dir, "package.json")), false);
+      } else if ((template.ecosystem ?? "node") === "python") {
+        assert.match(readFile(dir, "pyproject.toml"), new RegExp(`name = "${config.projectName}"`));
+        assert.equal(fs.existsSync(path.join(dir, "package.json")), false);
       } else {
         const pkg = JSON.parse(readFile(dir, "package.json")) as {
           name: string;
@@ -218,7 +232,7 @@ describe("end-to-end generation for every registered template", () => {
     assert.ok(TEMPLATE_IDS.length > 0);
     assert.deepEqual([...testedTemplateIds].sort(), [...TEMPLATE_IDS].sort());
     const ecosystems = new Set(TEMPLATE_IDS.map((id) => getTemplate(id)?.ecosystem ?? "node"));
-    assert.deepEqual([...ecosystems].sort(), ["go", "node"]);
+    assert.deepEqual([...ecosystems].sort(), ["go", "node", "python"]);
   });
 });
 
@@ -314,13 +328,13 @@ describe("existing target directories and repeated generation", () => {
     const cwd = caseDir();
     const { config } = resolveGeneration("vite-react", ["biome", "zustand"]);
     const first = await scaffoldProject(config, cwd);
-    const firstTree = snapshotTree(first);
+    const firstTree = withoutTimestamp(snapshotTree(first));
     const firstManifest = readFile(first, "package.json");
 
     const second = await scaffoldProject(config, cwd);
 
     assert.equal(second, first);
-    assert.deepEqual(snapshotTree(second), firstTree);
+    assert.deepEqual(withoutTimestamp(snapshotTree(second)), firstTree);
     assert.equal(readFile(second, "package.json"), firstManifest);
     assertStagesCleaned();
     assertCommitSiblingsClean(cwd);
@@ -522,5 +536,48 @@ describe("failure injection through the real pipeline", () => {
     }
     assertStagesCleaned();
     assertCommitSiblingsClean(cwd);
+  });
+});
+
+describe("single plan pipeline", () => {
+  it("writes every file the plan promised", async () => {
+    const cwd = caseDir();
+    const config: ScaffoldConfig = {
+      projectName: "app-plan-matches",
+      templateId: "vite-react",
+      recipeIds: ["biome", "zustand"],
+    };
+    const plan = buildScaffoldPlan(config, cwd);
+    assert.deepEqual(plan.blockers, []);
+    const dir = await executeScaffoldPlan(plan, { overwrite: "refuse" });
+    const missing = plan.files.filter((file) => !fs.existsSync(path.join(dir, file.path)));
+    assert.deepEqual(
+      missing.map((file) => file.path),
+      [],
+    );
+  });
+
+  it("reports unknown recipe ids as ids, not as dependencies", () => {
+    const plan = buildScaffoldPlan(
+      { projectName: "app-unknown", templateId: "vite-react", recipeIds: ["definitely-missing"] },
+      caseDir(),
+    );
+    assert.equal(plan.checks.find((check) => check.id === "recipe-ids")?.ok, false);
+    assert.ok(plan.blockers.some((blocker) => blocker.includes("definitely-missing")));
+  });
+
+  it("refuses a non-empty destination when asked to", async () => {
+    const cwd = caseDir();
+    fs.mkdirSync(path.join(cwd, "app-existing"));
+    fs.writeFileSync(path.join(cwd, "app-existing", "keep.txt"), "x");
+    const plan = buildScaffoldPlan(
+      { projectName: "app-existing", templateId: "vite-react", recipeIds: [] },
+      cwd,
+    );
+    await assert.rejects(
+      () => executeScaffoldPlan(plan, { overwrite: "refuse" }),
+      ScaffoldValidationError,
+    );
+    assert.equal(fs.existsSync(path.join(cwd, "app-existing", "keep.txt")), true);
   });
 });

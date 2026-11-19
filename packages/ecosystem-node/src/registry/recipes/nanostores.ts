@@ -2,6 +2,7 @@ import { defineRecipe } from "./define.js";
 
 export default defineRecipe({
   id: "nanostores",
+  discovery: { capabilities: [], projectTypes: ["ui"] },
   name: "Nanostores",
   category: "state",
   supportedScopes: ["client", "hybrid"],

@@ -2,6 +2,7 @@ import { defineRecipe, nextUiProviders, viteReactAppProvider } from "./define.js
 
 export default defineRecipe({
   id: "mui",
+  discovery: { capabilities: ["web-ui"], projectTypes: ["ui"] },
   name: "MUI",
   category: "ui",
   supportedScopes: ["client", "hybrid"],

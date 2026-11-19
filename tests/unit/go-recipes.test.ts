@@ -11,7 +11,7 @@ import {
   matchDiscovery,
   normalizeDiscoveryAnswers,
   validateScaffoldConfig,
-} from "@zealakit/core";
+} from "@zealakit/core/internal";
 
 const templateIds = ["stdlib-api", "gin-api", "stdlib-worker"];
 
@@ -55,7 +55,16 @@ describe("Go recipe registration", () => {
     const goIds = getInfo()
       .data.recipes.filter((recipe) => recipe.ecosystem === "go")
       .map((recipe) => recipe.id);
-    assert.deepEqual(goIds, ["postgres", "mysql", "mongodb"]);
+    assert.deepEqual(goIds, [
+      "postgres",
+      "mysql",
+      "mongodb",
+      "docker-go",
+      "github-actions-go",
+      "goose",
+      "sqlc",
+      "redis",
+    ]);
   });
 
   for (const expected of goRecipes) {

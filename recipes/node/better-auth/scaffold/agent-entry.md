@@ -1,0 +1,1 @@
+- **Auth (Better Auth):** [.agents/skills/better-auth/SKILL.md](.agents/skills/better-auth/SKILL.md) — email/password auth, route handler, client helpers

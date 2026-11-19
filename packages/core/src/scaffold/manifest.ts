@@ -1,3 +1,4 @@
+import type { PackageManager } from "../package-manager.js";
 import { getTemplate } from "../registry/index.js";
 import type { EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
 
@@ -19,10 +20,84 @@ export type PackagePlan = {
   conflicts: ManifestFieldConflict[];
 };
 
+/** What the user should run after `cd <project>`. */
+export type NextSteps = {
+  commands: string[];
+  /** Optional dim hint printed after the commands. */
+  tip?: string;
+};
+
+export type PostGenerateOptions = {
+  packageManager: PackageManager;
+  /** Install dependencies (npm install, go mod tidy, …). */
+  install: boolean;
+};
+
+export type PostGenerateResult = {
+  install: "skipped" | "ok" | "failed";
+  /** Human-readable detail (failure reason, skipped reason). */
+  message?: string;
+};
+
+export type NextStepsOptions = {
+  packageManager: PackageManager;
+  /** Dependencies were already installed by `postGenerate`. */
+  installed: boolean;
+};
+
+/** A dependency range declared by a project (used by `outdated`). */
+export type ProjectDependency = {
+  package: string;
+  /** Where it is declared (`dependencies`, `devDependencies`, a manifest file name, …). */
+  field: string;
+  range: string;
+};
+
+/** What an adapter reports about installed dependencies (used by `doctor`). */
+export type DependencyStatus = {
+  ok: boolean;
+  message: string;
+  /** Command that fixes it. */
+  fix?: string;
+};
+
+/** Result of merging one manifest-like file during `add`. */
+export type ProjectFileMerge = {
+  content: Buffer;
+  /** Package names the merge added or changed, for the add preview. */
+  changed: { dependencies: string[]; devDependencies: string[]; scripts: string[] };
+};
+
 export type ManifestAdapter = {
   planMerges(config: ScaffoldConfig): PackagePlan;
   applyMerges(targetDir: string, config: ScaffoldConfig): void;
   validateProjectName(name: string): ValidationResult;
+  /** Ecosystem-specific structural checks on the generated project; returns error messages. */
+  validateOutput(targetDir: string, config: ScaffoldConfig): string[];
+  /**
+   * Optional steps after the project is committed (set `packageManager`,
+   * install). Must not throw for expected failures: report `failed` instead.
+   */
+  postGenerate?(
+    targetDir: string,
+    config: ScaffoldConfig,
+    options: PostGenerateOptions,
+  ): Promise<PostGenerateResult>;
+  /** Commands shown after a successful scaffold. */
+  nextSteps(config: ScaffoldConfig, options: NextStepsOptions): NextSteps;
+  /**
+   * `add`: merge a file the recipe changed into the user's version (e.g. add
+   * dependencies to a manifest) instead of treating their edits as a conflict.
+   * Return `undefined` to fall back to the generic rules.
+   */
+  mergeProjectFile?(
+    relativePath: string,
+    input: { current: Buffer; before: Buffer; after: Buffer },
+  ): ProjectFileMerge | undefined;
+  /** `outdated`: dependency ranges declared by a project directory. */
+  readDependencies?(projectDir: string): ProjectDependency[];
+  /** `doctor`: whether dependencies are installed. */
+  dependencyStatus?(projectDir: string): DependencyStatus;
 };
 
 const adapters = new Map<EcosystemId, ManifestAdapter>();

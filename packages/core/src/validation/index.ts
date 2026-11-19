@@ -1,14 +1,15 @@
-import { printError } from "../diagnostics.js";
+import { ECOSYSTEMS } from "../constants.js";
 import { getTemplate } from "../registry/index.js";
 import { getManifestAdapter } from "../scaffold/manifest.js";
-import type { CliOptions, EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
+import type { EcosystemId, ScaffoldConfig, ValidationResult } from "../types.js";
 import {
   validateRecipeCompatibility,
   validateRecipeConflicts,
   validateRecipeIds,
+  validateRecipeRequirements,
   validateTemplate,
 } from "./recipes.js";
-import { validateTargetDirectory } from "./target-dir.js";
+import { checkTargetDirectory, nonEmptyTargetMessage, type OverwritePolicy } from "./target-dir.js";
 
 export {
   validateRecipeCompatibility,
@@ -16,15 +17,21 @@ export {
   validateRecipeIds,
   validateTemplate,
 } from "./recipes.js";
-export { directoryHasFiles, validateTargetDirectory } from "./target-dir.js";
+export {
+  checkTargetDirectory,
+  directoryHasFiles,
+  nonEmptyTargetMessage,
+  type OverwritePolicy,
+  type TargetDirectoryCheck,
+} from "./target-dir.js";
 
 export function validateProjectName(
   name: string,
   templateIdOrEcosystem?: string,
 ): ValidationResult {
   let ecosystem: EcosystemId = "node";
-  if (templateIdOrEcosystem === "node" || templateIdOrEcosystem === "go") {
-    ecosystem = templateIdOrEcosystem;
+  if (templateIdOrEcosystem && (ECOSYSTEMS as readonly string[]).includes(templateIdOrEcosystem)) {
+    ecosystem = templateIdOrEcosystem as EcosystemId;
   } else if (templateIdOrEcosystem) {
     ecosystem = getTemplate(templateIdOrEcosystem)?.ecosystem ?? "node";
   }
@@ -39,28 +46,31 @@ export function validateScaffoldConfig(config: ScaffoldConfig): ValidationResult
     validateRecipeIds(config.recipeIds),
     validateRecipeConflicts(config.recipeIds),
     validateRecipeCompatibility(config.templateId, config.recipeIds),
+    validateRecipeRequirements(config.recipeIds),
   ].flatMap((check) => check.errors);
 
   return { valid: errors.length === 0, errors };
 }
 
-export async function validateScaffoldInput(
+/**
+ * Config checks plus the destination policy. Never prompts: with `refuse` a
+ * non-empty destination is an error; with `allow` the caller has already
+ * obtained consent.
+ */
+export function validateScaffoldInput(
   config: ScaffoldConfig,
   cwd: string,
-  options: Pick<CliOptions, "yes">,
-): Promise<ValidationResult> {
+  options: { overwrite: OverwritePolicy },
+): ValidationResult {
   const configCheck = validateScaffoldConfig(config);
   if (!configCheck.valid) {
     return configCheck;
   }
-  return validateTargetDirectory(config.projectName, cwd, options);
-}
-
-export function printValidationErrors(errors: string[]): void {
-  for (const [index, error] of errors.entries()) {
-    if (index > 0) {
-      console.error();
-    }
-    printError(error);
+  if (
+    options.overwrite === "refuse" &&
+    checkTargetDirectory(config.projectName, cwd).status === "non-empty"
+  ) {
+    return { valid: false, errors: [nonEmptyTargetMessage(config.projectName)] };
   }
+  return { valid: true, errors: [] };
 }
