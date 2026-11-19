@@ -282,6 +282,7 @@ function buildRecipeMetadata(
   const categories = getRecipeCategories(recipe);
   const npm = recipe.manifest.ecosystem === "node" ? recipe.manifest : undefined;
   const go = recipe.manifest.ecosystem === "go" ? recipe.manifest : undefined;
+  const py = recipe.manifest.ecosystem === "python" ? recipe.manifest : undefined;
 
   return {
     id: recipe.id,
@@ -298,9 +299,9 @@ function buildRecipeMetadata(
     templates: compatibleTemplates,
     incompatibleTemplates,
     conflictsWith: conflictsFor(recipe, state.recipeIds),
-    packages: sortRecord(npm?.packages),
+    packages: sortRecord(npm?.packages ?? py?.dependencies),
     goModules: sortRecord(go?.goModules),
-    devDependencies: sortRecord(npm?.devDependencies),
+    devDependencies: sortRecord(npm?.devDependencies ?? py?.devDependencies),
     overlayPackages: sortNestedRecord(npm?.overlayPackages),
     overlayDevDependencies: sortNestedRecord(npm?.overlayDevDependencies),
     scripts: sortRecord(npm?.scripts),

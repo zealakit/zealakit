@@ -3,6 +3,7 @@ import path from "node:path";
 import { PROJECT_MANIFEST_FILE, readProjectManifest } from "../project-manifest.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import { listRecipeFiles } from "../scaffold/inventory.js";
+import { getManifestAdapter } from "../scaffold/manifest.js";
 import { KIT_VERSION } from "../scaffold/paths.js";
 import { validateAgentConfiguration } from "../scaffold/validate-output.js";
 
@@ -60,6 +61,14 @@ function envKeys(file: string): string[] {
     .split(/\r?\n/)
     .map((line) => /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line)?.[1])
     .filter((key): key is string => key !== undefined);
+}
+
+function tryAdapter(ecosystem: string) {
+  try {
+    return getManifestAdapter(ecosystem as never);
+  } catch {
+    return undefined;
+  }
 }
 
 export type CheckProjectOptions = {
@@ -182,7 +191,15 @@ export function checkProject(dir: string, options: CheckProjectOptions = {}): Pr
     }
   }
 
-  if (manifest.ecosystem === "go") {
+  const adapterStatus = tryAdapter(manifest.ecosystem)?.dependencyStatus?.(root);
+  if (adapterStatus) {
+    checks.push({
+      id: "dependencies",
+      status: adapterStatus.ok ? "ok" : "info",
+      message: adapterStatus.message,
+      ...(adapterStatus.fix ? { fix: adapterStatus.fix } : {}),
+    });
+  } else if (manifest.ecosystem === "go") {
     const hasSum = fs.existsSync(path.join(root, "go.sum"));
     checks.push(
       hasSum

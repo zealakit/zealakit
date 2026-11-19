@@ -148,8 +148,14 @@ export function parseRecipeData(json: unknown, options: { dir: string }): Recipe
 
   const npm = isObject(json.npm) ? json.npm : undefined;
   const go = isObject(json.go) ? json.go : undefined;
+  const py = isObject(json.python) ? json.python : undefined;
   if (json.npm !== undefined && !npm) errors.push("npm must be an object.");
   if (json.go !== undefined && !go) errors.push("go must be an object.");
+  if (json.python !== undefined && !py) errors.push("python must be an object.");
+  if (ecosystem === "python" && (npm || go))
+    errors.push("a python recipe cannot declare npm packages or go modules.");
+  if (ecosystem !== "python" && py)
+    errors.push("only python recipes can declare python dependencies.");
   if (ecosystem === "go" && npm) errors.push("a go recipe cannot declare npm packages.");
   if (ecosystem === "node" && go) errors.push("a node recipe cannot declare go modules.");
 
@@ -172,32 +178,38 @@ export function parseRecipeData(json: unknown, options: { dir: string }): Recipe
   }
 
   const manifest =
-    ecosystem === "go"
-      ? ({ ecosystem: "go", goModules: stringRecord(go?.modules, "go.modules", errors) } as const)
-      : ({
-          ecosystem: "node",
-          packages: stringRecord(npm?.dependencies, "npm.dependencies", errors),
-          devDependencies: stringRecord(npm?.devDependencies, "npm.devDependencies", errors),
-          scripts: stringRecord(npm?.scripts, "npm.scripts", errors),
-          ...(npm?.overlayDependencies !== undefined
-            ? {
-                overlayPackages: nestedStringRecord(
-                  npm.overlayDependencies,
-                  "npm.overlayDependencies",
-                  errors,
-                ),
-              }
-            : {}),
-          ...(npm?.overlayDevDependencies !== undefined
-            ? {
-                overlayDevDependencies: nestedStringRecord(
-                  npm.overlayDevDependencies,
-                  "npm.overlayDevDependencies",
-                  errors,
-                ),
-              }
-            : {}),
-        } as const);
+    ecosystem === "python"
+      ? ({
+          ecosystem: "python",
+          dependencies: stringRecord(py?.dependencies, "python.dependencies", errors),
+          devDependencies: stringRecord(py?.devDependencies, "python.devDependencies", errors),
+        } as const)
+      : ecosystem === "go"
+        ? ({ ecosystem: "go", goModules: stringRecord(go?.modules, "go.modules", errors) } as const)
+        : ({
+            ecosystem: "node",
+            packages: stringRecord(npm?.dependencies, "npm.dependencies", errors),
+            devDependencies: stringRecord(npm?.devDependencies, "npm.devDependencies", errors),
+            scripts: stringRecord(npm?.scripts, "npm.scripts", errors),
+            ...(npm?.overlayDependencies !== undefined
+              ? {
+                  overlayPackages: nestedStringRecord(
+                    npm.overlayDependencies,
+                    "npm.overlayDependencies",
+                    errors,
+                  ),
+                }
+              : {}),
+            ...(npm?.overlayDevDependencies !== undefined
+              ? {
+                  overlayDevDependencies: nestedStringRecord(
+                    npm.overlayDevDependencies,
+                    "npm.overlayDevDependencies",
+                    errors,
+                  ),
+                }
+              : {}),
+          } as const);
 
   if (errors.length > 0) return { ok: false, errors };
 

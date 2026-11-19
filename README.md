@@ -219,6 +219,8 @@ Interactive runs end with "Save these choices as a preset?" (default no). The ol
 
 The CLI surface, JSON outputs and `zealakit.json` are pinned by contract tests and JSON Schemas in `schema/` — see [`docs/stability.md`](docs/stability.md).
 
+Python templates are managed with [uv](https://docs.astral.sh/uv/) (`uv sync`, `uv run …`); `zealakit doctor` reports whether it is installed, and `--install` runs `uv sync`. Python templates are not part of the Discovery questionnaire yet; choose them with `-t fastapi-api` / `-t python-worker`.
+
 Other commands: `zealakit add`, `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
 
 ### Metadata queries (`zealakit info`)
@@ -250,20 +252,22 @@ Filters combine with AND semantics; unknown values exit `2` with diagnostics on 
 
 ## Templates
 
-| ID                   | Kind       | Stack                              | Dev command         |
-| -------------------- | ---------- | ---------------------------------- | ------------------- |
-| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`       |
-| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`       |
-| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`       |
-| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`       |
-| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`       |
-| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`       |
-| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`       |
-| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev` |
-| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`       |
-| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`          |
-| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`          |
-| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`          |
+| ID                   | Kind       | Stack                              | Dev command                                          |
+| -------------------- | ---------- | ---------------------------------- | ---------------------------------------------------- |
+| `vite-react`         | Client     | Vite + React + TypeScript          | `npm run dev`                                        |
+| `vite-vue`           | Client     | Vite + Vue + TypeScript            | `npm run dev`                                        |
+| `vite-svelte`        | Client     | SvelteKit SPA + Svelte 5 + TS      | `npm run dev`                                        |
+| `astro-react-client` | Client/SSG | Astro + React islands + TypeScript | `npm run dev`                                        |
+| `astro-react-hybrid` | Hybrid     | Astro + React SSR / Actions / ORM  | `npm run dev`                                        |
+| `next`               | Hybrid     | Next.js App Router + TypeScript    | `npm run dev`                                        |
+| `nuxt`               | Hybrid     | Nuxt + TypeScript                  | `npm run dev`                                        |
+| `nest`               | Server     | NestJS + TypeScript                | `npm run start:dev`                                  |
+| `hono`               | Server     | Hono + TypeScript                  | `npm run dev`                                        |
+| `stdlib-api`         | Server     | Go HTTP API (stdlib)               | `make run`                                           |
+| `gin-api`            | Server     | Go HTTP API (Gin)                  | `make run`                                           |
+| `stdlib-worker`      | Infra      | Go background worker (stdlib)      | `make run`                                           |
+| `fastapi-api`        | Server     | FastAPI + uv + pytest + ruff       | `uv run uvicorn app.main:app --reload --app-dir src` |
+| `python-worker`      | Infra      | Python asyncio worker (uv)         | `uv run python -m app.main`                          |
 
 Every Node project includes TypeScript, path aliases, and agent docs (`.agents/`, `AGENTS.md`). Go templates ship agent docs and Makefiles; Go recipes include PostgreSQL (`database/sql` + pgx), MySQL (`database/sql` + go-sql-driver/mysql), and MongoDB (official Go Driver v2).
 
@@ -278,41 +282,46 @@ Exceptions:
 - **`storybook`**, **`vitest`**, **`tanstack-query`**, **`docker`** — non-exclusive; combine with anything compatible (`tanstack-query` also sits beside Ky/Axios)
 - **`client-shared-pieces`** — added automatically on Vite, Astro, Next, and Nuxt
 
-| Recipe              | Category       | Templates                               | Adds                                                     |
-| ------------------- | -------------- | --------------------------------------- | -------------------------------------------------------- |
-| `biome`             | Linter         | All                                     | Lint + format scripts                                    |
-| `eslint`            | Linter         | All                                     | ESLint flat config                                       |
-| `zustand`           | State          | Vite React, Astro, Next                 | Zustand store example                                    |
-| `pinia`             | State          | Vite Vue, Nuxt                          | Pinia store example                                      |
-| `nanostores`        | State          | Vite, Astro, Next, Nuxt                 | Nanostores example                                       |
-| `hookform-zod`      | Forms          | Vite React, Astro, Next                 | React Hook Form + Zod                                    |
-| `vee-validate-zod`  | Forms          | Vite Vue, Nuxt                          | VeeValidate + Zod                                        |
-| `kyjs`              | HTTP           | Vite, Astro, Next, Nuxt                 | Ky client                                                |
-| `axios`             | HTTP           | Vite, Astro, Next, Nuxt                 | Axios client                                             |
-| `antd`              | UI             | Vite React, Astro, Next                 | Ant Design setup                                         |
-| `mui`               | UI             | Vite React, Astro, Next                 | MUI setup                                                |
-| `shadcn-ui`         | UI             | Vite React, Astro, Next                 | Tailwind + shadcn/ui                                     |
-| `shadcn-vue`        | UI             | Vite Vue, Nuxt                          | Tailwind + shadcn-vue                                    |
-| `nuxt-ui`           | UI             | Vite Vue, Nuxt                          | Tailwind + Nuxt UI                                       |
-| `storybook`         | Docs / testing | Vite, Astro, Next, Nuxt                 | Storybook config + scripts                               |
-| `vitest`            | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                    |
-| `tanstack-query`    | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                            |
-| `better-auth`       | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler              |
-| `nest-auth`         | Auth           | Nest                                    | JWT login endpoint + bearer-token guard                  |
-| `github-actions`    | CI             | All Node templates                      | CI workflow from your other recipes                      |
-| `docker`            | Infrastructure | Nest, Hono, Next, Nuxt                  | Dockerfile + compose (db service with an ORM)            |
-| `type-orm`          | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | TypeORM wiring + agent skill                             |
-| `mikro-orm`         | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | MikroORM wiring + agent skill                            |
-| `drizzle-orm`       | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Drizzle + drizzle-kit scripts                            |
-| `prisma`            | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Prisma schema + migrate scripts                          |
-| `postgres`          | Database       | Go templates                            | `database/sql` + pgx driver                              |
-| `mysql`             | Database       | Go templates                            | `database/sql` + MySQL driver                            |
-| `mongodb`           | Database       | Go templates                            | Official MongoDB Go Driver v2                            |
-| `docker-go`         | Infrastructure | Go templates                            | Dockerfile + compose (db service with a database recipe) |
-| `github-actions-go` | CI             | Go templates                            | `go vet` / `go test` / `go build` workflow               |
-| `goose`             | Migrations     | Go templates (needs `postgres`/`mysql`) | Embedded SQL migrations + `cmd/migrate`                  |
-| `sqlc`              | ORM            | Go templates (needs `postgres`/`mysql`) | `sqlc.yaml` + example queries                            |
-| `redis`             | Infrastructure | Go templates                            | go-redis client + `REDIS_URL`                            |
+| Recipe                  | Category       | Templates                               | Adds                                                        |
+| ----------------------- | -------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `biome`                 | Linter         | All                                     | Lint + format scripts                                       |
+| `eslint`                | Linter         | All                                     | ESLint flat config                                          |
+| `zustand`               | State          | Vite React, Astro, Next                 | Zustand store example                                       |
+| `pinia`                 | State          | Vite Vue, Nuxt                          | Pinia store example                                         |
+| `nanostores`            | State          | Vite, Astro, Next, Nuxt                 | Nanostores example                                          |
+| `hookform-zod`          | Forms          | Vite React, Astro, Next                 | React Hook Form + Zod                                       |
+| `vee-validate-zod`      | Forms          | Vite Vue, Nuxt                          | VeeValidate + Zod                                           |
+| `kyjs`                  | HTTP           | Vite, Astro, Next, Nuxt                 | Ky client                                                   |
+| `axios`                 | HTTP           | Vite, Astro, Next, Nuxt                 | Axios client                                                |
+| `antd`                  | UI             | Vite React, Astro, Next                 | Ant Design setup                                            |
+| `mui`                   | UI             | Vite React, Astro, Next                 | MUI setup                                                   |
+| `shadcn-ui`             | UI             | Vite React, Astro, Next                 | Tailwind + shadcn/ui                                        |
+| `shadcn-vue`            | UI             | Vite Vue, Nuxt                          | Tailwind + shadcn-vue                                       |
+| `nuxt-ui`               | UI             | Vite Vue, Nuxt                          | Tailwind + Nuxt UI                                          |
+| `storybook`             | Docs / testing | Vite, Astro, Next, Nuxt                 | Storybook config + scripts                                  |
+| `vitest`                | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                       |
+| `tanstack-query`        | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                               |
+| `better-auth`           | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler                 |
+| `nest-auth`             | Auth           | Nest                                    | JWT login endpoint + bearer-token guard                     |
+| `github-actions`        | CI             | All Node templates                      | CI workflow from your other recipes                         |
+| `docker`                | Infrastructure | Nest, Hono, Next, Nuxt                  | Dockerfile + compose (db service with an ORM)               |
+| `type-orm`              | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | TypeORM wiring + agent skill                                |
+| `mikro-orm`             | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | MikroORM wiring + agent skill                               |
+| `drizzle-orm`           | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Drizzle + drizzle-kit scripts                               |
+| `prisma`                | ORM            | Nest, Hono, Next, Nuxt, Astro hybrid    | Prisma schema + migrate scripts                             |
+| `postgres`              | Database       | Go templates                            | `database/sql` + pgx driver                                 |
+| `mysql`                 | Database       | Go templates                            | `database/sql` + MySQL driver                               |
+| `mongodb`               | Database       | Go templates                            | Official MongoDB Go Driver v2                               |
+| `docker-go`             | Infrastructure | Go templates                            | Dockerfile + compose (db service with a database recipe)    |
+| `sqlalchemy`            | ORM            | FastAPI                                 | SQLAlchemy 2 + repository adapter (SQLite default)          |
+| `alembic`               | Migrations     | FastAPI (needs `sqlalchemy`)            | Alembic config + first migration                            |
+| `postgres-python`       | Infrastructure | Python templates                        | psycopg 3 + `DATABASE_URL`                                  |
+| `docker-python`         | Infrastructure | Python templates                        | uv Dockerfile + compose (db service with `postgres-python`) |
+| `github-actions-python` | CI             | Python templates                        | `uv sync`, ruff, pytest workflow                            |
+| `github-actions-go`     | CI             | Go templates                            | `go vet` / `go test` / `go build` workflow                  |
+| `goose`                 | Migrations     | Go templates (needs `postgres`/`mysql`) | Embedded SQL migrations + `cmd/migrate`                     |
+| `sqlc`                  | ORM            | Go templates (needs `postgres`/`mysql`) | `sqlc.yaml` + example queries                               |
+| `redis`                 | Infrastructure | Go templates                            | go-redis client + `REDIS_URL`                               |
 
 ORM recipes are driver-agnostic. After scaffolding, install your DB driver (`pg`, `mysql2`, …) and follow the skill under `.agents/skills/<orm>/`.
 

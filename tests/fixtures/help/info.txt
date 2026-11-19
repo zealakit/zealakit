@@ -6,7 +6,7 @@ profiles
 Options:
   --json                        Print only machine-readable JSON (stdout
                                 contains nothing else)
-  --ecosystem <ecosystem>       Filter by ecosystem: node, go
+  --ecosystem <ecosystem>       Filter by ecosystem: node, go, python
   --scope <scope>               Filter by template scope: client, server,
                                 hybrid, infrastructure
   --project-type <projectType>  Filter by Discovery project type: ui,
@@ -18,7 +18,8 @@ Options:
   --template <templateId>       Filter by template id: vite-react, vite-vue,
                                 vite-svelte, astro-react-client,
                                 astro-react-hybrid, next, nuxt, nest, hono,
-                                stdlib-api, gin-api, stdlib-worker
+                                fastapi-api, python-worker, stdlib-api, gin-api,
+                                stdlib-worker
   --recipe <recipeId>           Filter by recipe id: biome, eslint, zustand,
                                 pinia, nanostores, client-shared-pieces,
                                 hookform-zod, vee-validate-zod, kyjs, axios,
@@ -26,8 +27,10 @@ Options:
                                 shadcn-vue, storybook, vitest, docker,
                                 better-auth, nest-auth, github-actions,
                                 type-orm, mikro-orm, drizzle-orm, prisma,
-                                postgres, mysql, mongodb, docker-go,
-                                github-actions-go, goose, sqlc, redis
+                                sqlalchemy, alembic, postgres-python,
+                                docker-python, github-actions-python, postgres,
+                                mysql, mongodb, docker-go, github-actions-go,
+                                goose, sqlc, redis
   --category <category>         Filter by recipe category: linter, state, ui,
                                 form, fetcher, orm, infrastructure, utils,
                                 testing, documentation, auth, ci

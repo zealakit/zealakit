@@ -1,0 +1,11 @@
+---
+description: asyncio worker conventions
+alwaysApply: true
+---
+
+# Worker
+
+- One unit of work = one application use case (`ProcessTick`); the loop in `worker.py` only schedules.
+- Never swallow `asyncio.CancelledError`; stop through the shutdown event.
+- Keep ticks idempotent and bounded in time.
+- Run `uv run ruff check .` and `uv run pytest` before claiming done.

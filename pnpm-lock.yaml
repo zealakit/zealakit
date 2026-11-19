@@ -225,6 +225,9 @@ importers:
       '@zealakit/ecosystem-node':
         specifier: workspace:*
         version: link:packages/ecosystem-node
+      '@zealakit/ecosystem-python':
+        specifier: workspace:*
+        version: link:packages/ecosystem-python
       tsup:
         specifier: ^9.0.0
         version: 9.0.0(@swc/core@1.16.2(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.32)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
@@ -249,6 +252,9 @@ importers:
       '@zealakit/ecosystem-node':
         specifier: workspace:*
         version: link:../../packages/ecosystem-node
+      '@zealakit/ecosystem-python':
+        specifier: workspace:*
+        version: link:../../packages/ecosystem-python
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -293,6 +299,19 @@ importers:
         version: 7.0.2
 
   packages/ecosystem-node:
+    dependencies:
+      '@zealakit/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
+  packages/ecosystem-python:
     dependencies:
       '@zealakit/core':
         specifier: workspace:*

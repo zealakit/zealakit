@@ -4,6 +4,7 @@ import {
   createZealakit,
   goEcosystem,
   nodeEcosystem,
+  pythonEcosystem,
   type ScaffoldConfig,
   type Zealakit,
   ZealakitApiError,
@@ -80,7 +81,9 @@ export function resolveInsideRoot(root: string, relative: string): string {
 
 export function createMcpServer(options: McpServerOptions) {
   const root = path.resolve(options.root);
-  const zealakit = options.zealakit ?? createZealakit({ ecosystems: [nodeEcosystem, goEcosystem] });
+  const zealakit =
+    options.zealakit ??
+    createZealakit({ ecosystems: [nodeEcosystem, goEcosystem, pythonEcosystem] });
 
   const configFrom = (args: Json): ScaffoldConfig => ({
     projectName: asString(args.projectName, "projectName"),
@@ -96,7 +99,7 @@ export function createMcpServer(options: McpServerOptions) {
       inputSchema: {
         type: "object",
         properties: {
-          ecosystem: { enum: ["node", "go"] },
+          ecosystem: { enum: ["node", "go", "python"] },
           scope: str,
           discovery: { type: "boolean" },
         },
@@ -110,7 +113,11 @@ export function createMcpServer(options: McpServerOptions) {
         "List recipes, optionally only those compatible with a template or in a category.",
       inputSchema: {
         type: "object",
-        properties: { templateId: str, ecosystem: { enum: ["node", "go"] }, category: str },
+        properties: {
+          templateId: str,
+          ecosystem: { enum: ["node", "go", "python"] },
+          category: str,
+        },
       },
       writes: false,
       handler: (args) => zealakit.metadata.getRecipes(args as never),

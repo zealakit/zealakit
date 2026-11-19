@@ -6,6 +6,7 @@ import {
   getAllRecipeProfiles,
   getAllTemplateIds,
   getAllTemplateProfiles,
+  getAllTemplates,
   getConflictingRecipes,
   getRecipe,
   getRecipeProfile,
@@ -21,7 +22,10 @@ import {
 
 describe("template profile registry", () => {
   it("exposes one profile per registered template", () => {
-    const templateIds = getAllTemplateIds().sort();
+    const templateIds = getAllTemplates()
+      .filter((template) => template.discoverable !== false)
+      .map((template) => template.id)
+      .sort();
     const profileIds = getAllTemplateProfiles()
       .map((profile) => profile.id)
       .sort();
@@ -205,7 +209,9 @@ describe("validateProfiles", () => {
   });
 
   it("keeps resolved profiles aligned with TemplateConfig / RecipeConfig", () => {
-    for (const template of getAllTemplateIds().map(getTemplate)) {
+    for (const template of getAllTemplateIds()
+      .map(getTemplate)
+      .filter((candidate) => candidate?.discoverable !== false)) {
       assert.ok(template);
       const resolved = resolveTemplateProfile(template.id);
       assert.ok(resolved);

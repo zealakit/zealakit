@@ -208,6 +208,9 @@ describe("end-to-end generation for every registered template", () => {
         assert.match(goMod, /^module\s+\S+/m);
         assert.ok(goMod.includes(config.projectName));
         assert.equal(fs.existsSync(path.join(dir, "package.json")), false);
+      } else if ((template.ecosystem ?? "node") === "python") {
+        assert.match(readFile(dir, "pyproject.toml"), new RegExp(`name = "${config.projectName}"`));
+        assert.equal(fs.existsSync(path.join(dir, "package.json")), false);
       } else {
         const pkg = JSON.parse(readFile(dir, "package.json")) as {
           name: string;
@@ -229,7 +232,7 @@ describe("end-to-end generation for every registered template", () => {
     assert.ok(TEMPLATE_IDS.length > 0);
     assert.deepEqual([...testedTemplateIds].sort(), [...TEMPLATE_IDS].sort());
     const ecosystems = new Set(TEMPLATE_IDS.map((id) => getTemplate(id)?.ecosystem ?? "node"));
-    assert.deepEqual([...ecosystems].sort(), ["go", "node"]);
+    assert.deepEqual([...ecosystems].sort(), ["go", "node", "python"]);
   });
 });
 

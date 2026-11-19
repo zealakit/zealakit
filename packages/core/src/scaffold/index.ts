@@ -25,6 +25,7 @@ import { applyFileTransforms } from "./transforms.js";
 import { validateGeneratedOutput } from "./validate-output.js";
 
 export {
+  type DependencyStatus,
   emptyPackagePlan,
   getManifestAdapter,
   getManifestAdapterForConfig,
@@ -35,6 +36,8 @@ export {
   type PackagePlan,
   type PostGenerateOptions,
   type PostGenerateResult,
+  type ProjectDependency,
+  type ProjectFileMerge,
   resolveTemplateEcosystem,
   setManifestAdapter,
 } from "./manifest.js";

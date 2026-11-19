@@ -12,6 +12,7 @@ import {
 } from "@zealakit/core/internal";
 import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
+import { registerPythonEcosystem } from "@zealakit/ecosystem-python";
 import { Command, CommanderError } from "commander";
 import { registerAddCommand } from "./add.js";
 import { attachCreateOptions, runCreateAction } from "./create.js";
@@ -27,6 +28,7 @@ import { registerPresetCommands } from "./preset-commands.js";
 import { registerRecipeCommands } from "./recipe-commands.js";
 
 registerNodeEcosystem();
+registerPythonEcosystem();
 registerGoEcosystem();
 
 // Fail fast on authored Discovery metadata drift at application startup.

@@ -27,7 +27,7 @@
       "type": ["string", "array"]
     },
     "ecosystem": {
-      "enum": ["node", "go"]
+      "enum": ["node", "go", "python"]
     },
     "uiFrameworks": {
       "type": "array",

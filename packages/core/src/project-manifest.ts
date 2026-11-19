@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ECOSYSTEMS } from "./constants.js";
 import { KIT_VERSION } from "./scaffold/paths.js";
 import type { EcosystemId, ExternalRecipeInfo } from "./types.js";
 
@@ -83,7 +84,7 @@ export function parseProjectManifest(json: unknown): ProjectManifestParse {
       errors.push(`${PROJECT_MANIFEST_FILE} field '${field}' must be a non-empty string.`);
     }
   }
-  if (data.ecosystem !== "node" && data.ecosystem !== "go") {
+  if (!(ECOSYSTEMS as readonly string[]).includes(data.ecosystem as string)) {
     errors.push(`${PROJECT_MANIFEST_FILE} field 'ecosystem' must be a known ecosystem.`);
   }
   for (const field of ["recipes", "requestedRecipes"] as const) {

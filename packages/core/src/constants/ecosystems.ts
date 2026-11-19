@@ -2,7 +2,7 @@
  * Scaffolding ecosystems. Each ecosystem contributes templates/recipes and one
  * `ManifestAdapter`; the CLI registers them at startup.
  */
-export const ECOSYSTEMS = ["node", "go"] as const;
+export const ECOSYSTEMS = ["node", "go", "python"] as const;
 
 export type EcosystemId = (typeof ECOSYSTEMS)[number];
 
@@ -10,4 +10,5 @@ export type EcosystemId = (typeof ECOSYSTEMS)[number];
 export const ECOSYSTEM_LABELS: Record<EcosystemId, string> = {
   node: "Node.js",
   go: "Go",
+  python: "Python",
 };

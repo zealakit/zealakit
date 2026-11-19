@@ -6,13 +6,14 @@ import { compareKitVersions } from "../project/checks.js";
 import { readProjectManifest } from "../project-manifest.js";
 import { getNpmManifest, getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.js";
 import { stagePlan } from "../scaffold/index.js";
+import { getManifestAdapter } from "../scaffold/manifest.js";
 import { KIT_VERSION } from "../scaffold/paths.js";
 import { buildScaffoldPlan, planIsReady } from "../scaffold/plan.js";
 
 export type OutdatedEntry = {
   package: string;
   /** Where the range is declared in the project. */
-  field: "dependencies" | "devDependencies" | "go.mod";
+  field: "dependencies" | "devDependencies" | "go.mod" | "dev" | "pyproject.toml";
   /** Range the project currently declares. */
   project: string;
   /** Range the installed kit would write today. */
@@ -93,6 +94,19 @@ function npmSource(
   return `template:${templateId}`;
 }
 
+function adapterSource(name: string, recipeIds: string[], templateId: string): string {
+  for (const id of [...recipeIds].reverse()) {
+    const manifest = getRecipe(id)?.manifest;
+    if (manifest?.ecosystem === "python") {
+      const key = name.toLowerCase();
+      const has = (record: { [name: string]: string }) =>
+        Object.keys(record).some((n) => n.toLowerCase() === key);
+      if (has(manifest.dependencies) || has(manifest.devDependencies)) return `recipe:${id}`;
+    }
+  }
+  return `template:${templateId}`;
+}
+
 function goSource(name: string, recipeIds: string[], templateId: string): string {
   for (const id of recipeIds) {
     const manifest = getRecipe(id)?.manifest;
@@ -150,6 +164,28 @@ export function computeOutdated(projectDir: string): OutdatedReport {
 
   const staged = stagePlan(plan);
   try {
+    const adapter = getManifestAdapter(manifest.ecosystem);
+    if (adapter.readDependencies) {
+      const mine = new Map(
+        adapter.readDependencies(root).map((dep) => [`${dep.field}:${dep.package}`, dep]),
+      );
+      for (const dep of adapter.readDependencies(staged.dir)) {
+        const current = mine.get(`${dep.field}:${dep.package}`);
+        if (current && current.range !== dep.range) {
+          report.entries.push({
+            package: dep.package,
+            field: dep.field as OutdatedEntry["field"],
+            project: current.range,
+            kit: dep.range,
+            source: adapterSource(dep.package, manifest.recipes, manifest.template),
+            status: statusFor(current.range, dep.range),
+          });
+        }
+      }
+      report.entries.sort((a, b) => a.package.localeCompare(b.package));
+      return report;
+    }
+
     if (manifest.ecosystem === "go") {
       const projectMod = path.join(root, "go.mod");
       if (!fs.existsSync(projectMod)) return report;

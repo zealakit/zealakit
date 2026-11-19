@@ -62,6 +62,11 @@ describe("template registry", () => {
       const ecosystem = template.ecosystem ?? "node";
       if (ecosystem === "go") {
         assert.ok(fs.existsSync(path.join(dir, "go.mod")), `go.mod missing for ${template.id}`);
+      } else if (ecosystem === "python") {
+        assert.ok(
+          fs.existsSync(path.join(dir, "pyproject.toml")),
+          `pyproject.toml missing for ${template.id}`,
+        );
       } else {
         assert.ok(
           fs.existsSync(path.join(dir, "package.json")),

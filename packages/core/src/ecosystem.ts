@@ -11,6 +11,7 @@ export {
 } from "./registry/index.js";
 export { getRecipeAgentEntry } from "./scaffold/agent-docs.js";
 export {
+  type DependencyStatus,
   emptyPackagePlan,
   type ManifestAdapter,
   type ManifestFieldConflict,
@@ -19,6 +20,8 @@ export {
   type PackagePlan,
   type PostGenerateOptions,
   type PostGenerateResult,
+  type ProjectDependency,
+  type ProjectFileMerge,
   setManifestAdapter,
 } from "./scaffold/manifest.js";
 export { assertStagingRealPath, getRecipeDir, resolveStagingPath } from "./scaffold/paths.js";
@@ -27,6 +30,7 @@ export type {
   FinalizeContext,
   GoRecipeManifest,
   NpmRecipeManifest,
+  PythonRecipeManifest,
   RecipeConfig,
   RecipeFileTransform,
   RecipeManifest,

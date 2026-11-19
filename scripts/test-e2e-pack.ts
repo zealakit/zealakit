@@ -371,6 +371,21 @@ const SMOKE_CASES: SmokeCase[] = [
     ],
   },
   {
+    name: "fastapi-api + sqlalchemy,alembic",
+    args: ["create", "smoke-py", "-t", "fastapi-api", "-w", "sqlalchemy,alembic", "-y"],
+    check: (result, appDir) => [
+      ...expectExit(result, true),
+      ...expectFiles(appDir, [
+        "pyproject.toml",
+        ".gitignore",
+        "alembic.ini",
+        "src/app/main.py",
+        "zealakit.json",
+      ]),
+      ...(result.output.includes("uv sync") ? [] : ["should print uv sync"]),
+    ],
+  },
+  {
     name: "mcp answers initialize and tools/list",
     args: ["mcp", "--root", "."],
     input: `${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })}\n${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" })}\n`,

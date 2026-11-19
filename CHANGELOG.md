@@ -13,6 +13,8 @@ All notable changes. During the beta, contract-affecting changes are listed unde
 - JSON Schemas for every machine-readable output, `docs/stability.md`, and contract tests.
 - `zealakit/api` (published programmatic API with types, including `project.planAdd/applyAdd/check/outdated`), `zealakit mcp` (stdio MCP server), external data-only recipes (`-w ./dir`, `-w github:owner/repo/path#ref`, `zealakit recipe init|validate`, `externalRecipes` in `zealakit.json`) and stacks (`create --stack`, root `zealakit.json` `schemaVersion: 2`, `add --app`).
 
+- **Python ecosystem** (`@zealakit/ecosystem-python`): templates `fastapi-api` and `python-worker` (uv, pytest, ruff, DDD layers), recipes `sqlalchemy`, `alembic`, `postgres-python`, `docker-python`, `github-actions-python`; `pyproject.toml` merged by a formatting-preserving editor; `doctor` reports `uv`; `pnpm test:python`. Python templates are `discoverable: false` (not recommended by Discovery yet).
+
 ### Changed
 
 - `@zealakit/core` is split into `.`, `./ecosystem` and `./internal`; core no longer prompts, colors output or exits.

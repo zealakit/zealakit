@@ -45,6 +45,29 @@ export type NextStepsOptions = {
   installed: boolean;
 };
 
+/** A dependency range declared by a project (used by `outdated`). */
+export type ProjectDependency = {
+  package: string;
+  /** Where it is declared (`dependencies`, `devDependencies`, a manifest file name, …). */
+  field: string;
+  range: string;
+};
+
+/** What an adapter reports about installed dependencies (used by `doctor`). */
+export type DependencyStatus = {
+  ok: boolean;
+  message: string;
+  /** Command that fixes it. */
+  fix?: string;
+};
+
+/** Result of merging one manifest-like file during `add`. */
+export type ProjectFileMerge = {
+  content: Buffer;
+  /** Package names the merge added or changed, for the add preview. */
+  changed: { dependencies: string[]; devDependencies: string[]; scripts: string[] };
+};
+
 export type ManifestAdapter = {
   planMerges(config: ScaffoldConfig): PackagePlan;
   applyMerges(targetDir: string, config: ScaffoldConfig): void;
@@ -62,6 +85,19 @@ export type ManifestAdapter = {
   ): Promise<PostGenerateResult>;
   /** Commands shown after a successful scaffold. */
   nextSteps(config: ScaffoldConfig, options: NextStepsOptions): NextSteps;
+  /**
+   * `add`: merge a file the recipe changed into the user's version (e.g. add
+   * dependencies to a manifest) instead of treating their edits as a conflict.
+   * Return `undefined` to fall back to the generic rules.
+   */
+  mergeProjectFile?(
+    relativePath: string,
+    input: { current: Buffer; before: Buffer; after: Buffer },
+  ): ProjectFileMerge | undefined;
+  /** `outdated`: dependency ranges declared by a project directory. */
+  readDependencies?(projectDir: string): ProjectDependency[];
+  /** `doctor`: whether dependencies are installed. */
+  dependencyStatus?(projectDir: string): DependencyStatus;
 };
 
 const adapters = new Map<EcosystemId, ManifestAdapter>();

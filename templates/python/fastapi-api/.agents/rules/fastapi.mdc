@@ -1,0 +1,13 @@
+---
+description: FastAPI + DDD conventions for this service
+alwaysApply: true
+---
+
+# FastAPI
+
+Follow `.agents/skills/structure-ddd/SKILL.md` and `.agents/skills/fastapi/SKILL.md`.
+
+- Keep routers thin: validate with Pydantic, call an application use case, return a response model.
+- Domain code imports nothing from FastAPI, Pydantic settings or infrastructure.
+- Construct concrete adapters only in `app/bootstrap/container.py`.
+- Type-annotate everything; run `uv run ruff check .` and `uv run pytest` before claiming done.

@@ -11,6 +11,7 @@ import {
   type GoEnvironmentReport,
   type ToolchainStatus,
 } from "@zealakit/ecosystem-go";
+import { detectPythonEnvironment, type PythonEnvironmentReport } from "@zealakit/ecosystem-python";
 import pc from "picocolors";
 import { loadProjectExternals } from "./external.js";
 import { readKitManifest } from "./manifest.js";
@@ -39,6 +40,8 @@ export type DoctorReport = {
   };
   node: RuntimeReport;
   go: GoEnvironmentReport;
+  /** Optional: `uv` and a Python interpreter (needed only for Python templates). */
+  python?: PythonEnvironmentReport;
   /** Present when the checked directory contains `zealakit.json`. */
   project?: ProjectReport;
   /** Per-app reports when the directory is a stack workspace. */
@@ -140,6 +143,19 @@ function formatDoctorHuman(report: DoctorReport): string {
   if (report.go.goarch) lines.push(field("GOARCH:", report.go.goarch));
   lines.push("");
   lines.push(report.go.message);
+  if (report.python) {
+    lines.push("");
+    lines.push(pc.bold("Python (optional)"));
+    lines.push(
+      field(
+        "uv:",
+        report.python.uv.available
+          ? pc.green(report.python.uv.message)
+          : pc.yellow(report.python.uv.message),
+      ),
+    );
+    lines.push(field("Interpreter:", report.python.python.message));
+  }
   if (report.project?.isZealakitProject) {
     lines.push("");
     lines.push(pc.bold("Project"));
@@ -177,6 +193,7 @@ export async function buildDoctorReport(options: DoctorOptions = {}): Promise<Do
   });
   const projectDir = path.resolve(options.cwd ?? process.cwd());
   await loadProjectExternals(projectDir); // so external recipe files are checked too
+  const python = detectPythonEnvironment();
   const stack = readStackManifest(projectDir);
   if (stack?.ok) {
     const members: Record<string, ProjectReport> = {};
@@ -190,6 +207,7 @@ export async function buildDoctorReport(options: DoctorOptions = {}): Promise<Do
       zealakit: { name: manifest.name, version: manifest.version },
       node,
       go,
+      python,
       stack: members,
     };
   }
@@ -198,6 +216,7 @@ export async function buildDoctorReport(options: DoctorOptions = {}): Promise<Do
     zealakit: { name: manifest.name, version: manifest.version },
     node,
     go,
+    python,
     ...(project.isZealakitProject ? { project } : {}),
   };
 }

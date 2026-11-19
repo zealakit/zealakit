@@ -35,7 +35,9 @@ export {
 import type { EcosystemRegistration } from "../../../packages/core/src/index.js";
 import { goEcosystem as goRegistration } from "../../../packages/ecosystem-go/src/index.js";
 import { nodeEcosystem as nodeRegistration } from "../../../packages/ecosystem-node/src/index.js";
+import { pythonEcosystem as pythonRegistration } from "../../../packages/ecosystem-python/src/index.js";
 
 // Typed through core so the emitted declarations do not depend on ecosystem internals.
 export const nodeEcosystem: EcosystemRegistration = nodeRegistration;
 export const goEcosystem: EcosystemRegistration = goRegistration;
+export const pythonEcosystem: EcosystemRegistration = pythonRegistration;

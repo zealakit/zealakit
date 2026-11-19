@@ -12,7 +12,7 @@ import {
   PROJECT_PURPOSES,
   PROJECT_TYPES,
 } from "../constants.js";
-import { getAllRecipeIds, getAllTemplateIds, getRecipe } from "../registry/index.js";
+import { getAllRecipeIds, getAllTemplates, getRecipe } from "../registry/index.js";
 import type { ValidationResult } from "../types.js";
 import { getAllRecipeProfiles, getAllTemplateProfiles } from "./catalog.js";
 import type { RecipeProfile, TemplateProfile } from "./types.js";
@@ -66,7 +66,12 @@ export type ProfileValidationInput = {
 export function validateProfiles(input: ProfileValidationInput = {}): ValidationResult {
   const errors: string[] = [];
 
-  const templateIds = input.templateIds ?? getAllTemplateIds();
+  // Templates marked `discoverable: false` are excluded from Discovery and need no profile.
+  const templateIds =
+    input.templateIds ??
+    getAllTemplates()
+      .filter((template) => template.discoverable !== false)
+      .map((template) => template.id);
   const recipeIds = input.recipeIds ?? getAllRecipeIds();
   const templateProfiles = input.templateProfiles ?? getAllTemplateProfiles();
   const recipeProfiles = input.recipeProfiles ?? getAllRecipeProfiles();

@@ -1,0 +1,29 @@
+[project]
+name = "python-worker"
+version = "0.1.0"
+description = "Background worker"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic-settings>=2.4",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+]
+
+# This is an application, not a library: no build backend, run from src/.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

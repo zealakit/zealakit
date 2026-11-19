@@ -12,6 +12,7 @@ import { getRecipe } from "../registry/index.js";
 import { getRecipeAgentEntry, insertAgentEntry } from "../scaffold/agent-docs.js";
 import { type StagedProject, stagePlan } from "../scaffold/index.js";
 import { walkFiles } from "../scaffold/inventory.js";
+import { getManifestAdapter } from "../scaffold/manifest.js";
 import { KIT_VERSION } from "../scaffold/paths.js";
 import { buildScaffoldPlan, planIsReady } from "../scaffold/plan.js";
 import type { EcosystemId, ScaffoldConfig } from "../types.js";
@@ -251,7 +252,9 @@ export function planAddRecipes(
 function computeChanges(projectDir: string, oldDir: string, newDir: string, plan: AddPlan): void {
   const oldFiles = listFiles(oldDir);
   const newFiles = listFiles(newDir);
-  const addedRecipes = plan.added.concat(plan.autoInjected);
+  // Apply order matters: each agent entry is inserted after the Structure bullet.
+  const newIds = new Set([...plan.added, ...plan.autoInjected]);
+  const addedRecipes = plan.config.recipeIds.filter((id) => newIds.has(id));
 
   for (const [relative, newAbsolute] of [...newFiles].sort(([a], [b]) => a.localeCompare(b))) {
     if (relative === PROJECT_MANIFEST_FILE) continue;
@@ -290,6 +293,27 @@ function computeChanges(projectDir: string, oldDir: string, newDir: string, plan
       const merged = Buffer.from(text, "utf-8");
       if (!merged.equals(current)) {
         push({ kind: "modify", before: current, after: merged, diff: textDiff(current, merged) });
+      }
+      continue;
+    }
+
+    const adapterMerge = before
+      ? getManifestAdapter(plan.manifest.ecosystem).mergeProjectFile?.(relative, {
+          current,
+          before,
+          after,
+        })
+      : undefined;
+    if (adapterMerge) {
+      for (const key of PACKAGE_SECTIONS)
+        plan.packageChanges[key].push(...adapterMerge.changed[key]);
+      if (!adapterMerge.content.equals(current)) {
+        push({
+          kind: "modify",
+          before: current,
+          after: adapterMerge.content,
+          diff: textDiff(current, adapterMerge.content),
+        });
       }
       continue;
     }

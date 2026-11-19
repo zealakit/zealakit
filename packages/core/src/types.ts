@@ -34,6 +34,11 @@ export type TemplateConfig = {
   ecosystem?: EcosystemId;
   /** Discovery metadata (authored next to the template; `id` is implied). */
   discovery?: Omit<TemplateProfile, "id">;
+  /**
+   * Set to `false` for templates Discovery must not recommend (no profile needed).
+   * They stay available with `-t <id>`, `info`, `add` and the API.
+   */
+  discoverable?: boolean;
 };
 
 export type RecipeFileTransform = {
@@ -78,7 +83,15 @@ export type GoRecipeManifest = {
   goModules: Record<string, string>;
 };
 
-export type RecipeManifest = NpmRecipeManifest | GoRecipeManifest;
+/** Python requirements (distribution name → version specifier, e.g. `">=2.0"`). */
+export type PythonRecipeManifest = {
+  ecosystem: "python";
+  dependencies: Record<string, string>;
+  /** `[dependency-groups] dev` entries. */
+  devDependencies: Record<string, string>;
+};
+
+export type RecipeManifest = NpmRecipeManifest | GoRecipeManifest | PythonRecipeManifest;
 
 /** What a recipe `finalize` hook can see besides the staging directory. */
 export type FinalizeContext = {
