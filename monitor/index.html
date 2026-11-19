@@ -3,375 +3,603 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dependency Monitor</title>
+    <title>Dependency Monitor · Zealakit</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
     <style>
       :root {
-        --outdated-bg: #5c3317;
-        --outdated-fg: #ffd8a8;
-        --ok-fg: #8ce99a;
-        --pico-font-size: 15px;
+        --pico-font-size: 14px;
         --pico-line-height: 1.4;
-        --pico-spacing: 0.8rem;
-        --pico-typography-spacing-vertical: 0.9rem;
+        --pico-spacing: 0.75rem;
         --pico-form-element-spacing-vertical: 0.4rem;
-        --pico-form-element-spacing-horizontal: 0.85rem;
-        --pico-border-radius: 10px;
+        --pico-form-element-spacing-horizontal: 0.75rem;
+        --pico-border-radius: 8px;
+        --font-xs: 12px;
+        --font-sm: 13px;
+        --font-base: 14px;
+        --font-md: 16px;
+        --font-lg: 18px;
+        --font-title: 24px;
+        --ok: #1f9d55;
+        --warn: #b7791f;
+        --danger: #c53030;
+        --muted: #9aa4b2;
+        --surface: #161b22;
+        --panel: #0d1117;
+        --line: #30363d;
+        --text: #e6edf3;
       }
 
       body {
-        padding-block: 1.25rem 2.5rem;
+        min-height: 100vh;
+        color: var(--text);
+        background: #0b0f14;
+        font-size: var(--font-base);
+        padding-block: 1rem 2rem;
       }
 
       main.container {
-        max-width: 1120px;
+        max-width: 1920px;
+        padding-inline: 32px;
       }
 
-      header {
+      .monitor-header {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.85rem;
         flex-wrap: wrap;
+        gap: 0.85rem;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+      }
+
+      .monitor-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: var(--font-title);
+        line-height: 1.2;
+      }
+
+      .monitor-header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--font-sm);
+      }
+
+      .monitor-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .monitor-actions button {
+        margin: 0;
+        width: auto;
+        font-size: var(--font-sm);
+        padding: 0.4rem 0.8rem;
+      }
+
+      .monitor-stats {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         margin-bottom: 0.9rem;
       }
 
-      header h1 {
-        margin: 0;
-        font-size: 1.35rem;
+      .monitor-stat {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.65rem 0.8rem;
       }
 
-      #refresh-btn {
-        padding: 0.4rem 0.9rem;
-        font-size: 0.85rem;
-        border-radius: 10px;
+      .monitor-stat span {
+        display: block;
+        color: var(--muted);
+        font-size: var(--font-xs);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
       }
 
-      .bucket {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
+      .monitor-stat strong {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: var(--font-lg);
       }
 
-      .bucket + .bucket {
-        margin-top: 2.25rem;
-        padding-top: 2rem;
-        border-top: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #444) 85%, transparent);
-      }
-
-      .bucket > header {
-        margin-bottom: 0.85rem;
-      }
-
-      .bucket > header h2 {
-        margin: 0;
-        font-size: 1.15rem;
-        letter-spacing: 0.02em;
-      }
-
-      .bucket > header p {
-        margin: 0.2rem 0 0;
-        opacity: 0.7;
-        font-size: 0.8rem;
-      }
-
-      .folder {
-        margin: 0;
-        padding: 0.75rem 0.9rem 0.85rem;
-        border: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #3a3f4a) 70%, transparent);
-        border-radius: 12px;
-        background: color-mix(in srgb, var(--pico-card-background-color, #1c2128) 88%, #fff 4%);
-        box-shadow: none;
-      }
-
-      .folder + .folder {
-        margin-top: 0.75rem;
-      }
-
-      .folder > header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
+      .monitor-filters {
+        display: grid;
         gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.4rem;
+        /* Zealakit adds a Kind filter: ecosystem · kind · package · search · outdated */
+        grid-template-columns: 1fr 1fr 1.2fr 1.4fr auto;
+        align-items: end;
+        margin-bottom: 1rem;
       }
 
-      .folder > header h3 {
+      .monitor-filters label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
         margin: 0;
-        font-size: 0.95rem;
-        display: inline-flex;
+        font-size: var(--font-xs);
+        color: var(--muted);
+      }
+
+      .monitor-filters select,
+      .monitor-filters input,
+      .monitor-filters button {
+        margin: 0;
+        font-size: var(--font-base);
+        min-height: 2.5rem;
+      }
+
+      .monitor-filters select {
+        padding-block: 0.5rem;
+      }
+
+      .dep-name {
+        font-size: var(--font-md);
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .monitor-checkbox {
+        display: flex;
+        flex-direction: row;
         align-items: center;
         gap: 0.45rem;
-        flex-wrap: wrap;
+        min-height: 2.4rem;
+        font-size: var(--font-sm);
+        color: var(--text);
+        margin: 0;
       }
 
-      .folder > header p {
+      .package-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin-bottom: 0.85rem;
+        overflow: hidden;
+      }
+
+      .package-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 0.75rem 0.9rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .package-card-header h2 {
         margin: 0;
-        opacity: 0.65;
-        font-size: 0.75rem;
+        font-size: var(--font-md);
+        font-weight: 600;
+        line-height: 1.3;
       }
 
       .tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.12rem 0.45rem;
-        border-radius: 8px;
-        font-size: 0.68rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-        text-transform: lowercase;
-        border: 1px solid transparent;
-      }
-
-      /* Template scopes — fixed palette */
-      .tag[data-kind="scope"][data-value="client"] {
-        color: #7dd3fc;
-        background: color-mix(in srgb, #0ea5e9 22%, transparent);
-        border-color: color-mix(in srgb, #0ea5e9 45%, transparent);
-      }
-      .tag[data-kind="scope"][data-value="server"] {
-        color: #c4b5fd;
-        background: color-mix(in srgb, #8b5cf6 22%, transparent);
-        border-color: color-mix(in srgb, #8b5cf6 45%, transparent);
-      }
-      .tag[data-kind="scope"][data-value="hybrid"] {
-        color: #6ee7b7;
-        background: color-mix(in srgb, #10b981 22%, transparent);
-        border-color: color-mix(in srgb, #10b981 45%, transparent);
-      }
-      .tag[data-kind="scope"][data-value="infrastructure"] {
-        color: #fdba74;
-        background: color-mix(in srgb, #f97316 22%, transparent);
-        border-color: color-mix(in srgb, #f97316 45%, transparent);
-      }
-
-      /* Recipe categories — fixed palette */
-      .tag[data-kind="category"][data-value="linter"] {
-        color: #fca5a5;
-        background: color-mix(in srgb, #ef4444 20%, transparent);
-        border-color: color-mix(in srgb, #ef4444 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="state"] {
-        color: #f9a8d4;
-        background: color-mix(in srgb, #ec4899 20%, transparent);
-        border-color: color-mix(in srgb, #ec4899 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="ui"] {
-        color: #93c5fd;
-        background: color-mix(in srgb, #3b82f6 22%, transparent);
-        border-color: color-mix(in srgb, #3b82f6 45%, transparent);
-      }
-      .tag[data-kind="category"][data-value="form"] {
-        color: #fde68a;
-        background: color-mix(in srgb, #eab308 20%, transparent);
-        border-color: color-mix(in srgb, #eab308 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="fetcher"] {
-        color: #5eead4;
-        background: color-mix(in srgb, #14b8a6 20%, transparent);
-        border-color: color-mix(in srgb, #14b8a6 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="orm"] {
-        color: #d8b4fe;
-        background: color-mix(in srgb, #a855f7 20%, transparent);
-        border-color: color-mix(in srgb, #a855f7 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="infrastructure"] {
-        color: #fdba74;
-        background: color-mix(in srgb, #f97316 20%, transparent);
-        border-color: color-mix(in srgb, #f97316 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="utils"] {
-        color: #a5b4fc;
-        background: color-mix(in srgb, #6366f1 20%, transparent);
-        border-color: color-mix(in srgb, #6366f1 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="testing"] {
-        color: #86efac;
-        background: color-mix(in srgb, #22c55e 20%, transparent);
-        border-color: color-mix(in srgb, #22c55e 42%, transparent);
-      }
-      .tag[data-kind="category"][data-value="documentation"] {
-        color: #67e8f9;
-        background: color-mix(in srgb, #06b6d4 20%, transparent);
-        border-color: color-mix(in srgb, #06b6d4 42%, transparent);
-      }
-
-      table {
-        font-size: 0.85rem;
-        margin-bottom: 0;
-        table-layout: fixed;
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        border-radius: 6px;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #3a3f4a) 55%, transparent);
-      }
-
-      td,
-      th {
-        vertical-align: middle;
-        padding: 0.4rem 0.5rem;
-      }
-
-      thead th {
-        padding: 0.45rem 0.5rem;
-        font-size: 0.75rem;
-        text-transform: uppercase;
+        display: inline-block;
+        margin-left: 0.45rem;
+        border-radius: 999px;
+        font-size: var(--font-xs);
+        font-weight: 700;
         letter-spacing: 0.03em;
-        opacity: 0.75;
+        padding: 0.1rem 0.45rem;
+        vertical-align: middle;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: color-mix(in srgb, var(--muted) 14%, transparent);
+      }
+      .tag[data-kind="scope"] {
+        color: #74c0fc;
+        background: color-mix(in srgb, #74c0fc 16%, transparent);
+      }
+      .tag[data-kind="category"] {
+        color: #b197fc;
+        background: color-mix(in srgb, #b197fc 16%, transparent);
+      }
+      .tag[data-kind="kind"] {
+        color: var(--muted);
       }
 
-      thead th:first-child {
-        border-top-left-radius: 6px;
+      .package-card-header .meta {
+        margin-top: 0.2rem;
+        color: var(--muted);
+        font-size: var(--font-xs);
       }
 
-      thead th:last-child {
-        border-top-right-radius: 6px;
-      }
-
-      tbody tr:last-child td:first-child {
-        border-bottom-left-radius: 6px;
-      }
-
-      tbody tr:last-child td:last-child {
-        border-bottom-right-radius: 6px;
-      }
-
-      th:nth-child(1),
-      td:nth-child(1) {
-        width: 34%;
-      }
-
-      th:nth-child(2),
-      td:nth-child(2) {
-        width: 12%;
-      }
-
-      th:nth-child(3),
-      td:nth-child(3),
-      th:nth-child(4),
-      td:nth-child(4) {
-        width: 14%;
-      }
-
-      th:nth-child(5),
-      td:nth-child(5) {
-        width: 12%;
-      }
-
-      th:nth-child(6),
-      td:nth-child(6) {
-        width: 14%;
-        text-align: right;
-      }
-
-      td:nth-child(1) {
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .package-card-header .counts {
+        color: var(--muted);
+        font-weight: 500;
+        font-size: var(--font-xs);
         white-space: nowrap;
       }
 
-      td code {
-        font-size: 0.8rem;
-        padding: 0.12rem 0.4rem;
-        border-radius: 8px;
+      .package-card-body {
+        padding: 0;
       }
 
-      button.update {
-        padding: 0.28rem 0.65rem;
-        font-size: 0.78rem;
-        line-height: 1.25;
-        border-radius: 10px;
+      .package-cards {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .monitor-table-wrap {
+        overflow-x: auto;
+      }
+
+      .monitor-table {
+        font-size: var(--font-sm);
+        line-height: 1.35;
         margin: 0;
       }
 
-      button.update[disabled] {
-        opacity: 0.4;
+      .monitor-table th,
+      .monitor-table td {
+        padding: 0.45rem 0.55rem;
+        vertical-align: middle;
+        white-space: nowrap;
       }
 
-      .status-outdated {
-        background: var(--outdated-bg);
-        color: var(--outdated-fg);
-        padding: 0.12rem 0.45rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
+      .monitor-table th {
+        font-size: var(--font-xs);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
       }
 
-      .status-ok {
-        color: var(--ok-fg);
-        font-size: 0.8rem;
+      .monitor-table th:last-child,
+      .monitor-table td:last-child {
+        text-align: right;
       }
 
-      .status-error {
-        color: #ffa8a8;
-        font-size: 0.75rem;
+      .row-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
       }
 
-      #status-bar {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        margin: 0 0 0.75rem;
-        min-height: 1.25rem;
-        padding: 0.55rem 0.75rem;
-        font-size: 0.85rem;
-        border-radius: 10px;
-        background: color-mix(in srgb, var(--pico-background-color, #111) 92%, #fff 8%);
-        border: 1px solid color-mix(in srgb, var(--pico-muted-border-color, #444) 80%, transparent);
+      .monitor-table td:last-child .row-actions {
+        justify-content: flex-end;
       }
 
-      #status-bar[data-tone="error"] {
-        color: #ffa8a8;
-        border-color: color-mix(in srgb, #ffa8a8 45%, transparent);
+      .monitor-table code {
+        background: none;
+        padding: 0;
+        font-size: var(--font-sm);
       }
 
-      #status-bar[data-tone="ok"] {
-        color: var(--ok-fg);
-        border-color: color-mix(in srgb, var(--ok-fg) 40%, transparent);
+      .monitor-table small {
+        display: block;
+        margin-top: 0.15rem;
+        color: var(--muted);
+        font-size: var(--font-xs);
       }
 
-      button.update.is-error {
-        border-color: #ffa8a8;
-        color: #ffa8a8;
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        font-size: var(--font-xs);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        padding: 0.15rem 0.45rem;
+        text-transform: uppercase;
+      }
+
+      .badge-up-to-date {
+        color: var(--ok);
+        background: color-mix(in srgb, var(--ok) 16%, transparent);
+      }
+      .badge-patch-available,
+      .badge-minor-available {
+        color: var(--warn);
+        background: color-mix(in srgb, var(--warn) 18%, transparent);
+      }
+      .badge-major-available,
+      .badge-deprecated,
+      .badge-registry-check-failed {
+        color: var(--danger);
+        background: color-mix(in srgb, var(--danger) 16%, transparent);
+      }
+      .badge-skipped {
+        color: var(--muted);
+        background: color-mix(in srgb, var(--muted) 14%, transparent);
+      }
+
+      .local-label {
+        color: #a78bfa;
+        font-size: var(--font-xs);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .row-actions select {
+        margin: 0;
+        min-width: 9.5rem;
+        min-height: 2.25rem;
+        font-size: var(--font-sm);
+        padding: 0.4rem 0.6rem;
+      }
+
+      .row-actions button {
+        margin: 0;
+        width: auto;
+        min-height: 2.25rem;
+        font-size: var(--font-sm);
+        padding: 0.35rem 0.65rem;
+        line-height: 1.2;
+      }
+
+      #monitor-message {
+        margin-bottom: 0.75rem;
+        font-size: var(--font-sm);
+      }
+
+      #monitor-message:empty {
+        display: none;
+      }
+
+      dialog article {
+        border: 1px solid var(--line);
+        background: #12161c;
+      }
+
+      #prompt-dialog article,
+      #batch-dialog article {
+        width: min(72rem, 94vw);
+        max-width: 72rem;
+      }
+
+      #prompt-text {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: var(--font-xs);
+        line-height: 1.4;
+        min-height: 18rem;
+        resize: vertical;
+      }
+
+      .batch-table {
+        font-size: var(--font-sm);
+        margin: 0;
+      }
+
+      .batch-table th,
+      .batch-table td {
+        padding: 0.4rem 0.45rem;
+        vertical-align: middle;
+      }
+
+      .batch-table select {
+        margin: 0;
+        min-height: 2.25rem;
+        font-size: var(--font-sm);
+        padding: 0.35rem 0.55rem;
+      }
+
+      .batch-table button {
+        margin: 0;
+        width: auto;
+        min-height: 2.25rem;
+        font-size: var(--font-sm);
+        padding: 0.3rem 0.55rem;
+      }
+
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 1.25rem 0.75rem;
+        font-size: var(--font-base);
+      }
+
+      @media (max-width: 960px) {
+        .monitor-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .monitor-filters {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .monitor-stats,
+        .monitor-filters {
+          grid-template-columns: 1fr;
+        }
+        .monitor-actions {
+          width: 100%;
+        }
+        .monitor-actions button {
+          flex: 1;
+        }
       }
     </style>
   </head>
   <body>
     <main class="container">
-      <header>
-        <h1>Dependency Monitor</h1>
-        <button type="button" id="refresh-btn">Refresh</button>
+      <header class="monitor-header">
+        <div>
+          <h1>Dependency Monitor · Zealakit</h1>
+          <p>
+            Root + <code>apps/*</code> + <code>packages/*</code> + <code>templates/node/*</code> + recipe registry · <code>templates/go</code>, <code>tests/</code>, <code>.sandbox/</code> excluded ·
+            <span id="last-check">No registry check yet</span>
+          </p>
+        </div>
+        <div class="monitor-actions">
+          <button id="refresh-btn" type="button">Refresh Data</button>
+          <button id="prompt-btn" class="contrast" type="button">Get AI Check Prompt</button>
+          <button id="upgrade-prompt-btn" class="contrast" type="button">
+            Get AI Upgrade Prompt
+          </button>
+          <button id="update-all-btn" class="secondary" type="button">
+            Update All Outdated
+          </button>
+        </div>
       </header>
 
-      <p id="status-bar" aria-live="polite">Loading…</p>
-      <div id="groups"></div>
+      <div id="monitor-message" role="alert"></div>
+
+      <section class="monitor-stats" aria-label="Dependency summary">
+        <article class="monitor-stat">
+          <span>Total</span>
+          <strong id="stat-total">0</strong>
+        </article>
+        <article class="monitor-stat">
+          <span>Outdated</span>
+          <strong id="stat-outdated">0</strong>
+        </article>
+        <article class="monitor-stat">
+          <span>Up to date</span>
+          <strong id="stat-current">0</strong>
+        </article>
+        <article class="monitor-stat">
+          <span>Errors</span>
+          <strong id="stat-errors">0</strong>
+        </article>
+      </section>
+
+      <form class="monitor-filters" onsubmit="return false">
+        <label>
+          Ecosystem
+          <select id="filter-ecosystem">
+            <option value="all">All</option>
+          </select>
+        </label>
+        <label>
+          Kind
+          <select id="filter-kind">
+            <option value="all">All</option>
+            <option value="root">Root</option>
+            <option value="workspace">Workspace packages</option>
+            <option value="template">Templates</option>
+            <option value="recipe">Recipes</option>
+          </select>
+        </label>
+        <label>
+          Package / workspace
+          <select id="filter-package">
+            <option value="all">All</option>
+          </select>
+        </label>
+        <label>
+          Search
+          <input id="filter-search" type="search" placeholder="dependency name" />
+        </label>
+        <label class="monitor-checkbox">
+          <input id="filter-outdated" type="checkbox" />
+          Only outdated
+        </label>
+      </form>
+
+      <div id="loading" class="empty">Loading dependencies…</div>
+      <div id="sections"></div>
     </main>
 
+    <dialog id="confirm-dialog">
+      <article>
+        <header><h3 id="confirm-title" style="margin:0">Confirm update</h3></header>
+        <div id="confirm-body"></div>
+        <footer style="display:flex;gap:0.45rem;justify-content:flex-end">
+          <button id="confirm-cancel" class="secondary" type="button">Cancel</button>
+          <button id="confirm-ok" type="button">Confirm</button>
+        </footer>
+      </article>
+    </dialog>
+
+    <dialog id="batch-dialog">
+      <article>
+        <header>
+          <h3 style="margin:0">Review outdated updates</h3>
+        </header>
+        <p style="margin-top:0;color:var(--muted);font-size:0.84rem">
+          Conservative targets prefer patch/minor. Majors require explicit selection and confirmation.
+        </p>
+        <div class="monitor-table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>Dependency</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Current</th>
+                <th>Target</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="batch-body"></tbody>
+          </table>
+        </div>
+        <footer style="display:flex;gap:0.45rem;justify-content:flex-end;margin-top:0.75rem">
+          <button id="batch-cancel" class="secondary" type="button">Cancel</button>
+          <button id="batch-confirm" type="button">Apply updates</button>
+        </footer>
+      </article>
+    </dialog>
+
+    <dialog id="prompt-dialog">
+      <article>
+        <header><h3 id="prompt-title" style="margin:0">AI Check Prompt</h3></header>
+        <p id="prompt-note" style="margin-top:0;color:var(--muted);font-size:0.84rem">
+          Copy into your AI coding assistant. This does not update packages.
+          Scope: selected outdated rows, otherwise outdated rows in the current
+          filter view (includes each row’s selected target version).
+        </p>
+        <textarea id="prompt-text" readonly spellcheck="false"></textarea>
+        <footer style="display:flex;gap:0.45rem;justify-content:flex-end">
+          <button id="prompt-copy" type="button">Copy Prompt</button>
+          <button id="prompt-close" class="secondary" type="button">Close</button>
+        </footer>
+      </article>
+    </dialog>
+
     <script>
-      const groupsEl = document.getElementById("groups");
-      const statusBar = document.getElementById("status-bar");
-      const refreshBtn = document.getElementById("refresh-btn");
+      const state = {
+        rows: [],
+        packages: [],
+        summary: null,
+        ecosystems: ["node"],
+        batch: [],
+        pending: [],
+        allowMajor: false,
+      };
 
-      function setStatus(message, tone = "") {
-        statusBar.textContent = message;
-        if (tone) statusBar.dataset.tone = tone;
-        else delete statusBar.dataset.tone;
-        // Keep feedback visible when scrolled deep into recipe tables.
-        statusBar.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
-
-      function npmUrl(name) {
-        return `https://www.npmjs.com/package/${name}`;
-      }
+      const els = {
+        loading: document.getElementById("loading"),
+        sections: document.getElementById("sections"),
+        message: document.getElementById("monitor-message"),
+        lastCheck: document.getElementById("last-check"),
+        ecosystem: document.getElementById("filter-ecosystem"),
+        kind: document.getElementById("filter-kind"),
+        package: document.getElementById("filter-package"),
+        search: document.getElementById("filter-search"),
+        outdated: document.getElementById("filter-outdated"),
+        refresh: document.getElementById("refresh-btn"),
+        prompt: document.getElementById("prompt-btn"),
+        upgradePrompt: document.getElementById("upgrade-prompt-btn"),
+        updateAll: document.getElementById("update-all-btn"),
+        confirmDialog: document.getElementById("confirm-dialog"),
+        confirmTitle: document.getElementById("confirm-title"),
+        confirmBody: document.getElementById("confirm-body"),
+        confirmCancel: document.getElementById("confirm-cancel"),
+        confirmOk: document.getElementById("confirm-ok"),
+        batchDialog: document.getElementById("batch-dialog"),
+        batchBody: document.getElementById("batch-body"),
+        batchCancel: document.getElementById("batch-cancel"),
+        batchConfirm: document.getElementById("batch-confirm"),
+        promptDialog: document.getElementById("prompt-dialog"),
+        promptTitle: document.getElementById("prompt-title"),
+        promptNote: document.getElementById("prompt-note"),
+        promptText: document.getElementById("prompt-text"),
+        promptCopy: document.getElementById("prompt-copy"),
+        promptClose: document.getElementById("prompt-close"),
+        statTotal: document.getElementById("stat-total"),
+        statOutdated: document.getElementById("stat-outdated"),
+        statCurrent: document.getElementById("stat-current"),
+        statErrors: document.getElementById("stat-errors"),
+      };
 
       function escapeHtml(value) {
         return String(value)
@@ -381,321 +609,785 @@
           .replaceAll('"', "&quot;");
       }
 
-      function renderStatus(pkg) {
-        if (pkg.error) {
-          return `<span class="status-error" title="${escapeHtml(pkg.error)}">error</span>`;
-        }
-        if (pkg.needsUpdate) {
-          return `<mark class="status-outdated">outdated</mark>`;
-        }
-        return `<span class="status-ok">up-to-date</span>`;
+      function showMessage(text, kind = "") {
+        els.message.textContent = text || "";
+        els.message.style.color = kind === "error" ? "var(--danger)" : "";
       }
 
-      function typeLabel(pkg) {
-        return pkg.overlay ? `${pkg.depType}/${pkg.overlay}` : pkg.depType;
+      function isOutdated(row) {
+        return [
+          "patch-available",
+          "minor-available",
+          "major-available",
+          "deprecated",
+        ].includes(row.registry.classification);
       }
 
-      function renderRow(group, pkg) {
-        const canUpdate = group.allowUpdate !== false;
-        const disabled = canUpdate && pkg.needsUpdate && pkg.latest ? "" : "disabled";
-        const latest = pkg.latest ?? "—";
-        const recipeId = pkg.recipeId || group.recipeId || "";
-        const overlay = pkg.overlay || "";
-        const isRoot = group.filePath === "package.json";
+      function canUpdate(row) {
+        return !row.local && isOutdated(row) && Boolean(row.registry.latestPatch || row.registry.latestMinor || row.registry.latest);
+      }
+
+      function statusLabel(value) {
+        return value.replaceAll("-", " ");
+      }
+
+      function locationLabel(manifestId) {
+        return manifestId === "." ? "root" : manifestId;
+      }
+
+      /** Recipe overlay buckets (overlayPackages.next) show as `dependencies · next`. */
+      function typeLabel(row) {
+        return row.overlay ? `${row.depType} · ${row.overlay}` : row.depType;
+      }
+
+      function packageInfo(manifestId) {
+        return state.packages.find((item) => item.id === manifestId);
+      }
+
+      function parseMajor(spec) {
+        const match = String(spec).match(/(\d+)/);
+        return match ? Number(match[1]) : NaN;
+      }
+
+      function conservativeTarget(row) {
+        const classification = row.registry.classification;
+        if (classification === "patch-available" && row.registry.latestPatch) {
+          return row.registry.latestPatch;
+        }
+        if (
+          (classification === "patch-available" || classification === "minor-available") &&
+          row.registry.latestMinor
+        ) {
+          return row.registry.latestMinor;
+        }
+        if (classification === "major-available" && row.registry.latestMinor) {
+          return row.registry.latestMinor;
+        }
+        if (classification === "deprecated" && row.registry.latestMinor) {
+          return row.registry.latestMinor;
+        }
+        return null;
+      }
+
+      function targetOptions(row) {
+        const options = [];
+        const safe = conservativeTarget(row);
+        if (safe) options.push([safe, `Safe · ${safe}`]);
+        if (row.registry.latestPatch) {
+          options.push([row.registry.latestPatch, `Patch · ${row.registry.latestPatch}`]);
+        }
+        if (row.registry.latestMinor) {
+          options.push([row.registry.latestMinor, `Minor · ${row.registry.latestMinor}`]);
+        }
+        if (row.registry.latest) {
+          const majorBump =
+            parseMajor(row.declared) !== parseMajor(row.registry.latest) &&
+            parseMajor(row.registry.latest) > parseMajor(row.declared);
+          options.push([
+            row.registry.latest,
+            majorBump
+              ? `Latest stable (major) · ${row.registry.latest}`
+              : `Latest stable · ${row.registry.latest}`,
+          ]);
+        }
+        for (const version of (row.registry.versions || []).slice(0, 30)) {
+          options.push([version, version]);
+        }
+        const seen = new Set();
+        return options.filter(([version]) => {
+          if (seen.has(version)) return false;
+          seen.add(version);
+          return true;
+        });
+      }
+
+      function selectedIds() {
+        return [...document.querySelectorAll("input.row-select:checked")].map(
+          (input) => input.value,
+        );
+      }
+
+      function filteredRows() {
+        const ecosystem = els.ecosystem.value;
+        const pkg = els.package.value;
+        const q = els.search.value.trim().toLowerCase();
+        const onlyOutdated = els.outdated.checked;
+
+        return state.rows.filter((row) => {
+          if (ecosystem !== "all" && row.ecosystem !== ecosystem) return false;
+          if (els.kind.value !== "all" && row.kind !== els.kind.value) return false;
+          if (pkg !== "all" && row.manifestId !== pkg) return false;
+          if (q && !row.dependency.toLowerCase().includes(q)) return false;
+          if (onlyOutdated && !isOutdated(row)) return false;
+          return true;
+        });
+      }
+
+      function renderFilters() {
+        const ecosystems = state.summary?.ecosystems || state.ecosystems || ["node"];
+        const currentEco = els.ecosystem.value || "all";
+        els.ecosystem.innerHTML =
+          `<option value="all">All</option>` +
+          ecosystems
+            .map(
+              (eco) =>
+                `<option value="${escapeHtml(eco)}">${escapeHtml(
+                  eco === "node" ? "Node.js" : eco,
+                )}</option>`,
+            )
+            .join("");
+        els.ecosystem.value = ecosystems.includes(currentEco) || currentEco === "all"
+          ? currentEco
+          : "all";
+
+        const currentPkg = els.package.value || "all";
+        const packages = state.packages.filter((pkg) => {
+          if (els.kind.value !== "all" && pkg.kind !== els.kind.value) return false;
+          if (els.ecosystem.value === "all") return true;
+          return state.rows.some(
+            (row) => row.manifestId === pkg.id && row.ecosystem === els.ecosystem.value,
+          );
+        });
+        els.package.innerHTML =
+          `<option value="all">All</option>` +
+          packages
+            .map(
+              (pkg) =>
+                `<option value="${escapeHtml(pkg.id)}">${escapeHtml(pkg.label)}</option>`,
+            )
+            .join("");
+        els.package.value = [...packages.map((p) => p.id), "all"].includes(currentPkg)
+          ? currentPkg
+          : "all";
+      }
+
+      function renderStats() {
+        const summary = state.summary || {};
+        els.statTotal.textContent = String(summary.total ?? summary.uniqueDependencies ?? 0);
+        els.statOutdated.textContent = String(summary.outdated ?? summary.updatesAvailable ?? 0);
+        els.statCurrent.textContent = String(summary.upToDate ?? 0);
+        els.statErrors.textContent = String(summary.errors ?? summary.registryFailures ?? 0);
+        if (summary.lastRegistryCheckAt) {
+          els.lastCheck.textContent = `Last check ${new Date(
+            summary.lastRegistryCheckAt,
+          ).toLocaleString()}`;
+        }
+      }
+
+      function renderRow(row) {
+        const options = targetOptions(row);
+        const defaultTarget = conservativeTarget(row);
+        const selectHtml = options.length
+          ? `<select class="target-version" data-id="${escapeHtml(row.id)}">
+              ${options
+                .map(
+                  ([version, label]) =>
+                    `<option value="${escapeHtml(version)}" ${
+                      version === defaultTarget ? "selected" : ""
+                    }>${escapeHtml(label)}</option>`,
+                )
+                .join("")}
+            </select>`
+          : `<span class="local-label">${row.local ? "LOCAL" : "n/a"}</span>`;
+
+        const action = row.local
+          ? `<span class="local-label">LOCAL</span>`
+          : canUpdate(row)
+            ? `<button class="outline update-one" type="button" data-id="${escapeHtml(
+                row.id,
+              )}">Update</button>`
+            : row.registry.classification === "up-to-date"
+              ? `<span class="badge badge-up-to-date">up to date</span>`
+              : `<button class="outline" type="button" disabled>Update</button>`;
+
         return `
-          <tr data-file="${escapeHtml(group.filePath)}" data-name="${escapeHtml(pkg.name)}" data-type="${pkg.depType}">
+          <tr data-id="${escapeHtml(row.id)}">
             <td>
-              <a href="${npmUrl(pkg.name)}" target="_blank" rel="noopener noreferrer">${escapeHtml(pkg.name)}</a>
+              <input class="row-select" type="checkbox" value="${escapeHtml(row.id)}" ${
+                canUpdate(row) ? "" : "disabled"
+              } />
             </td>
-            <td><code>${escapeHtml(typeLabel(pkg))}</code></td>
-            <td><code class="current">${escapeHtml(pkg.current)}</code></td>
-            <td><code class="latest">${escapeHtml(latest)}</code></td>
-            <td class="status-cell">${renderStatus(pkg)}</td>
             <td>
-              <button
-                type="button"
-                class="outline update"
-                ${disabled}
-                data-file="${escapeHtml(group.filePath)}"
-                data-name="${escapeHtml(pkg.name)}"
-                data-latest="${escapeHtml(pkg.latest ?? "")}"
-                data-dep-type="${pkg.depType}"
-                data-recipe-id="${escapeHtml(recipeId)}"
-                data-overlay="${escapeHtml(overlay)}"
-                title="${isRoot ? "Updates package.json then runs pnpm up to refresh the lockfile" : recipeId ? `Update version in src/registry/recipes/${recipeId}.ts` : "Update package.json version"}"
-              >Update</button>
+              <a class="dep-name" href="https://www.npmjs.com/package/${encodeURIComponent(
+                row.dependency,
+              )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+                row.dependency,
+              )}</a>
             </td>
+            <td><code>${escapeHtml(typeLabel(row))}</code></td>
+            <td><code>${escapeHtml(row.declared)}</code>${
+              row.resolved && row.resolved !== row.declared.replace(/^[~^]/, "")
+                ? `<small>resolved ${escapeHtml(row.resolved)}</small>`
+                : ""
+            }</td>
+            <td>
+              <div class="row-actions">
+                ${selectHtml}
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-${escapeHtml(
+                row.registry.classification,
+              )}" title="${escapeHtml(row.registry.error || "")}">${escapeHtml(
+                statusLabel(row.registry.classification),
+              )}</span>
+            </td>
+            <td>${action}</td>
           </tr>
         `;
       }
 
-      function folderCategory(group) {
-        if (group.filePath === "package.json" || group.label === "Root") return "root";
-        if (group.recipeId || group.label?.startsWith("recipe/") || group.relativePath?.startsWith("src/registry/recipes")) {
-          return "recipes";
-        }
-        if (group.relativePath?.startsWith("templates/") || group.label?.startsWith("template/")) {
-          return "templates";
-        }
-        return "other";
+      const KIND_LABELS = {
+        root: "root",
+        workspace: "workspace",
+        template: "template",
+        recipe: "recipe",
+      };
+
+      function packageCardTitle(manifestId) {
+        if (manifestId === ".") return "Root";
+        const pkg = packageInfo(manifestId);
+        return pkg?.label || pkg?.name || locationLabel(manifestId);
       }
 
-      function renderTag(group) {
-        if (!group.tagKind) return "";
-        const values = Array.isArray(group.tags) && group.tags.length > 0
-          ? group.tags
-          : group.tag
-            ? [group.tag]
-            : [];
-        if (!values.length) return "";
-        return values
+      function packageCardPath(manifestId) {
+        return packageInfo(manifestId)?.relativePath || `${manifestId}/package.json`;
+      }
+
+      function packageCardTags(manifestId) {
+        const pkg = packageInfo(manifestId);
+        if (!pkg) return "";
+        const kind = pkg.kind && pkg.kind !== "root"
+          ? `<span class="tag" data-kind="kind">${escapeHtml(KIND_LABELS[pkg.kind] || pkg.kind)}</span>`
+          : "";
+        const tags = (pkg.tags || [])
           .map(
-            (value) =>
-              `<span class="tag" data-kind="${escapeHtml(group.tagKind)}" data-value="${escapeHtml(value)}" title="${group.tagKind}">${escapeHtml(value)}</span>`,
+            (tag) =>
+              `<span class="tag" data-kind="${escapeHtml(pkg.tagKind || "")}" title="${escapeHtml(
+                pkg.tagKind || "",
+              )}">${escapeHtml(tag)}</span>`,
           )
           .join("");
+        return kind + tags;
       }
 
-      function renderFolder(group) {
-        const rows =
-          group.packages.length > 0
-            ? group.packages.map((pkg) => renderRow(group, pkg)).join("")
-            : `<tr><td colspan="6"><em>No dependencies</em></td></tr>`;
-
-        const outdated = group.packages.filter((p) => p.needsUpdate).length;
-        const rootNote =
-          group.filePath === "package.json"
-            ? " · Update runs pnpm up (refreshes lockfile)"
-            : "";
-        const title =
-          group.label === "Root"
-            ? "package.json"
-            : group.label.replace(/^(template|recipe)\//, "");
-
-        return `
-          <section class="folder" data-file="${escapeHtml(group.filePath)}">
-            <header>
-              <h3>${escapeHtml(title)}${renderTag(group)}</h3>
-              <p>${escapeHtml(group.relativePath)} · ${group.packages.length} packages${outdated ? ` · ${outdated} outdated` : ""}${rootNote}</p>
-            </header>
-            <div class="overflow-auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Package</th>
-                    <th>Type</th>
-                    <th>Current</th>
-                    <th>Latest</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rows}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        `;
+      function packageCardNote(manifestId) {
+        const pkg = packageInfo(manifestId);
+        if (pkg?.kind === "recipe") return " · versions written into generated projects (no install)";
+        if (pkg?.kind === "template") return " · shipped as a starter app";
+        return "";
       }
 
-      let SCOPE_ORDER = [];
-      let CATEGORY_ORDER = [];
-      /*__ZEALAKIT_CONSTANTS__*/
+      function renderSections() {
+        const rows = filteredRows();
+        els.loading.hidden = true;
 
-      function applySortOrders(scopes, categories) {
-        if (Array.isArray(scopes) && scopes.length > 0) SCOPE_ORDER = scopes;
-        if (Array.isArray(categories) && categories.length > 0) CATEGORY_ORDER = categories;
-        const baked = window.__ZEALAKIT__;
-        if ((!SCOPE_ORDER.length || !CATEGORY_ORDER.length) && baked) {
-          if (!SCOPE_ORDER.length && Array.isArray(baked.scopes)) SCOPE_ORDER = baked.scopes;
-          if (!CATEGORY_ORDER.length && Array.isArray(baked.categories)) {
-            CATEGORY_ORDER = baked.categories;
-          }
-        }
-      }
-
-      applySortOrders();
-
-      function tagRank(group, order) {
-        if (!order.length) return 0;
-        const idx = order.indexOf(group.tag);
-        return idx === -1 ? order.length : idx;
-      }
-
-      function sortBucketItems(bucketId, items) {
-        return [...items].sort((a, b) => {
-          if (bucketId === "templates") {
-            const byScope = tagRank(a, SCOPE_ORDER) - tagRank(b, SCOPE_ORDER);
-            if (byScope !== 0) return byScope;
-            if (a.tag && b.tag && a.tag !== b.tag) return String(a.tag).localeCompare(String(b.tag));
-          }
-          if (bucketId === "recipes") {
-            const byCategory = tagRank(a, CATEGORY_ORDER) - tagRank(b, CATEGORY_ORDER);
-            if (byCategory !== 0) return byCategory;
-            if (a.tag && b.tag && a.tag !== b.tag) return String(a.tag).localeCompare(String(b.tag));
-          }
-          return (a.label || "").localeCompare(b.label || "");
-        });
-      }
-
-      function renderGroups(groups) {
-        if (!groups.length) {
-          groupsEl.innerHTML = "<p>No package.json files found.</p>";
+        if (rows.length === 0) {
+          els.sections.innerHTML = `<div class="empty">No dependencies match the current filters.</div>`;
+          els.updateAll.disabled = true;
           return;
         }
 
-        const buckets = [
-          { id: "root", title: "Root", blurb: "Workspace root package.json + lockfile" },
-          { id: "templates", title: "Templates", blurb: "Starter apps under templates/" },
-          { id: "recipes", title: "Recipes", blurb: "Versions from src/registry/recipes/*.ts" },
-          { id: "other", title: "Other", blurb: "Additional package.json files" },
-        ];
-
-        const byCategory = Object.fromEntries(buckets.map((b) => [b.id, []]));
-        for (const group of groups) {
-          byCategory[folderCategory(group)].push(group);
+        const byPackage = new Map();
+        for (const row of rows) {
+          const list = byPackage.get(row.manifestId) || [];
+          list.push(row);
+          byPackage.set(row.manifestId, list);
         }
 
-        groupsEl.innerHTML = buckets
-          .filter((bucket) => byCategory[bucket.id].length > 0)
-          .map((bucket) => {
-            const items = sortBucketItems(bucket.id, byCategory[bucket.id]);
-            const packageCount = items.reduce((sum, g) => sum + g.packages.length, 0);
-            const outdated = items.reduce(
-              (sum, g) => sum + g.packages.filter((p) => p.needsUpdate).length,
-              0,
-            );
+        // Server order: root → apps/packages → templates (by scope) → recipes (by category).
+        const serverOrder = new Map(state.packages.map((pkg, index) => [pkg.id, index]));
+        const orderedIds = [...byPackage.keys()].sort(
+          (a, b) =>
+            (serverOrder.get(a) ?? Number.MAX_SAFE_INTEGER) -
+              (serverOrder.get(b) ?? Number.MAX_SAFE_INTEGER) || a.localeCompare(b),
+        );
+
+        els.sections.innerHTML = `<div class="package-cards">${orderedIds
+          .map((manifestId) => {
+            const packageRows = byPackage.get(manifestId) || [];
+            const outdated = packageRows.filter(isOutdated).length;
             return `
-              <section class="bucket" data-bucket="${bucket.id}">
-                <header>
-                  <h2>${escapeHtml(bucket.title)}</h2>
-                  <p>${escapeHtml(bucket.blurb)} · ${items.length} folders · ${packageCount} packages${outdated ? ` · ${outdated} outdated` : ""}</p>
+              <section class="package-card" data-package="${escapeHtml(manifestId)}">
+                <header class="package-card-header">
+                  <div>
+                    <h2>${escapeHtml(packageCardTitle(manifestId))}${packageCardTags(manifestId)}</h2>
+                    <div class="meta"><code>${escapeHtml(
+                      packageCardPath(manifestId),
+                    )}</code>${escapeHtml(packageCardNote(manifestId))}</div>
+                  </div>
+                  <div class="counts">${packageRows.length} deps · ${outdated} outdated</div>
                 </header>
-                ${items.map((group) => renderFolder(group)).join("")}
+                <div class="package-card-body monitor-table-wrap">
+                  <table class="monitor-table">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Dependency</th>
+                        <th>Type</th>
+                        <th>Current</th>
+                        <th>Target</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${packageRows.map(renderRow).join("")}
+                    </tbody>
+                  </table>
+                </div>
               </section>
             `;
           })
+          .join("")}</div>`;
+
+        const outdatedCount = rows.filter((row) => canUpdate(row)).length;
+        els.updateAll.disabled = outdatedCount === 0;
+      }
+
+      function rowById(id) {
+        return state.rows.find((row) => row.id === id);
+      }
+
+      function selectedTarget(id) {
+        const select = document.querySelector(
+          `select.target-version[data-id="${CSS.escape(id)}"]`,
+        );
+        return select?.value || conservativeTarget(rowById(id)) || null;
+      }
+
+      function isMajorBump(row, target) {
+        const current = parseMajor(row.declared);
+        const next = parseMajor(target);
+        return Number.isFinite(current) && Number.isFinite(next) && next > current;
+      }
+
+      function openConfirm(updates, allowMajor) {
+        state.pending = updates;
+        state.allowMajor = allowMajor;
+        els.confirmTitle.textContent =
+          updates.length === 1 ? "Confirm update" : `Confirm ${updates.length} updates`;
+        els.confirmBody.innerHTML = `
+          <p style="font-size:0.86rem">package.json updates (root, apps, packages, templates) write the manifest and run <code>pnpm install</code> for the lockfile. Recipe updates edit the version in <code>packages/ecosystem-node/src/registry/recipes/&lt;id&gt;.ts</code> only.</p>
+          <ul style="font-size:0.84rem">
+            ${updates
+              .map((item) => {
+                const row = rowById(item.id);
+                return `<li><strong>${escapeHtml(row.dependency)}</strong> in <code>${escapeHtml(
+                  locationLabel(row.manifestId),
+                )}</code> (${escapeHtml(typeLabel(row))}): <code>${escapeHtml(
+                  row.declared,
+                )}</code> → <code>${escapeHtml(item.targetVersion)}</code></li>`;
+              })
+              .join("")}
+          </ul>
+          ${
+            allowMajor
+              ? `<p><strong>Major updates are included.</strong></p>`
+              : `<p style="color:var(--muted)">Major updates are blocked unless explicitly allowed.</p>`
+          }
+        `;
+        els.confirmDialog.showModal();
+      }
+
+      function renderBatchDialog() {
+        els.batchBody.innerHTML = state.batch
+          .map((item) => {
+            const row = rowById(item.id);
+            const options = targetOptions(row);
+            return `
+              <tr data-id="${escapeHtml(item.id)}">
+                <td><strong>${escapeHtml(row.dependency)}</strong></td>
+                <td><code>${escapeHtml(locationLabel(row.manifestId))}</code></td>
+                <td><code>${escapeHtml(typeLabel(row))}</code></td>
+                <td><code>${escapeHtml(row.declared)}</code></td>
+                <td>
+                  <select class="batch-target" data-id="${escapeHtml(item.id)}">
+                    ${options
+                      .map(
+                        ([version, label]) =>
+                          `<option value="${escapeHtml(version)}" ${
+                            version === item.targetVersion ? "selected" : ""
+                          }>${escapeHtml(label)}</option>`,
+                      )
+                      .join("")}
+                  </select>
+                </td>
+                <td><span class="badge badge-${escapeHtml(
+                  row.registry.classification,
+                )}">${escapeHtml(statusLabel(row.registry.classification))}</span></td>
+                <td><button class="outline batch-remove" type="button" data-id="${escapeHtml(
+                  item.id,
+                )}">Remove</button></td>
+              </tr>
+            `;
+          })
           .join("");
+        els.batchConfirm.disabled = state.batch.length === 0;
+      }
+
+      function openBatchDialog(rows) {
+        state.batch = rows
+          .map((row) => {
+            const target = selectedTarget(row.id) || conservativeTarget(row);
+            return target ? { id: row.id, targetVersion: target } : null;
+          })
+          .filter(Boolean);
+        if (state.batch.length === 0) {
+          showMessage("No safe targets available. Select versions manually in the table.", "error");
+          return;
+        }
+        renderBatchDialog();
+        els.batchDialog.showModal();
+      }
+
+      async function executeUpdates(updates, allowMajor) {
+        const payload = {
+          dryRun: false,
+          updates: updates.map((item) => {
+            const row = rowById(item.id);
+            return {
+              manifestId: row.manifestId,
+              dependency: row.dependency,
+              depType: row.depType,
+              overlay: row.overlay || null,
+              targetVersion: item.targetVersion,
+              preserveRange: true,
+              allowMajor,
+            };
+          }),
+        };
+
+        showMessage(`Updating ${updates.length} declaration(s)…`);
+        const res = await fetch("/api/update-bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Update failed");
+        showMessage(`Updated ${data.results?.length ?? 0} declaration(s).`);
+        await loadDependencies(true);
+      }
+
+      function promptCell(value) {
+        return String(value ?? "—").replaceAll("|", "\\|").replace(/\s+/g, " ").trim() || "—";
+      }
+
+      function publishedPackageList() {
+        const fromState = (state.packages || [])
+          .filter((pkg) => pkg.kind === "workspace")
+          .map((pkg) => pkg.name)
+          .filter(Boolean);
+        return (
+          fromState.length > 0
+            ? fromState
+            : [
+                "@zealakit/cli",
+                "@zealakit/core",
+                "@zealakit/ecosystem-node",
+                "@zealakit/ecosystem-go",
+              ]
+        ).join(", ");
+      }
+
+      function templateList() {
+        const fromState = (state.packages || [])
+          .filter((pkg) => pkg.kind === "template")
+          .map((pkg) => pkg.id.replace(/^templates\/node\//, ""));
+        return fromState.length > 0 ? fromState.join(", ") : "templates/node/*";
+      }
+
+      function buildPrompt(rows, options = {}) {
+        const autoUpgrade = options.mode === "upgrade";
+        const generatedAt = state.summary?.lastRegistryCheckAt || new Date().toISOString();
+        const scopeNote = options.scopeNote || "outdated dependencies in monitor scope";
+        const summary = state.summary || {};
+        const inventory = rows
+          .map((row) => {
+            const proposed = autoUpgrade
+              ? row.registry.latest || conservativeTarget(row) || "—"
+              : selectedTarget(row.id) || conservativeTarget(row) || row.registry.latest || "—";
+            return `| ${promptCell(row.kind)} | ${promptCell(locationLabel(row.manifestId))} | ${promptCell(row.packageName)} | ${promptCell(row.dependency)} | ${promptCell(typeLabel(row))} | ${promptCell(row.declared)} | ${promptCell(row.resolved)} | ${promptCell(proposed)} | ${promptCell(row.registry.latestPatch)} | ${promptCell(row.registry.latestMinor)} | ${promptCell(row.registry.latestMajor)} | ${promptCell(row.registry.latest)} | ${promptCell(row.registry.classification)} | ${row.local ? "yes" : "no"} |`;
+          })
+          .join("\n");
+
+        const investigationIntro = autoUpgrade
+          ? "Before changing anything, inspect the actual repository and determine:"
+          : "Before recommending any upgrade, inspect the actual repository and determine:";
+
+        const recommendationSection = autoUpgrade
+          ? `## Execution directive — apply upgrades now
+Auto-upgrade mode is enabled. The user explicitly asked you to upgrade the listed dependencies to the newest stable versions the workspace can support. Do not stop to ask for approval before starting, and do not return a recommendation-only report.
+
+1. Work through every inventory row. Treat the **Latest** column (not "Proposed target") as the target: upgrade to the newest stable version published on the registry. If a Latest cell is \`—\`, treat it as a registry error, verify the version yourself, and report the row as blocked rather than guessing.
+2. Prefer the newest stable release of every dependency, **including major versions**, as long as the repository still builds, typechecks, tests, and lints.
+3. Apply upgrades by editing only the monitored declarations: root \`package.json\`, \`apps/*/package.json\`, \`packages/*/package.json\`, \`templates/node/*/package.json\`, and the \`packages\` / \`devDependencies\` / \`overlayPackages\` / \`overlayDevDependencies\` objects inside \`packages/ecosystem-node/src/registry/recipes/<id>.ts\` (rows with kind \`recipe\`; the Type column shows the overlay family). Then run \`pnpm install\` from the repository root so \`pnpm-lock.yaml\` is refreshed.
+4. After each batch of upgrades, run \`pnpm build\`, \`pnpm typecheck\`, \`pnpm test\`, and \`pnpm check\` (Biome). Keep iterating until all of them pass. \`pnpm test\` includes the scaffold suites that generate every template and recipe combination, so template and recipe upgrades are verified there; when a template or recipe changed, also build one generated app per affected template (\`pnpm test:sandbox <name> -t <template> -w <recipes> -y\`, then install and build inside \`.sandbox/<name>\`).
+5. If an upgrade cannot be made green with a reasonable, in-scope change, revert **that single dependency** to the highest version that passes verification and record it as "kept", with the failing signal and reason. Never leave the workspace red.
+6. Fix breakages where they actually live: kit source, template source under \`templates/node/<id>/\`, recipe files under \`recipes/node/<id>/\` (shared/overlays), \`fileTransforms\` patterns in the recipe module, types, and config. When a template file changes, check every recipe \`fileTransforms\` pattern that targets it still matches.
+7. Skip no row silently: every row ends as upgraded to latest, upgraded to a lower latest-compatible version, kept, or blocked with a concrete reason.
+
+## Final report format
+Return one table covering every inventory row: dependency · location · from → to (or kept at) · outcome (upgraded / kept / blocked) · reason when not on the latest version. Then list the exact commands you ran with their result, and call out anything the user must know: lockfile churn, peer-range decisions, deprecated packages, or follow-up work.`
+          : `## Recommendation format
+For each dependency, return exactly one of:
+- Safe to upgrade
+- Safe with code/configuration changes
+- Needs further investigation
+- Not recommended
+
+Explain the reason and identify relevant files or compatibility constraints where possible.
+If proposing a different target than the "Proposed target" column, say why.`;
+
+        const constraintsSection = autoUpgrade
+          ? `## Constraints
+- Never modify \`dist/\`, \`.sandbox/\`, \`tests/integration/external-consumer\` fixtures, or Go templates (\`templates/go/**\`) through this prompt.
+- Keep \`@zealakit/core\` ecosystem-independent; \`@zealakit/ecosystem-*\` depend on core, and only \`apps/cli\` depends on every package. Never import \`templates/**\` or \`recipes/**\` code into the kit packages.
+- Keep a recipe's versions consistent with the template it overlays (e.g. a React UI kit must support the React major in \`templates/node/vite-react\` and \`templates/node/next\`). Keep the same dependency on the same major across templates unless a template deliberately differs.
+- Respect \`minimumReleaseAge\` / \`minimumReleaseAgeExclude\` in \`pnpm-workspace.yaml\`; never bypass it silently — report releases that are too new as blocked.
+- Do not commit, push, tag, or publish anything.
+- Do not change the \`packageManager\` field unless the user asks.
+- Do not add, remove, or reclassify dependencies unless an upgrade genuinely requires it; state the reason when it does.
+- Use pnpm only; keep \`pnpm-lock.yaml\` consistent and never introduce a second package manager.
+- If a package is deprecated, stay on its newest published version unless a documented successor exists, and flag the deprecation in the final report.
+- Report honestly: do not claim a dependency was upgraded unless \`pnpm install\` and the verification chain actually succeeded.`
+          : `## Constraints
+- Never modify dist/, .sandbox/, or templates/go/**
+- Prefer patch/minor over major unless the user explicitly wants a major bump
+- Keep recipe versions compatible with the templates they overlay, and the same dependency on one major across templates unless deliberate
+- Keep \`@zealakit/core\` ecosystem-independent and the package graph acyclic (core ← ecosystem-* ← apps/cli)
+- Do not automatically apply upgrades or execute commands unless the user explicitly asks after reviewing your recommendation`;
+
+        return `You are a senior monorepo dependency-upgrade engineer working on the Zealakit repository.
+
+## Context
+- Repository: zealakit — recipe-based scaffolding CLI. The published npm package is the root \`zealakit\` (bundled \`dist\` + \`templates/\` + \`recipes/\`); workspace packages are private and bundled by tsup.
+- Workspace packages: ${publishedPackageList()}.
+- Node templates (shipped to users as starter apps): ${templateList()}. Their package.json versions become the generated project's versions.
+- Recipes: npm versions live in \`packages/ecosystem-node/src/registry/recipes/<id>.ts\` (\`defineRecipe\` → \`packages\`, \`devDependencies\`, \`overlayPackages\`, \`overlayDevDependencies\`) and are merged into generated projects; recipe files and \`fileTransforms\` patch template source.
+- Architecture: \`@zealakit/core\` is ecosystem-independent; \`@zealakit/ecosystem-node\` / \`@zealakit/ecosystem-go\` depend on it; \`apps/cli\` wires everything. Templates and recipes are data, never imported by kit code.
+- Tooling stack to consider: TypeScript, tsup, tsx, Biome, node:test, pnpm workspaces with \`minimumReleaseAge\`; template stacks (Vite + React/Vue/Svelte, Astro, Next.js, Nuxt, NestJS, Hono) and recipe stacks (UI kits, state, forms, ORMs, linters, Storybook).
+- Scan time: ${generatedAt}
+- Monitor summary (unique deps): total ${summary.total ?? "—"}, outdated ${summary.outdated ?? "—"}, up to date ${summary.upToDate ?? "—"}, registry errors ${summary.errors ?? "—"}.
+- Prompt scope: ${scopeNote} (${rows.length} row(s)).
+- Session mode: ${autoUpgrade ? "auto-upgrade — apply the upgrades yourself, majors allowed when the verification chain stays green" : "advisory only — inspect and recommend, do not write files"}.
+- Monitoring covers root package.json, apps/*, packages/*, templates/node/*, and recipe registry modules. dist/, .sandbox/, tests/ fixtures, and templates/go/** must never be modified.
+- This prompt was generated by the local Dependency Monitor. It does NOT mean source code was already inspected.
+
+## Inventory to review
+| Kind | Location | Package name | Dependency | Type | Declared | Resolved | Proposed target | Patch | Minor | Major | Latest | Status | Local |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+${inventory || "| — | — | — | — | — | — | — | — | — | — | — | — | — | — |"}
+
+## Required investigation
+${investigationIntro}
+
+1. Whether the project currently uses APIs affected by the proposed upgrade.
+2. Whether breaking changes exist between the declared/resolved version and the proposed target.
+3. Whether peer dependency constraints remain compatible (recipe packages vs the framework majors pinned in each template).
+4. Whether the upgrade affects other manifests (kit packages, other templates using the same dependency, recipes overlaying the template).
+5. Whether framework and build-tool versions remain compatible across templates (Vite, React/Vue/Svelte, Astro, Next.js, Nuxt, NestJS, Hono, TypeScript, Biome).
+6. For template upgrades: whether recipe overlays (\`recipes/node/<id>/overlays/<template>/\`) and \`fileTransforms\` regex patterns still match the template source, and the scaffold tests still pass.
+7. For kit packages: whether the tsup bundle (\`dist/index.js\`) and the packed tarball (\`pnpm test:pack\`) still work.
+8. Whether template \`AGENTS.md\` / \`.agents\` skills, recipe agent entries, README tables (EN/VI/CN), or docs need updates.
+9. ${autoUpgrade ? "What the concrete migration work is, and whether it can be completed in this session." : "Whether the upgrade should be performed now, postponed, or avoided."}
+
+${recommendationSection}
+
+${constraintsSection}
+`;
       }
 
       async function loadPackages() {
-        refreshBtn.setAttribute("aria-busy", "true");
-        refreshBtn.disabled = true;
-        setStatus("Fetching registry versions…");
+        const res = await fetch("/api/packages");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load packages");
+        state.packages = data.packages || [];
+      }
+
+      async function loadDependencies(refresh = false) {
+        els.loading.hidden = false;
+        els.sections.innerHTML = "";
+        els.refresh.disabled = true;
+        els.refresh.textContent = "Loading…";
+        showMessage("");
 
         try {
-          const res = await fetch("/api/packages");
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Failed to load packages");
-          applySortOrders(data.scopes, data.categories);
-          renderGroups(data.groups || []);
-          const outdated = (data.groups || []).reduce(
-            (sum, g) => sum + g.packages.filter((p) => p.needsUpdate).length,
-            0,
+          const res = await fetch(
+            refresh ? "/api/refresh" : "/api/dependencies",
+            refresh
+              ? {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: "{}",
+                }
+              : undefined,
           );
-          setStatus(
-            outdated
-              ? `Loaded ${(data.groups || []).length} groups · ${outdated} outdated`
-              : `Loaded ${(data.groups || []).length} groups · all up to date`,
-            outdated ? "" : "ok",
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to load dependencies");
+          state.rows = data.dependencies || [];
+          state.summary = data.summary || null;
+          state.ecosystems = data.summary?.ecosystems || ["node"];
+          renderFilters();
+          renderStats();
+          renderSections();
+          showMessage(
+            refresh
+              ? "Registry data refreshed."
+              : `Loaded ${state.rows.length} declarations across ${state.summary?.uniqueDependencies ?? 0} unique dependencies.`,
           );
         } catch (error) {
-          setStatus(error instanceof Error ? error.message : String(error), "error");
+          els.loading.textContent = error instanceof Error ? error.message : String(error);
+          showMessage(els.loading.textContent, "error");
         } finally {
-          refreshBtn.removeAttribute("aria-busy");
-          refreshBtn.disabled = false;
+          els.loading.hidden = true;
+          els.refresh.disabled = false;
+          els.refresh.textContent = "Refresh Data";
         }
       }
 
-      async function updatePackage(button) {
-        const filePath = button.dataset.file;
-        const packageName = button.dataset.name;
-        const newVersion = button.dataset.latest;
-        // Prefer data-dep-type; fall back to data-type (legacy).
-        const depType = button.dataset.depType || button.dataset.type;
-        const recipeId = button.dataset.recipeId || undefined;
-        const overlay = button.dataset.overlay || undefined;
+      els.refresh.addEventListener("click", () => {
+        void loadDependencies(true);
+      });
 
-        if (!filePath || !packageName || !newVersion || !depType) {
-          setStatus(
-            `Update aborted: missing data (file=${filePath || "?"} name=${packageName || "?"} latest=${newVersion || "?"} depType=${depType || "?"})`,
+      for (const el of [els.ecosystem, els.kind, els.package, els.search, els.outdated]) {
+        el.addEventListener("change", () => {
+          if (el === els.ecosystem || el === els.kind) renderFilters();
+          renderSections();
+        });
+        el.addEventListener("input", () => renderSections());
+      }
+
+      els.sections.addEventListener("click", (event) => {
+        const button = event.target.closest("button.update-one");
+        if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+        const row = rowById(button.dataset.id);
+        if (!row) return;
+        const targetVersion = selectedTarget(row.id);
+        if (!targetVersion) {
+          showMessage("Select a target version first.", "error");
+          return;
+        }
+        openConfirm([{ id: row.id, targetVersion }], isMajorBump(row, targetVersion));
+      });
+
+      els.updateAll.addEventListener("click", () => {
+        const rows = filteredRows().filter(canUpdate);
+        openBatchDialog(rows);
+      });
+
+      els.batchBody.addEventListener("click", (event) => {
+        const button = event.target.closest("button.batch-remove");
+        if (!(button instanceof HTMLButtonElement)) return;
+        state.batch = state.batch.filter((item) => item.id !== button.dataset.id);
+        renderBatchDialog();
+      });
+
+      els.batchBody.addEventListener("change", (event) => {
+        const select = event.target.closest("select.batch-target");
+        if (!(select instanceof HTMLSelectElement)) return;
+        const item = state.batch.find((entry) => entry.id === select.dataset.id);
+        if (item) item.targetVersion = select.value;
+      });
+
+      els.batchCancel.addEventListener("click", () => els.batchDialog.close());
+      els.batchConfirm.addEventListener("click", async () => {
+        const updates = state.batch.map((item) => {
+          const select = els.batchBody.querySelector(
+            `select.batch-target[data-id="${CSS.escape(item.id)}"]`,
+          );
+          return {
+            id: item.id,
+            targetVersion: select?.value || item.targetVersion,
+          };
+        });
+        const allowMajor = updates.some((item) =>
+          isMajorBump(rowById(item.id), item.targetVersion),
+        );
+        if (
+          allowMajor &&
+          !window.confirm("This batch includes major upgrades. Continue?")
+        ) {
+          return;
+        }
+        els.batchConfirm.disabled = true;
+        try {
+          els.batchDialog.close();
+          await executeUpdates(updates, allowMajor);
+        } catch (error) {
+          showMessage(error instanceof Error ? error.message : String(error), "error");
+        } finally {
+          els.batchConfirm.disabled = false;
+        }
+      });
+
+      els.confirmCancel.addEventListener("click", () => els.confirmDialog.close());
+      els.confirmOk.addEventListener("click", async () => {
+        els.confirmOk.disabled = true;
+        try {
+          els.confirmDialog.close();
+          await executeUpdates(state.pending, state.allowMajor);
+        } catch (error) {
+          showMessage(error instanceof Error ? error.message : String(error), "error");
+        } finally {
+          els.confirmOk.disabled = false;
+        }
+      });
+
+      function openPromptDialog(mode) {
+        const autoUpgrade = mode === "upgrade";
+        const selected = selectedIds().map(rowById).filter(Boolean);
+        const usingSelection = selected.length > 0;
+        const rows = usingSelection
+          ? selected.filter(isOutdated)
+          : filteredRows().filter(isOutdated);
+        if (rows.length === 0) {
+          showMessage(
+            usingSelection
+              ? "No outdated dependencies in the current selection."
+              : "No outdated dependencies in the current filter view.",
             "error",
           );
           return;
         }
-
-        button.classList.remove("is-error");
-        button.setAttribute("aria-busy", "true");
-        button.disabled = true;
-        setStatus(
-          filePath === "package.json"
-            ? `Updating ${packageName} + pnpm up (lockfile)…`
-            : `Updating ${packageName} in ${filePath}…`,
-        );
-
-        try {
-          const payload = { filePath, packageName, newVersion, depType };
-          if (recipeId) payload.recipeId = recipeId;
-          if (overlay) payload.overlay = overlay;
-
-          const res = await fetch("/api/update", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.error || `Update failed (${res.status})`);
-
-          const row = button.closest("tr");
-          if (row) {
-            const prefixMatch = row.querySelector(".current")?.textContent?.match(/^([~^])/);
-            const written = prefixMatch ? `${prefixMatch[1]}${newVersion}` : newVersion;
-            row.querySelector(".current").textContent = written;
-            row.querySelector(".latest").textContent = newVersion;
-            row.querySelector(".status-cell").innerHTML =
-              '<span class="status-ok">up-to-date</span>';
-            button.disabled = true;
-          }
-
-          setStatus(
-            data.lockfileSynced
-              ? `Updated ${packageName} → ${newVersion} (lockfile synced)`
-              : `Updated ${packageName} → ${newVersion}`,
-            "ok",
-          );
-        } catch (error) {
-          button.disabled = false;
-          button.classList.add("is-error");
-          setStatus(error instanceof Error ? error.message : String(error), "error");
-        } finally {
-          button.removeAttribute("aria-busy");
-        }
+        els.promptTitle.textContent = autoUpgrade ? "AI Auto-Upgrade Prompt" : "AI Check Prompt";
+        els.promptNote.textContent = autoUpgrade
+          ? "Copy into your AI coding assistant. It asks the agent to upgrade every listed dependency to the latest stable version (majors included), edit the manifests and recipe modules, run pnpm install, then verify with build/typecheck/test/check. The agent writes files; the monitor itself still does not."
+          : "Copy into your AI coding assistant. This does not update packages. Scope: selected outdated rows, otherwise outdated rows in the current filter view (includes each row’s selected target version).";
+        els.promptText.value = buildPrompt(rows, {
+          mode: autoUpgrade ? "upgrade" : "check",
+          scopeNote: usingSelection
+            ? "selected outdated rows"
+            : "outdated rows matching current filters",
+        });
+        els.promptDialog.showModal();
+        els.promptText.focus();
       }
 
-      refreshBtn.addEventListener("click", () => {
-        void loadPackages();
-      });
+      els.prompt.addEventListener("click", () => openPromptDialog("check"));
+      els.upgradePrompt.addEventListener("click", () => openPromptDialog("upgrade"));
 
-      groupsEl.addEventListener("click", (event) => {
-        const path = typeof event.composedPath === "function" ? event.composedPath() : [];
-        const fromPath = path.find(
-          (node) => node instanceof HTMLButtonElement && node.classList.contains("update"),
-        );
-        const fallbackTarget = event.target;
-        const fromTarget =
-          fallbackTarget instanceof Element
-            ? fallbackTarget.closest("button.update")
-            : fallbackTarget instanceof Node
-              ? fallbackTarget.parentElement?.closest("button.update")
-              : null;
-        const button = fromPath || fromTarget;
-        if (!(button instanceof HTMLButtonElement) || button.disabled) return;
-        event.preventDefault();
-        void updatePackage(button);
+      els.promptCopy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(els.promptText.value);
+          showMessage("AI prompt copied to clipboard.");
+        } catch {
+          els.promptText.select();
+          document.execCommand("copy");
+          showMessage("AI prompt selected for copy.");
+        }
       });
+      els.promptClose.addEventListener("click", () => els.promptDialog.close());
 
-      void loadPackages();
+      void (async () => {
+        try {
+          await loadPackages();
+          await loadDependencies(false);
+        } catch (error) {
+          showMessage(error instanceof Error ? error.message : String(error), "error");
+        }
+      })();
     </script>
   </body>
 </html>

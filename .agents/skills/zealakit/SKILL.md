@@ -137,7 +137,7 @@ Categories / scopes / discovery enums: always use / extend `packages/core/src/co
 - Match existing style in the file you edit; minimal diffs.
 - Recipe version pins live in `packages/ecosystem-node/src/registry/recipes/<id>.ts` (and template `package.json` for base deps).
 - After scaffold-behavior changes run `pnpm test` (seconds; filter with `pnpm test next mui`). `pnpm test:pack` is the release smoke test for the packed tarball.
-- Dependency UI for the kit: `pnpm monitor` (Root update runs `pnpm up`).
+- Dependency UI for the kit: `pnpm monitor` → http://127.0.0.1:4177 (root, apps, packages, Node templates, recipe registry; package.json updates run `pnpm install` and roll back on failure; recipe updates edit `registry/recipes/<id>.ts`). See `monitor/README.md`.
 
 ## Do / don’t
 
