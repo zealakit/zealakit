@@ -6,7 +6,9 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import { DISCOVERY_API_SCHEMA_VERSION, PACKAGE_ROOT } from "@zealakit/core/internal";
+
 import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));
@@ -256,30 +258,34 @@ describe("Discovery JSON request hardening", () => {
     assert.equal(fs.readFileSync(path.join(cwd, "my-app", "keep.txt"), "utf-8"), "user data");
   });
 
-  it("returns SCAFFOLD_FAILED with exit 1 when commit fails", {
-    skip:
-      process.platform === "win32" ||
-      (typeof process.getuid === "function" && process.getuid() === 0),
-  }, () => {
-    const cwd = caseDir();
-    fs.chmodSync(cwd, 0o500);
-    try {
-      const result = runJson(
-        cwd,
-        request("scaffold", {
-          selection: { templateId: "vite-react", recipeIds: [] },
-          project: { name: "my-app" },
-          confirmation: { confirmed: true },
-        }),
-      );
-      assert.equal(result.status, 1);
-      assert.equal(errorCode(result), "SCAFFOLD_FAILED");
-      assert.equal(result.stderr, "");
-      assert.deepEqual(fs.readdirSync(cwd), []);
-    } finally {
-      fs.chmodSync(cwd, 0o700);
-    }
-  });
+  it(
+    "returns SCAFFOLD_FAILED with exit 1 when commit fails",
+    {
+      skip:
+        process.platform === "win32" ||
+        (typeof process.getuid === "function" && process.getuid() === 0),
+    },
+    () => {
+      const cwd = caseDir();
+      fs.chmodSync(cwd, 0o500);
+      try {
+        const result = runJson(
+          cwd,
+          request("scaffold", {
+            selection: { templateId: "vite-react", recipeIds: [] },
+            project: { name: "my-app" },
+            confirmation: { confirmed: true },
+          }),
+        );
+        assert.equal(result.status, 1);
+        assert.equal(errorCode(result), "SCAFFOLD_FAILED");
+        assert.equal(result.stderr, "");
+        assert.deepEqual(fs.readdirSync(cwd), []);
+      } finally {
+        fs.chmodSync(cwd, 0o700);
+      }
+    },
+  );
 
   it("keeps recommendations and validation read-only", () => {
     const cwd = caseDir();

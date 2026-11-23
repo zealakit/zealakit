@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
+
 import { ExitCode, PACKAGE_ROOT } from "@zealakit/core/internal";
 import type { GoEnvironmentReport } from "@zealakit/ecosystem-go";
+
 import { type DoctorOptions, doctorExitCode } from "../../apps/cli/src/doctor.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");

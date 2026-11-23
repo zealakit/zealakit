@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import type { ScaffoldConfig } from "@zealakit/core/ecosystem";
 
 export function validateGoOutput(targetDir: string, config: ScaffoldConfig): string[] {

@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+
 import type { DiscoveryFeedbackPaths } from "./types.js";
 
 const CONFIG_DIR_ENV = "ZEALAKIT_CONFIG_DIR";

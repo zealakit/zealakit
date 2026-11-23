@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import { ScaffoldValidationError } from "../../diagnostics.js";
 import { HYBRID_ORM_WARNING, hybridOrmSelections } from "../../orm-warnings.js";
 import {

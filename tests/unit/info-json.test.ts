@@ -1,7 +1,9 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import { INFO_SCHEMA_VERSION } from "@zealakit/core/internal";
+
 import { buildInfoResponse, type InfoResponse } from "../../apps/cli/src/info.js";
 
 function containsFunction(value: unknown): boolean {

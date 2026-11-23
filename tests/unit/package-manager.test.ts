@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import { adaptRunCommand, detectPackageManager, getManifestAdapter } from "@zealakit/core/internal";
 
 describe("detectPackageManager", () => {

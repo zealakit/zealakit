@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import {
   assertStagingRealPath,
   emptyPackagePlan,
@@ -15,6 +16,7 @@ import {
   type ScaffoldConfig,
   type ValidationResult,
 } from "@zealakit/core/ecosystem";
+
 import { defaultRunCommand } from "../run-command.js";
 import { validateGoOutput } from "../validation/output.js";
 import { isValidGoProjectName } from "../validation/project-name.js";

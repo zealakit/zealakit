@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   applyAddPlan,
   checkProject,
@@ -12,6 +13,7 @@ import {
   parseProjectManifest,
   planAddRecipes,
 } from "@zealakit/core/internal";
+
 import { validateJsonSchema } from "../helpers/json-schema.js";
 
 /**

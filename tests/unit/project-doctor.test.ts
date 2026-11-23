@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   checkProject,
   compareKitVersions,
@@ -13,6 +14,7 @@ import {
   scaffoldProject,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { noColorEnv } from "../helpers/env.js";
 
 const require = createRequire(path.join(PACKAGE_ROOT, "package.json"));

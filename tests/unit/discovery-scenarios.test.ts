@@ -1,11 +1,13 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   matchDiscovery,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
 } from "@zealakit/core/internal";
+
 import {
   buildTemplateChoices,
   defaultSelectedRecipeIds,

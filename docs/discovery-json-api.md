@@ -93,7 +93,7 @@ scores come from the existing Discovery engine — nothing is recomputed here.
   "schemaVersion": 1,
   "operation": "validate",
   "answers": {},
-  "selection": { "templateId": "nest", "recipeIds": ["biome"] }
+  "selection": { "templateId": "nest", "recipeIds": ["biome"] },
 }
 ```
 
@@ -113,7 +113,7 @@ are written.
   "answers": { "projectType": "ui", "uiTechPreference": "react" },
   "selection": { "templateId": "vite-react", "recipeIds": [] },
   "project": { "name": "my-app", "directory": "./my-app" },
-  "confirmation": { "confirmed": true }
+  "confirmation": { "confirmed": true },
 }
 ```
 

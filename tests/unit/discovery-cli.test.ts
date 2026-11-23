@@ -3,12 +3,14 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
+
 import {
   ExitCode,
   matchDiscovery,
   normalizeDiscoveryAnswers,
   PACKAGE_ROOT,
 } from "@zealakit/core/internal";
+
 import {
   buildRecipeChoices,
   buildTemplateChoices,

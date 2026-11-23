@@ -1,5 +1,6 @@
 import { ExitCode, isPackageManager } from "@zealakit/core/internal";
 import type { Command } from "commander";
+
 import { failDiagnostic, printInfo, printValidationErrors } from "./output.js";
 import {
   formatPreset,

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, it } from "node:test";
+
 import {
   getAllRecipeIds,
   getAllTemplateIds,
@@ -13,6 +14,7 @@ import {
   PACKAGE_ROOT,
   RECIPE_CATEGORIES,
 } from "@zealakit/core/internal";
+
 import { buildInfoResponse, type InfoResponse } from "../../apps/cli/src/info.js";
 import { readKitManifest } from "../../apps/cli/src/manifest.js";
 import { forceColorEnv, noColorEnv } from "../helpers/env.js";

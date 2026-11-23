@@ -44,6 +44,7 @@ chọn template → chọn recipe → copy files
 | `RecipeCategory` | Nhóm recipe: `linter`, `state`, `ui`, `form`, `fetcher`, `orm`, `infrastructure`, `utils`, `testing`, `documentation` | `constants/recipe-categories.ts`        |
 
 `Scope` và `ProjectType` **khác nhau**:
+
 - `Scope` là thuộc tính của template (Next là `hybrid`, Nest là `server`).
 - `ProjectType` là nhánh ra quyết định của Discovery (UI, API, worker).
 - `complete-product` có trong enum nhưng **chưa hỗ trợ** (`SUPPORTED_PROJECT_TYPES` chỉ có 3 giá trị đầu).
@@ -911,6 +912,7 @@ pnpm test <filter...>   # lọc theo test name
 > Đây là source context của repo **zealakit** — một CLI scaffolding dựa trên recipe, không phải app frontend.
 > Hãy đọc kỹ các invariant ở mục 16 trước khi đề xuất code.
 > Khi trả lời:
+>
 > - Chỉ rõ file cần sửa và lý do.
 > - Không hardcode template/recipe id; dùng registry, `compat.ts`, profile.
 > - Không import ecosystem package từ `packages/core`.

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { adaptRunCommand, type PackageManager } from "../package-manager.js";
 import { getRecipe, getRecipeCategories, getTemplate } from "../registry/index.js";
 import type { EcosystemId, ScaffoldConfig, TemplateConfig } from "../types.js";

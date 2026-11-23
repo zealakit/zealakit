@@ -6,12 +6,14 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   ExitCode,
   PACKAGE_ROOT,
   ScaffoldValidationError,
   scaffoldProject,
 } from "@zealakit/core/internal";
+
 import { exitCodeForError } from "../../apps/cli/src/create.js";
 import { ScaffoldCommitError } from "../../packages/core/src/scaffold/commit.js";
 import { noColorEnv } from "../helpers/env.js";

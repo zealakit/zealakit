@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { ECOSYSTEMS } from "./constants.js";
 import { KIT_VERSION } from "./scaffold/paths.js";
 import type { EcosystemId, ExternalRecipeInfo } from "./types.js";

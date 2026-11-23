@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+
 import { ScaffoldValidationError } from "../diagnostics.js";
 import { fse } from "../fs-extra.js";
 import type { PackageManager } from "../package-manager.js";

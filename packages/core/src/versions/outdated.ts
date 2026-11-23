@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+
+import { readProjectManifest } from "../project-manifest.js";
 import { inferProjectName } from "../project/add.js";
 import { compareKitVersions } from "../project/checks.js";
-import { readProjectManifest } from "../project-manifest.js";
 import { getNpmManifest, getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.js";
 import { stagePlan } from "../scaffold/index.js";
 import { getManifestAdapter } from "../scaffold/manifest.js";

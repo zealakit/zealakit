@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.js";
 
 /** Works from `src/**` (tsx) and from the bundled `dist/index.js`. */

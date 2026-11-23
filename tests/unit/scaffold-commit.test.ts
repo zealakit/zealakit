@@ -4,7 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import { scaffoldProject } from "@zealakit/core/internal";
+
 import {
   type CommitFileSystem,
   commitStagedDirectory,
@@ -281,25 +283,29 @@ describe("commit failure and rollback", () => {
     }
   });
 
-  it("reports permission errors without modifying the existing target", {
-    skip:
-      process.platform === "win32" ||
-      (typeof process.getuid === "function" && process.getuid() === 0),
-  }, () => {
-    const parent = freshDir();
-    const target = path.join(parent, "app");
-    writeFile(target, "keep.txt", "user data");
-    const stage = createStage();
-    fs.chmodSync(parent, 0o500);
-    try {
-      const error = captureCommitError(() => commitStagedDirectory(stage, target));
-      assert.match(error.message, /Failed to create a commit directory|EACCES|permission/i);
-      assert.equal(readFile(target, "keep.txt"), "user data");
-    } finally {
-      fs.chmodSync(parent, 0o700);
-      cleanupStage(stage);
-    }
-  });
+  it(
+    "reports permission errors without modifying the existing target",
+    {
+      skip:
+        process.platform === "win32" ||
+        (typeof process.getuid === "function" && process.getuid() === 0),
+    },
+    () => {
+      const parent = freshDir();
+      const target = path.join(parent, "app");
+      writeFile(target, "keep.txt", "user data");
+      const stage = createStage();
+      fs.chmodSync(parent, 0o500);
+      try {
+        const error = captureCommitError(() => commitStagedDirectory(stage, target));
+        assert.match(error.message, /Failed to create a commit directory|EACCES|permission/i);
+        assert.equal(readFile(target, "keep.txt"), "user data");
+      } finally {
+        fs.chmodSync(parent, 0o700);
+        cleanupStage(stage);
+      }
+    },
+  );
 });
 
 describe("scaffoldProject commit integration", () => {

@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   API_TRAFFIC_EXPECTATIONS,
   getTemplateMatchDiagnostics,
@@ -10,6 +11,7 @@ import {
   type ProjectRequirements,
   resolveDiscoveryRequirements,
 } from "@zealakit/core/internal";
+
 import { buildTemplateChoices } from "../../apps/cli/src/discovery/present.js";
 
 function fromAnswers(

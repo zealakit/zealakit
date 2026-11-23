@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { fse } from "../fs-extra.js";
 import type { TemplateConfig } from "../types.js";
 import { TEMPLATE_SKIP_NAMES } from "./inventory.js";

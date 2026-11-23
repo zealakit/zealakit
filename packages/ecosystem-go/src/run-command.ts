@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+
 import type { RunCommand, RunCommandResult } from "./types.js";
 
 const DEFAULT_TIMEOUT_MS = 5_000;

@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+
 import { confirm, isCancel } from "@clack/prompts";
 import {
   type AddPlan,
@@ -18,6 +19,7 @@ import {
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+
 import {
   describeExternals,
   loadExternalSpecs,

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import {
   adaptRunCommand,
   getTemplate,
@@ -14,6 +15,7 @@ import {
   type ScaffoldConfig,
   type ValidationResult,
 } from "@zealakit/core/ecosystem";
+
 import { runCapture, runStreaming } from "../run-command.js";
 import { validateNpmOutput } from "../validation/output.js";
 import { validateProjectName } from "../validation/project-name.js";

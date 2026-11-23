@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import {
   checkProject,
   ExitCode,
@@ -13,6 +14,7 @@ import {
 } from "@zealakit/ecosystem-go";
 import { detectPythonEnvironment, type PythonEnvironmentReport } from "@zealakit/ecosystem-python";
 import pc from "picocolors";
+
 import { loadProjectExternals } from "./external.js";
 import { readKitManifest } from "./manifest.js";
 import { printInfo } from "./output.js";

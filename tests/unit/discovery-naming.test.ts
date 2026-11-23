@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   createProjectNaming,
   DISCOVERY_QUESTIONS,
@@ -8,6 +9,7 @@ import {
   type ScaffoldConfig,
 } from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
+
 import { formatDiscoverySummary } from "../../apps/cli/src/discovery/present.js";
 
 describe("discovery naming stage", () => {

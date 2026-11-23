@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   applyAgentEntry,
   applyFileTransforms,
@@ -19,6 +20,7 @@ import {
   type ScaffoldConfig,
 } from "@zealakit/core/internal";
 import { goManifestAdapter } from "@zealakit/ecosystem-go";
+
 import { walkFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
 

@@ -8,6 +8,7 @@ import {
   setDiscoveryFeedbackEnabled,
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
+
 import { failDiagnostic, printInfo } from "../output.js";
 import { registerDiscoveryQueryCommand } from "./query.js";
 

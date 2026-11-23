@@ -1,4 +1,5 @@
 import fs from "node:fs";
+
 import { getTemplateOverlayId } from "../registry/index.js";
 import type { RecipeConfig, RecipeFileTransform } from "../types.js";
 import { assertStagingRealPath, resolveStagingPath } from "./paths.js";

@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { ExitCode } from "@zealakit/core/internal";
 import type { Command } from "commander";
+
 import { serveMcp } from "../../mcp/src/server.js";
 import { readKitManifest } from "./manifest.js";
 import { failDiagnostic } from "./output.js";

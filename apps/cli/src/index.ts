@@ -14,6 +14,7 @@ import { registerGoEcosystem } from "@zealakit/ecosystem-go";
 import { registerNodeEcosystem } from "@zealakit/ecosystem-node";
 import { registerPythonEcosystem } from "@zealakit/ecosystem-python";
 import { Command, CommanderError } from "commander";
+
 import { registerAddCommand } from "./add.js";
 import { attachCreateOptions, runCreateAction } from "./create.js";
 import { registerDiscoveryCommands } from "./discovery/commands.js";

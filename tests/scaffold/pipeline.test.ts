@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   buildScaffoldPlan,
   executeScaffoldPlan,
@@ -23,6 +24,7 @@ import {
   validateGeneratedOutput,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { ScaffoldCommitError } from "../../packages/core/src/scaffold/commit.js";
 import { listRecipeFiles, listTemplateFiles } from "../../packages/core/src/scaffold/inventory.js";
 import { planPackageMerges } from "../../packages/ecosystem-node/src/manifest/package-plan.js";
@@ -514,29 +516,33 @@ describe("failure injection through the real pipeline", () => {
     assertStagesCleaned();
   });
 
-  it("keeps the existing target intact when commit fails", {
-    skip:
-      process.platform === "win32" ||
-      (typeof process.getuid === "function" && process.getuid() === 0),
-  }, async () => {
-    const cwd = caseDir();
-    const { config } = resolveGeneration("vite-react", []);
-    writeFile(cwd, `${config.projectName}/keep.txt`, "user data");
-    fs.chmodSync(cwd, 0o500);
-    try {
-      await assert.rejects(
-        () => scaffoldProject(config, cwd),
-        (error: unknown) =>
-          error instanceof ScaffoldCommitError &&
-          /Failed to create a commit directory|EACCES|permission/i.test(error.message),
-      );
-      assert.equal(readFile(cwd, `${config.projectName}/keep.txt`), "user data");
-    } finally {
-      fs.chmodSync(cwd, 0o700);
-    }
-    assertStagesCleaned();
-    assertCommitSiblingsClean(cwd);
-  });
+  it(
+    "keeps the existing target intact when commit fails",
+    {
+      skip:
+        process.platform === "win32" ||
+        (typeof process.getuid === "function" && process.getuid() === 0),
+    },
+    async () => {
+      const cwd = caseDir();
+      const { config } = resolveGeneration("vite-react", []);
+      writeFile(cwd, `${config.projectName}/keep.txt`, "user data");
+      fs.chmodSync(cwd, 0o500);
+      try {
+        await assert.rejects(
+          () => scaffoldProject(config, cwd),
+          (error: unknown) =>
+            error instanceof ScaffoldCommitError &&
+            /Failed to create a commit directory|EACCES|permission/i.test(error.message),
+        );
+        assert.equal(readFile(cwd, `${config.projectName}/keep.txt`), "user data");
+      } finally {
+        fs.chmodSync(cwd, 0o700);
+      }
+      assertStagesCleaned();
+      assertCommitSiblingsClean(cwd);
+    },
+  );
 });
 
 describe("single plan pipeline", () => {

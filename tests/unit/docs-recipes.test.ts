@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   DOCS_PROFILE_FILE,
   docsLayoutForTemplate,
@@ -12,6 +13,7 @@ import {
   getTemplate,
   RECIPE_CATEGORIES,
 } from "@zealakit/core/internal";
+
 import { scaffold } from "../helpers/scaffold.js";
 
 type DocsProfile = {

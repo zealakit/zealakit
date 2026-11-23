@@ -4,7 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import { computeOutdated, scaffoldProject, withDefaultRecipes } from "@zealakit/core/internal";
+
 import { parseGoRequires } from "../../packages/core/src/versions/outdated.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-outdated-"));

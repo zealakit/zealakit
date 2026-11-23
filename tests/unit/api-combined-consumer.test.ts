@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import { createZealakit, type EcosystemRegistration, ScaffoldCommitError } from "@zealakit/core";
 import { goEcosystem } from "@zealakit/ecosystem-go";
 import { nodeEcosystem } from "@zealakit/ecosystem-node";
@@ -65,26 +66,30 @@ describe("programmatic API — combined registration", () => {
     assert.equal(fs.existsSync(path.join(cwd, "app")), false);
   });
 
-  it("propagates commit failures without leaving partial output", {
-    skip:
-      process.platform === "win32" ||
-      (typeof process.getuid === "function" && process.getuid() === 0),
-  }, async () => {
-    const zealakit = createZealakit({ ecosystems: [nodeEcosystem] });
-    const cwd = caseDir();
-    fs.chmodSync(cwd, 0o500);
-    try {
-      await assert.rejects(
-        () =>
-          zealakit.scaffold.create(
-            { projectName: "app", templateId: "vite-react", recipeIds: [] },
-            { cwd },
-          ),
-        ScaffoldCommitError,
-      );
-      assert.equal(fs.existsSync(path.join(cwd, "app")), false);
-    } finally {
-      fs.chmodSync(cwd, 0o700);
-    }
-  });
+  it(
+    "propagates commit failures without leaving partial output",
+    {
+      skip:
+        process.platform === "win32" ||
+        (typeof process.getuid === "function" && process.getuid() === 0),
+    },
+    async () => {
+      const zealakit = createZealakit({ ecosystems: [nodeEcosystem] });
+      const cwd = caseDir();
+      fs.chmodSync(cwd, 0o500);
+      try {
+        await assert.rejects(
+          () =>
+            zealakit.scaffold.create(
+              { projectName: "app", templateId: "vite-react", recipeIds: [] },
+              { cwd },
+            ),
+          ScaffoldCommitError,
+        );
+        assert.equal(fs.existsSync(path.join(cwd, "app")), false);
+      } finally {
+        fs.chmodSync(cwd, 0o700);
+      }
+    },
+  );
 });

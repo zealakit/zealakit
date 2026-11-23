@@ -150,10 +150,10 @@ export const DISCOVERY_QUESTIONS: readonly DiscoveryQuestion[] = [
     condition: (answers) =>
       Boolean(
         isUi(answers) &&
-          (INTERACTIVE_UI.has(answers.websiteKind as string) ||
-            answers.visitorActions?.some((action) =>
-              ["sign-in", "manage-information", "make-purchases"].includes(action),
-            )),
+        (INTERACTIVE_UI.has(answers.websiteKind as string) ||
+          answers.visitorActions?.some((action) =>
+            ["sign-in", "manage-information", "make-purchases"].includes(action),
+          )),
       ),
   },
   {
@@ -179,14 +179,14 @@ export const DISCOVERY_QUESTIONS: readonly DiscoveryQuestion[] = [
     condition: (answers) =>
       Boolean(
         isUi(answers) &&
-          (INTERACTIVE_UI.has(answers.websiteKind as string) ||
-            answers.visitorActions?.some((action) =>
-              ["manage-information", "submit-forms", "make-purchases", "upload-files"].includes(
-                action,
-              ),
-            ) ||
-            answers.userAccounts === "sign-in" ||
-            answers.userAccounts === "roles"),
+        (INTERACTIVE_UI.has(answers.websiteKind as string) ||
+          answers.visitorActions?.some((action) =>
+            ["manage-information", "submit-forms", "make-purchases", "upload-files"].includes(
+              action,
+            ),
+          ) ||
+          answers.userAccounts === "sign-in" ||
+          answers.userAccounts === "roles"),
       ),
   },
   {
@@ -214,12 +214,12 @@ export const DISCOVERY_QUESTIONS: readonly DiscoveryQuestion[] = [
     condition: (answers) =>
       Boolean(
         isUi(answers) &&
-          (answers.uiDataNeed === "store-retrieve" ||
-            answers.uiDataNeed === "user-managed" ||
-            answers.userAccounts === "sign-in" ||
-            answers.userAccounts === "roles" ||
-            answers.visitorActions?.includes("call-existing-api") ||
-            answers.visitorActions?.includes("manage-information")),
+        (answers.uiDataNeed === "store-retrieve" ||
+          answers.uiDataNeed === "user-managed" ||
+          answers.userAccounts === "sign-in" ||
+          answers.userAccounts === "roles" ||
+          answers.visitorActions?.includes("call-existing-api") ||
+          answers.visitorActions?.includes("manage-information")),
       ),
   },
   {
@@ -336,9 +336,9 @@ export const DISCOVERY_QUESTIONS: readonly DiscoveryQuestion[] = [
     condition: (answers) =>
       Boolean(
         isServer(answers) &&
-          (answers.serviceGoals?.includes("manage-accounts") ||
-            answers.apiStorageNeed === "relational" ||
-            answers.apiStorageNeed === "both"),
+        (answers.serviceGoals?.includes("manage-accounts") ||
+          answers.apiStorageNeed === "relational" ||
+          answers.apiStorageNeed === "both"),
       ),
   },
   {
@@ -419,8 +419,8 @@ export const DISCOVERY_QUESTIONS: readonly DiscoveryQuestion[] = [
     condition: (answers) =>
       Boolean(
         (isServer(answers) || isWorker(answers)) &&
-          answers.backendRuntime &&
-          answers.backendRuntime !== NO_PREFERENCE,
+        answers.backendRuntime &&
+        answers.backendRuntime !== NO_PREFERENCE,
       ),
   },
 

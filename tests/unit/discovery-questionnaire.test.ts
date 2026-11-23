@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   DISCOVERY_QUESTIONS,
   type DiscoveryAnswers,
@@ -119,7 +120,9 @@ describe("discovery questionnaire branching", () => {
 
   it("shows account and data questions only for interactive UI intents", () => {
     const marketing = new Set(
-      getVisibleQuestions({ projectType: "ui", websiteKind: "business-marketing" }).map((q) => q.id),
+      getVisibleQuestions({ projectType: "ui", websiteKind: "business-marketing" }).map(
+        (q) => q.id,
+      ),
     );
     assert.ok(!marketing.has("userAccounts"));
     assert.ok(!marketing.has("uiDataNeed"));

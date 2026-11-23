@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+
 import { templateSuite } from "../helpers/cases.js";
 
 templateSuite("next", {

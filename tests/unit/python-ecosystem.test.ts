@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   applyAddPlan,
   checkProject,
@@ -14,6 +15,7 @@ import {
   validateScaffoldConfig,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { composeFor } from "../../packages/ecosystem-python/src/registry/recipes/docker-python.js";
 import { renderPythonWorkflow } from "../../packages/ecosystem-python/src/registry/recipes/github-actions-python.js";
 import {

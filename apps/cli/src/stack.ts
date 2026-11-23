@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+
 import {
   buildStackPlan,
   detectPackageManager,
@@ -13,6 +14,7 @@ import {
   type StackPlan,
 } from "@zealakit/core/internal";
 import pc from "picocolors";
+
 import type { CliOptions } from "./options.js";
 import {
   failDiagnostic,

@@ -27,7 +27,7 @@
     // Nested helpers that capture context read better than hoisted ones.
     "unicorn/consistent-function-scoping": "off",
     // Sequential I/O is deliberate (ordering, rate limits); Promise.all would change behavior.
-    "eslint/no-await-in-loop": "off",
+    "eslint/no-await-in-loop": "off"
   },
   "overrides": [
     {
