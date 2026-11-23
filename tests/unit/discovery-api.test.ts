@@ -84,7 +84,7 @@ describe("Discovery API — questions", () => {
       assert.ok(question);
       const value = question.type === "multi-select" ? [] : question.options[0]?.value;
       assert.ok(value !== undefined, `${question.id} has no options`);
-      answers = { ...answers, [question.id]: value };
+      answers[question.id] = value;
       steps += 1;
     }
     assert.ok(steps < 40, "question flow should complete");

@@ -73,8 +73,7 @@ async function packCli(): Promise<string> {
   const tarballPath = output
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.endsWith(".tgz"))
-    .pop();
+    .find((line) => line.endsWith(".tgz"));
   if (!tarballPath) {
     throw new Error("Could not determine tarball path from pnpm pack output.");
   }

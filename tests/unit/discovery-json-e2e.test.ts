@@ -31,8 +31,8 @@ type CliResult = {
   stderr: string;
 };
 
-function runJson(cwd: string, request: unknown): CliResult {
-  const input = typeof request === "string" ? request : JSON.stringify(request);
+function runJson(cwd: string, body: unknown): CliResult {
+  const input = typeof body === "string" ? body : JSON.stringify(body);
   const result = spawnSync(
     process.execPath,
     ["--import", TSX_LOADER, CLI_ENTRY, "create", "--discover", "--json"],

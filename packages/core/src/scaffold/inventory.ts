@@ -127,7 +127,7 @@ export function listRecipeFiles(
         ? (relative: string) => RECIPE_META_DIRS.has(relative.split("/")[0] ?? "")
         : undefined;
     for (const [relative, absolutePath] of walkFiles(root, {
-      skip: skipMeta ? (relative) => skipMeta(relative) : undefined,
+      skip: skipMeta ? (candidate) => skipMeta(candidate) : undefined,
     })) {
       let targetRelative = mapRelative(relative);
       // Fold recipe `src/` into template.srcDir (Nuxt → `app/`).

@@ -81,7 +81,8 @@ function npmSource(
   templateId: string,
 ): string {
   const overlay = getTemplateOverlayId(templateId);
-  for (const id of [...recipeIds].reverse()) {
+  for (let index = recipeIds.length - 1; index >= 0; index -= 1) {
+    const id = recipeIds[index] as string;
     const npm = getNpmManifest(getRecipe(id) ?? ({ manifest: { ecosystem: "go" } } as never));
     if (!npm) continue;
     const own = field === "dependencies" ? npm.packages : npm.devDependencies;
@@ -95,7 +96,8 @@ function npmSource(
 }
 
 function adapterSource(name: string, recipeIds: string[], templateId: string): string {
-  for (const id of [...recipeIds].reverse()) {
+  for (let index = recipeIds.length - 1; index >= 0; index -= 1) {
+    const id = recipeIds[index] as string;
     const manifest = getRecipe(id)?.manifest;
     if (manifest?.ecosystem === "python") {
       const key = name.toLowerCase();

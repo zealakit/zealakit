@@ -52,6 +52,7 @@ function readConfigFile(file: string): ConfigFile {
   } catch (error) {
     throw new Error(
       `${file} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
   const root = (json ?? {}) as { presets?: unknown; defaults?: unknown };

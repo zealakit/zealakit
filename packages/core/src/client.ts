@@ -162,11 +162,11 @@ export function createZealakit(options: ZealakitOptions = {}): Zealakit {
       getRecipes: (filter = {}) => getRecipeMetadata(filter),
     },
     discovery: {
-      async getQuestions(options = {}) {
+      async getQuestions(queryOptions = {}) {
         const response = await handleDiscoveryRequest({
           schemaVersion: DISCOVERY_API_SCHEMA_VERSION,
           operation: "questions",
-          answers: options.answers ?? {},
+          answers: queryOptions.answers ?? {},
         });
         return unwrap<DiscoveryQuestionsData>(response, "questions");
       },

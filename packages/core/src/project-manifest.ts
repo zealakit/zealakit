@@ -109,12 +109,15 @@ export function parseProjectManifest(json: unknown): ProjectManifestParse {
         `${PROJECT_MANIFEST_FILE} field 'externalRecipes' must be an array of { id, source, ref?, sha? }.`,
       );
     } else {
-      externalRecipes = (list as Array<Record<string, unknown>>).map((item) => ({
-        id: item.id as string,
-        source: item.source as string,
-        ...(typeof item.ref === "string" ? { ref: item.ref } : {}),
-        ...(typeof item.sha === "string" ? { sha: item.sha } : {}),
-      }));
+      externalRecipes = (list as Array<Record<string, unknown>>).map((item) => {
+        const entry: ExternalRecipeInfo & { id: string } = {
+          id: item.id as string,
+          source: item.source as string,
+        };
+        if (typeof item.ref === "string") entry.ref = item.ref;
+        if (typeof item.sha === "string") entry.sha = item.sha;
+        return entry;
+      });
     }
   }
   if (errors.length > 0) {

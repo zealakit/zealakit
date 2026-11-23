@@ -65,33 +65,33 @@ describe("discovery questionnaire branching", () => {
   });
 
   it("UI selection only activates UI questions", () => {
-    const ids = getVisibleQuestions({ projectType: "ui" }).map((q) => q.id);
-    assert.ok(ids.includes("websiteKind"));
-    assert.ok(ids.includes("visitorActions"));
-    assert.ok(ids.includes("contentChangeFrequency"));
-    assert.ok(ids.includes("uiTechPreference"));
-    assert.ok(!ids.includes("serviceGoals"));
-    assert.ok(!ids.includes("workerTasks"));
-    assert.ok(!ids.includes("backendRuntime"));
+    const ids = new Set(getVisibleQuestions({ projectType: "ui" }).map((q) => q.id));
+    assert.ok(ids.has("websiteKind"));
+    assert.ok(ids.has("visitorActions"));
+    assert.ok(ids.has("contentChangeFrequency"));
+    assert.ok(ids.has("uiTechPreference"));
+    assert.ok(!ids.has("serviceGoals"));
+    assert.ok(!ids.has("workerTasks"));
+    assert.ok(!ids.has("backendRuntime"));
   });
 
   it("Server/API selection only activates server questions", () => {
-    const ids = getVisibleQuestions({ projectType: "server-api" }).map((q) => q.id);
-    assert.ok(ids.includes("serviceGoals"));
-    assert.ok(ids.includes("apiStorageNeed"));
-    assert.ok(ids.includes("apiTrafficExpectation"));
-    assert.ok(ids.includes("backendRuntime"));
-    assert.ok(!ids.includes("websiteKind"));
-    assert.ok(!ids.includes("workerTasks"));
+    const ids = new Set(getVisibleQuestions({ projectType: "server-api" }).map((q) => q.id));
+    assert.ok(ids.has("serviceGoals"));
+    assert.ok(ids.has("apiStorageNeed"));
+    assert.ok(ids.has("apiTrafficExpectation"));
+    assert.ok(ids.has("backendRuntime"));
+    assert.ok(!ids.has("websiteKind"));
+    assert.ok(!ids.has("workerTasks"));
   });
 
   it("Worker selection only activates worker questions", () => {
-    const ids = getVisibleQuestions({ projectType: "background-worker" }).map((q) => q.id);
-    assert.ok(ids.includes("workerTasks"));
-    assert.ok(ids.includes("workerSchedule"));
-    assert.ok(ids.includes("backendRuntime"));
-    assert.ok(!ids.includes("websiteKind"));
-    assert.ok(!ids.includes("serviceGoals"));
+    const ids = new Set(getVisibleQuestions({ projectType: "background-worker" }).map((q) => q.id));
+    assert.ok(ids.has("workerTasks"));
+    assert.ok(ids.has("workerSchedule"));
+    assert.ok(ids.has("backendRuntime"));
+    assert.ok(!ids.has("websiteKind"));
+    assert.ok(!ids.has("serviceGoals"));
   });
 
   it("Complete Product has no follow-up questions and a clear message", () => {
@@ -118,19 +118,19 @@ describe("discovery questionnaire branching", () => {
   });
 
   it("shows account and data questions only for interactive UI intents", () => {
-    const marketing = getVisibleQuestions({
-      projectType: "ui",
-      websiteKind: "business-marketing",
-    }).map((q) => q.id);
-    assert.ok(!marketing.includes("userAccounts"));
-    assert.ok(!marketing.includes("uiDataNeed"));
+    const marketing = new Set(
+      getVisibleQuestions({ projectType: "ui", websiteKind: "business-marketing" }).map((q) => q.id),
+    );
+    assert.ok(!marketing.has("userAccounts"));
+    assert.ok(!marketing.has("uiDataNeed"));
 
-    const dashboard = getVisibleQuestions({
-      projectType: "ui",
-      websiteKind: "management-dashboard",
-    }).map((q) => q.id);
-    assert.ok(dashboard.includes("userAccounts"));
-    assert.ok(dashboard.includes("uiDataNeed"));
+    const dashboard = new Set(
+      getVisibleQuestions({ projectType: "ui", websiteKind: "management-dashboard" }).map(
+        (q) => q.id,
+      ),
+    );
+    assert.ok(dashboard.has("userAccounts"));
+    assert.ok(dashboard.has("uiDataNeed"));
   });
 
   it("shows auth follow-up for APIs that manage accounts or structured data", () => {

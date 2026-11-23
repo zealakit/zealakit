@@ -194,7 +194,7 @@ function matchRecipes(
   }
 
   // Promote required dependencies of chosen recipes
-  for (const recipeId of [...recommendedRecipeIds]) {
+  for (const recipeId of recommendedRecipeIds) {
     const profile = profileById.get(recipeId);
     if (!profile) continue;
     for (const dep of profile.dependsOn) {

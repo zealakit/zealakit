@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "env": { "node": true, "es2024": true },
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "templates",
+    "recipes",
+    ".agents",
+    ".cursor",
+    ".sandbox",
+    ".temp",
+    "coverage",
+    "tests/fixtures"
+  ],
+  "rules": {
+    // Side-effect imports (CSS, test registration) are intentional here.
+    "import/no-unassigned-import": "off",
+    // In-place sort on locally-owned arrays is deliberate (hot paths, no copies).
+    "unicorn/no-array-sort": "off",
+    // Nested helpers that capture context read better than hoisted ones.
+    "unicorn/consistent-function-scoping": "off",
+    // Sequential I/O is deliberate (ordering, rate limits); Promise.all would change behavior.
+    "eslint/no-await-in-loop": "off",
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "eslint/no-underscore-dangle": "off",
+        "typescript/no-non-null-assertion": "off"
+      }
+    }
+  ]
+}

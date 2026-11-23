@@ -61,11 +61,12 @@ async function runStep(
       options: [
         ...options.map((recipe) => {
           const hint = recipeOptionHint(recipe);
-          return {
+          const entry: { value: string; label: string; hint?: string } = {
             value: recipe.id,
             label: recipe.name,
-            ...(hint ? { hint } : {}),
           };
+          if (hint) entry.hint = hint;
+          return entry;
         }),
         { value: NONE, label: step.noneLabel },
       ],

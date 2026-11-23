@@ -33,9 +33,12 @@
   "scripts": {
     "build": "tsup && tsc -p apps/api/tsconfig.build.json",
     "dev": "tsup --watch",
-    "check": "biome check .",
-    "check:write": "biome check --write .",
-    "format": "biome format --write .",
+    "lint": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "check": "pnpm lint && pnpm fmt:check",
+    "check:write": "oxlint --fix && oxfmt",
     "check:exports": "tsx scripts/check-exports.ts",
     "check:skills": "tsx scripts/sync-shared-skills.ts --check",
     "sync:skills": "tsx scripts/sync-shared-skills.ts",
@@ -88,7 +91,6 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.4",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.6.6",
     "@zealakit/cli": "workspace:*",
@@ -96,6 +98,8 @@
     "@zealakit/ecosystem-go": "workspace:*",
     "@zealakit/ecosystem-node": "workspace:*",
     "@zealakit/ecosystem-python": "workspace:*",
+    "oxfmt": "~0.79.0",
+    "oxlint": "^1.94.0",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

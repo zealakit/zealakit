@@ -131,12 +131,12 @@ describe("metadata retrieval", () => {
     const template = info.data.templates[0];
     assert.ok(template);
     template.discovery?.capabilities.push("database");
-    template.compatibleRecipes.push("__mutated__");
+    template.compatibleRecipes.push("mutated");
 
     const recipe = info.data.recipes[0];
     assert.ok(recipe);
-    recipe.packages.__mutated__ = "0.0.0";
-    recipe.discovery?.conflicts.push("__mutated__");
+    recipe.packages.mutated = "0.0.0";
+    recipe.discovery?.conflicts.push("mutated");
 
     assert.ok(!resolveTemplateProfile(template.id)?.capabilities.includes("database"));
     assert.deepEqual(getNpmManifest(getRecipe(recipe.id) as RecipeConfig)?.packages, {});
@@ -268,10 +268,10 @@ describe("metadata filtering", () => {
     );
 
     const httpApi = getInfo({ capability: "http-api" });
-    const httpApiTemplateIds = httpApi.data.templates.map((template) => template.id);
-    assert.ok(httpApiTemplateIds.includes("stdlib-api"));
-    assert.ok(httpApiTemplateIds.includes("gin-api"));
-    assert.ok(httpApiTemplateIds.includes("nest"));
+    const httpApiTemplateIds = new Set(httpApi.data.templates.map((template) => template.id));
+    assert.ok(httpApiTemplateIds.has("stdlib-api"));
+    assert.ok(httpApiTemplateIds.has("gin-api"));
+    assert.ok(httpApiTemplateIds.has("nest"));
   });
 
   it("combines filters with AND semantics", () => {
