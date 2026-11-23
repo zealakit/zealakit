@@ -33,8 +33,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check code quality
-        run: pnpm check
+      - name: Lint
+        run: pnpm exec oxlint --deny-warnings --format github
+
+      - name: Format check
+        run: pnpm fmt:check
 
       - name: Check docs
         run: pnpm docs:check

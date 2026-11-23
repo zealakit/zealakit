@@ -790,7 +790,7 @@ Recipe có thể có `finalize(targetDir)` chạy sau tất cả recipe copy; d�
 ## 15. Testing & quality gates
 
 ```bash
-pnpm check        # Biome (lint + format, gồm markdown table)
+pnpm check        # Oxlint + Oxfmt (lint + format)
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
 pnpm test         # unit + scaffold in-process
 pnpm test:unit

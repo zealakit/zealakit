@@ -19,6 +19,7 @@ All notable changes. During the beta, contract-affecting changes are listed unde
 
 ### Changed
 
+- The kit repository uses **Oxlint + Oxfmt** instead of Biome (`pnpm check`, `pnpm lint:fix`, `pnpm fmt`). Generated projects are unchanged; the `biome` recipe still ships Biome.
 - `@zealakit/core` is split into `.`, `./ecosystem` and `./internal`; core no longer prompts, colors output or exits.
 - `-y` now documents "non-interactive, refuses a non-empty target"; `--force` overwrites.
 

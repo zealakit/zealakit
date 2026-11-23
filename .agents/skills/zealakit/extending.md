@@ -65,7 +65,7 @@ fileTransforms: {
 ## Verify
 
 ```bash
-pnpm check          # biome
+pnpm check          # Oxlint + Oxfmt
 pnpm typecheck      # packages, apps, tests, scripts, monitor
 pnpm test           # unit + in-process scaffold tests (seconds)
 pnpm test next mui  # only tests whose names match "next" or "mui"

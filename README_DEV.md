@@ -174,6 +174,20 @@ Build output is generated; do not edit it by hand.
 - After changing the JSON shape, bump `INFO_SCHEMA_VERSION` and update
   `docs/internal/metadata-query-layer.md` and `scripts/test-e2e-pack.ts`.
 
+## Editor setup
+
+The kit lints with **Oxlint** and formats with **Oxfmt**.
+
+- Install the Oxc VS Code extension (`oxc.oxc-vscode`); `.vscode/extensions.json`
+  recommends it.
+- Format on save is enabled in `.vscode/settings.json`; Oxfmt reads
+  `.oxfmtrc.json` (100 columns, 2 spaces, double quotes, sorted imports).
+- Oxlint reads `.oxlintrc.json`. Rules that conflict with house style are
+  disabled with a one-line reason next to them — add a reason, not a silent
+  override.
+- Type-aware linting is not enabled: `pnpm typecheck` already runs `tsc` over
+  every workspace package.
+
 ## Programmatic API
 
 `@zealakit/core` exposes `createZealakit()` for TypeScript consumers (metadata,
@@ -188,7 +202,9 @@ See [docs/release.md](docs/release.md) for the repeatable release checklist.
 ## Verification
 
 ```bash
-pnpm check        # Biome (includes markdown table formatting)
+pnpm check        # Oxlint + Oxfmt (lint + format check)
+pnpm lint:fix     # apply Oxlint fixes
+pnpm fmt          # rewrite files with Oxfmt
 pnpm docs:check   # README layout / links / translation parity
 pnpm check:skills # repo-docs skill copies match recipes/_shared
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
