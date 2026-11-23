@@ -81,7 +81,7 @@ describe("recipe profile registry", () => {
     assert.ok(resolved);
     assert.deepEqual(resolved.capabilities, []);
     assert.deepEqual(resolved.categories, ["linter"]);
-    assert.deepEqual(resolved.conflicts.sort(), ["eslint"]);
+    assert.deepEqual(resolved.conflicts.sort(), ["eslint", "oxc"]);
     assert.deepEqual(resolved.dependsOn, []);
   });
 

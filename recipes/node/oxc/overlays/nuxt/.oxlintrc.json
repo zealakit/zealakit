@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "vue"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "dist",
+    "build",
+    ".next",
+    ".nuxt",
+    ".output",
+    ".svelte-kit",
+    ".astro",
+    "storybook-static",
+    "coverage",
+    "node_modules",
+    ".agents",
+    "zealakit.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "bun.lockb"
+  ],
+  "rules": {
+    "import/no-unassigned-import": "off",
+    "unicorn/no-empty-file": "off",
+    "unicorn/require-module-specifiers": "off"
+  }
+}

@@ -16,6 +16,7 @@ import mui from "./mui.js";
 import nanostores from "./nanostores.js";
 import nestAuth from "./nest-auth.js";
 import nuxtUi from "./nuxt-ui.js";
+import oxc from "./oxc.js";
 import pinia from "./pinia.js";
 import prisma from "./prisma.js";
 import shadcnUi from "./shadcn-ui.js";
@@ -29,6 +30,7 @@ import zustand from "./zustand.js";
 
 /** Registration order = prompt option order. One module per recipe: `./<id>.ts`. */
 export const RECIPE_LIST: RecipeConfig[] = [
+  oxc,
   biome,
   eslint,
   zustand,

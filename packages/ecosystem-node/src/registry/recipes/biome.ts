@@ -26,7 +26,7 @@ export default defineRecipe({
   id: "biome",
   discovery: { capabilities: [], alwaysRelevant: true },
   name: "Biome",
-  hint: "Fast, all-in-one — recommended",
+  hint: "Fast, all-in-one",
   category: "linter",
   supportedScopes: ["client", "server", "hybrid"],
   exclusive: true,

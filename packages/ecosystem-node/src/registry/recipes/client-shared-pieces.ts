@@ -21,9 +21,9 @@ export default defineRecipe({
     "vite-vue": [
       {
         file: "src/main.ts",
-        pattern: /import \{ createApp \} from "vue";/,
+        pattern: /import router from "\.\/app\/router";/,
         replacement:
-          'import { createApp } from "vue";\nimport { installI18n } from "./configs/i18n";',
+          'import router from "./app/router";\nimport { installI18n } from "./configs/i18n";',
       },
       {
         file: "src/main.ts",

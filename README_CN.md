@@ -72,14 +72,14 @@ npm run dev
 ### 非交互模式
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w oxc,drizzle-orm -y
 ```
 
 ### 预览（不写入）
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook --dry-run
 ```
 
 - 不带 `-w` / `-y` 时进入交互流程。
@@ -292,6 +292,7 @@ CLI、JSON 输出与 `zealakit.json` 由契约测试和 `schema/` 中的 JSON Sc
 
 | Recipe                  | 分类           | 适用模板                                | 内容                                                       |
 | ----------------------- | -------------- | --------------------------------------- | ---------------------------------------------------------- |
+| `oxc`                   | Linter         | 全部                                    | Oxlint + Oxfmt（快速 lint + format）                       |
 | `biome`                 | Linter         | 全部                                    | Lint + Format 脚本                                         |
 | `eslint`                | Linter         | 全部                                    | ESLint flat config                                         |
 | `zustand`               | State          | Vite React、Astro、Next                 | Zustand 示例                                               |

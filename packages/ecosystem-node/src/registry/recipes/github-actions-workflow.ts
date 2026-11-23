@@ -46,7 +46,9 @@ export function renderNodeWorkflow(context: NodeWorkflowContext): string {
   }
   steps.push("      - name: Install dependencies", `        run: ${installStep(pm)}`);
 
-  if (recipeIds.includes("biome")) {
+  if (recipeIds.includes("oxc")) {
+    steps.push("      - name: Lint + format (Oxc)", `        run: ${script(pm, "check")}`);
+  } else if (recipeIds.includes("biome")) {
     steps.push("      - name: Lint (Biome)", `        run: ${script(pm, "check")}`);
   } else if (recipeIds.includes("eslint")) {
     steps.push("      - name: Lint (ESLint)", `        run: ${script(pm, "lint")}`);

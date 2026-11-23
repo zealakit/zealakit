@@ -13,9 +13,6 @@ const { list, create, filter, can, isCommonLoading } = useFeatureAShell();
     <button v-if="can('create')" type="button" @click="create.open()">
       {{ create.title ?? "Create" }}
     </button>
-    <p>
-      Page {{ list.page }} / {{ list.limit
-      }}{{ isCommonLoading ? " — loading" : "" }}
-    </p>
+    <p>Page {{ list.page }} / {{ list.limit }}{{ isCommonLoading ? " — loading" : "" }}</p>
   </div>
 </template>

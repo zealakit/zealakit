@@ -55,6 +55,16 @@ jobs:
     );
   });
 
+  it("oxc runs the combined lint + format check", () => {
+    const yaml = renderNodeWorkflow({
+      packageManager: "npm",
+      templateId: "vite-react",
+      recipeIds: ["oxc"],
+    });
+    assert.match(yaml, /- name: Lint \+ format \(Oxc\)/);
+    assert.match(yaml, /run: npm run check/);
+  });
+
   it("pnpm enables corepack and uses pnpm commands", () => {
     const yaml = renderNodeWorkflow({
       packageManager: "pnpm",

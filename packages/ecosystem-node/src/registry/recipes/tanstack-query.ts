@@ -3,7 +3,7 @@ import { defineRecipe } from "./define.js";
 const VUE_IMPORT = {
   pattern: /import \{ createApp \} from "vue";/,
   replacement:
-    'import { createApp } from "vue";\nimport { VueQueryPlugin } from "@tanstack/vue-query";',
+    'import { VueQueryPlugin } from "@tanstack/vue-query";\nimport { createApp } from "vue";',
 };
 
 export default defineRecipe({

@@ -23,11 +23,14 @@ describe("prompt labels", () => {
   });
 
   it("includes recipe hints and dependsOn", () => {
+    const oxc = getRecipe("oxc");
+    assert.ok(oxc);
+    assert.match(recipeOptionHint(oxc), /recommended/i);
     const biome = getRecipe("biome");
     assert.ok(biome);
-    assert.match(recipeOptionHint(biome), /recommended/i);
+    assert.doesNotMatch(recipeOptionHint(biome), /recommended/i);
 
-    const withDeps = { ...biome, dependsOn: ["eslint"] };
+    const withDeps = { ...oxc, dependsOn: ["eslint"] };
     assert.match(recipeOptionHint(withDeps), /needs eslint/);
   });
 

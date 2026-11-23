@@ -67,10 +67,12 @@ describe("discovery CLI presentation", () => {
     });
     const choices = buildRecipeChoices(result);
     assert.ok(choices.every((choice) => choice.match.relevant && choice.match.compatible));
-    assert.ok(choices.some((choice) => choice.value === "biome"));
+    assert.ok(choices.some((choice) => choice.value === "oxc"));
 
-    const linters = result.recommendedRecipeIds.filter((id) => id === "biome" || id === "eslint");
-    assert.deepEqual(linters, ["biome"]);
+    const linters = result.recommendedRecipeIds.filter(
+      (id) => id === "oxc" || id === "biome" || id === "eslint",
+    );
+    assert.deepEqual(linters, ["oxc"]);
 
     const selected = defaultSelectedRecipeIds(result);
     assert.ok(selected.length >= 1);
@@ -91,7 +93,7 @@ describe("discovery CLI presentation", () => {
     const result = matchDiscovery(normalized.requirements, {
       templateId: templates.recommendedTemplateId,
     });
-    assert.deepEqual(defaultSelectedRecipeIds(result), ["biome"]);
+    assert.deepEqual(defaultSelectedRecipeIds(result), ["oxc"]);
     assert.ok(!result.recommendedRecipeIds.includes("storybook"));
   });
 });

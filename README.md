@@ -72,14 +72,14 @@ npm run dev
 ### Non-interactive
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w oxc,drizzle-orm -y
 ```
 
 ### Preview without writing
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook --dry-run
 ```
 
 - Without `-w` / `-y`, the CLI is interactive.
@@ -302,6 +302,7 @@ Exceptions:
 
 | Recipe                  | Category       | Templates                               | Adds                                                        |
 | ----------------------- | -------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `oxc`                   | Linter         | All                                     | Oxlint + Oxfmt (fast lint + format)                         |
 | `biome`                 | Linter         | All                                     | Lint + format scripts                                       |
 | `eslint`                | Linter         | All                                     | ESLint flat config                                          |
 | `zustand`               | State          | Vite React, Astro, Next                 | Zustand store example                                       |

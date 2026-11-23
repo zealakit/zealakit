@@ -35,7 +35,7 @@ const LINTER_STEP: SelectStep = {
   category: "linter",
   message: "Select linter / formatter:",
   noneLabel: "No linter",
-  initialValue: "biome",
+  initialValue: "oxc",
 };
 
 const ORM_STEP_SERVER: SelectStep = {

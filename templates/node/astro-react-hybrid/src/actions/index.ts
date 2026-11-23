@@ -1,5 +1,5 @@
-import { defineAction } from "astro:actions";
 import { z } from "astro/zod";
+import { defineAction } from "astro:actions";
 
 export const server = {
   /** Demo action: validate input, persist a display name in the session, return it. */

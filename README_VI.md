@@ -72,14 +72,14 @@ npm run dev
 ### Không tương tác
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w oxc,drizzle-orm -y
 ```
 
 ### Xem trước (không ghi file)
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook --dry-run
 ```
 
 - Không có `-w` / `-y` → CLI hỏi tương tác.
@@ -292,6 +292,7 @@ Ngoại lệ:
 
 | Recipe                  | Nhóm           | Template                                | Nội dung                                                   |
 | ----------------------- | -------------- | --------------------------------------- | ---------------------------------------------------------- |
+| `oxc`                   | Linter         | Tất cả                                  | Oxlint + Oxfmt (lint + format nhanh)                       |
 | `biome`                 | Linter         | Tất cả                                  | Script lint + format                                       |
 | `eslint`                | Linter         | Tất cả                                  | ESLint flat config                                         |
 | `zustand`               | State          | Vite React, Astro, Next                 | Ví dụ store Zustand                                        |

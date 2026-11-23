@@ -14,7 +14,7 @@ Options:
                              fastapi-api, python-worker, stdlib-api, gin-api,
                              stdlib-worker
   -w, --with <recipes>       Recipes to apply, comma-separated (e.g. biome).
-                             Available: biome, eslint, zustand, pinia,
+                             Available: oxc, biome, eslint, zustand, pinia,
                              nanostores, client-shared-pieces, hookform-zod,
                              vee-validate-zod, kyjs, axios, tanstack-query,
                              antd, mui, shadcn-ui, nuxt-ui, shadcn-vue,
