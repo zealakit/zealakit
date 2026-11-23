@@ -204,7 +204,7 @@ See [docs/release.md](docs/release.md) for the repeatable release checklist.
 ```bash
 pnpm check        # Oxlint + Oxfmt (lint + format check)
 pnpm lint:fix     # apply Oxlint fixes
-pnpm fmt          # rewrite files with Oxfmt
+pnpm format       # rewrite files with Oxfmt
 pnpm docs:check   # README layout / links / translation parity
 pnpm check:skills # repo-docs skill copies match recipes/_shared
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
