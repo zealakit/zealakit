@@ -258,7 +258,9 @@ function resolveLayout(profileDir, layoutId) {
   ];
   const file = firstExisting(candidates);
   if (!file) {
-    return { error: `No layout definition for '${layoutId}' (looked in ${candidates.join(", ")}).` };
+    return {
+      error: `No layout definition for '${layoutId}' (looked in ${candidates.join(", ")}).`,
+    };
   }
   return { file, frontmatter: parseFrontmatter(fs.readFileSync(file, "utf-8")) };
 }
@@ -279,9 +281,7 @@ function checkReadme(options) {
   if (h1.length !== 1) {
     errors.push(`${relative}: expected exactly one H1, found ${h1.length}.`);
   } else if (normalizeTitle(h1[0].text) !== normalizeTitle(unit.name)) {
-    errors.push(
-      `${relative}: H1 is "${h1[0].text}" but profile unit name is "${unit.name}".`,
-    );
+    errors.push(`${relative}: H1 is "${h1[0].text}" but profile unit name is "${unit.name}".`);
   }
 
   if (profile.cover && !raw.includes(profile.cover)) {
@@ -388,7 +388,9 @@ function checkReadme(options) {
       }
       for (const key of envKeys) {
         if (!documented.has(key)) {
-          errors.push(`${relative}: .env.example key "${key}" is missing from the environment table.`);
+          errors.push(
+            `${relative}: .env.example key "${key}" is missing from the environment table.`,
+          );
         }
       }
     }
@@ -400,7 +402,9 @@ function checkReadme(options) {
     const signature = {
       headings: headings.map((heading) => heading.level).join(","),
       codeBlocks: fencedBlocks,
-      tables: collectTables(prose).map((table) => table.shape).join(","),
+      tables: collectTables(prose)
+        .map((table) => table.shape)
+        .join(","),
     };
     for (const language of languages.slice(1)) {
       const translatedRelative = path.join(
@@ -416,7 +420,9 @@ function checkReadme(options) {
       const translatedSignature = {
         headings: translated.headings.map((heading) => heading.level).join(","),
         codeBlocks: translated.fencedBlocks,
-        tables: collectTables(translated.prose).map((table) => table.shape).join(","),
+        tables: collectTables(translated.prose)
+          .map((table) => table.shape)
+          .join(","),
       };
       if (translatedSignature.headings !== signature.headings) {
         errors.push(
