@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg?raw=true" alt="Zealakit logo" />
 </p>
 
 **基于 Recipe 的多生态项目脚手架。**
@@ -10,9 +10,23 @@
 
 [English](https://github.com/zealakit/zealakit/blob/main/README.md) · [Tiếng Việt](https://github.com/zealakit/zealakit/blob/main/README_VI.md) · [中文](https://github.com/zealakit/zealakit/blob/main/README_CN.md)
 
+---
+
+## 安装
+
+无需全局安装——用 `npx` 直接运行 CLI：
+
 ```bash
 npx zealakit@latest create
 ```
+
+或全局安装：
+
+```bash
+npm install --global zealakit
+```
+
+CLI 需要 Node.js 22.12+（见 [环境要求](#环境要求)）。
 
 ---
 
@@ -137,7 +151,7 @@ npx zealakit@latest create --discover
 
 ---
 
-## CLI
+## 命令
 
 ```text
 npx zealakit@latest create [项目名] [选项]
@@ -175,27 +189,18 @@ zealakit add github-actions -y --json   # 非交互，JSON 输出
 
 ### 外部 Recipe、Stack、MCP 与 API
 
-- **外部 Recipe**：`-w ./my-recipe` 或 `-w github:owner/repo/path#ref`——仅数据、不执行代码，使用前必须确认（非交互需 `--trust-external`）。见 [`docs/external-recipes.md`](docs/external-recipes.md)；用 `zealakit recipe init|validate` 创建。
+- **外部 Recipe**：`-w ./my-recipe` 或 `-w github:owner/repo/path#ref`——仅数据、不执行代码，使用前必须确认（非交互需 `--trust-external`）。见 [`docs/external-recipes.md`](https://github.com/zealakit/zealakit/blob/main/docs/external-recipes.md)；用 `zealakit recipe init|validate` 创建。
 - **Stack**：`zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` 创建含 `apps/web`、`apps/api`、`packages/contracts` 的工作区及 `schemaVersion: 2` 的 `zealakit.json`；用 `zealakit add <recipe> --app web` 追加。
-- **MCP**：`zealakit mcp --root <dir>`（见 [`docs/mcp.md`](docs/mcp.md)）；**API**：`import { createZealakit } from "zealakit/api"`。
+- **MCP**：`zealakit mcp --root <dir>`（见 [`docs/mcp.md`](https://github.com/zealakit/zealakit/blob/main/docs/mcp.md)）；**API**：`import { createZealakit } from "zealakit/api"`。
 - 旧的根命令形式 `zealakit [name] -t …` 已**移除**，请使用 `zealakit create`。
 
-### `zealakit outdated` 与稳定性约定
+### `zealakit outdated`
 
-`zealakit outdated` 将项目中（来自模板/Recipe）的依赖版本范围与当前安装的 kit 今天会写入的版本对比；仅报告，不改文件（`--json` 输出机器可读结果）。预设还会读取 `./zealakit.config.json`、`--config <file>` 以及 `defaults`（`pm`、`git`、`install`）。CLI、JSON 输出与 `zealakit.json` 由契约测试和 `schema/` 中的 JSON Schema 固定——见 [`docs/stability.md`](docs/stability.md)。
+`zealakit outdated` 将项目中（来自模板/Recipe）的依赖版本范围与当前安装的 kit 今天会写入的版本对比；仅报告，不改文件（`--json` 输出机器可读结果）。
 
-### `zealakit.json` 与预设
+### `zealakit doctor`
 
-每个生成的项目都会写入 `zealakit.json`（`kitVersion`、`template`、解析后的 `recipes`、`requestedRecipes`、`createdAt`），其 schema 随包发布（`schema/zealakit.schema.json`），可用 `--no-manifest` 关闭。安装或 git 失败不会使生成失败（项目已写入，仅打印警告，退出码仍为 `0`）。
-
-```bash
-zealakit preset save team-next -t next -w biome,zustand --pm pnpm
-zealakit create my-app --preset team-next
-```
-
-用户预设位于 `~/.config/zealakit/presets.json`（`$ZEALAKIT_CONFIG_DIR` 可覆盖）；项目内 `zealakit.config.json` 同名时优先。
-
-其他命令：`zealakit preset`、`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
+在生成的项目中运行（或使用 `--cwd`）会额外检查 `zealakit.json`、kit 版本、`.cursor → .agents` 链接、缺失的 Recipe 文件、`.env` 与 `.env.example` 以及已安装依赖。失败退出码为 `3`；警告不影响退出码。
 
 ### 元数据查询（`zealakit info`）
 
@@ -210,6 +215,8 @@ zealakit info --json --recipe biome
 
 过滤器使用 AND 组合；非法值会以退出码 `2` 结束，并且不会向 stdout 输出 JSON。
 
+其他命令：`zealakit preset`、`zealakit info`、`zealakit doctor`、`zealakit discovery stats`、`zealakit discovery feedback`。
+
 **规则**
 
 - `--discover` 不能与 `--template`、`-w`、`-y` 或 `--dry-run` 同时使用（Discovery 为交互式）。
@@ -219,6 +226,35 @@ zealakit info --json --recipe biome
 - 生成会先写入临时目录并校验，通过后再提交——失败时不会留下半成品的新项目。
 - `--dry-run` 使用与真实生成相同的解析与校验（含默认 Recipe 与 `dependsOn`），打印预览；就绪时退出码 `0`，被阻止时为 `3`。
 - 退出码：`0` 成功或取消，`2` 用法错误，`3` 校验/兼容失败，`1` 意外错误。
+
+---
+
+## 配置
+
+### `zealakit.json`
+
+每个生成的项目都会写入 `zealakit.json`（`kitVersion`、`template`、解析后的 `recipes`、`requestedRecipes`、`createdAt`），其 schema 随包发布（`schema/zealakit.schema.json`），可用 `--no-manifest` 关闭。安装或 git 失败不会使生成失败（项目已写入，仅打印警告，退出码仍为 `0`）。
+
+### 预设
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+zealakit preset list        # 还会读取 ./zealakit.config.json: { "presets": { … } }
+```
+
+用户预设位于 `~/.config/zealakit/presets.json`（`$ZEALAKIT_CONFIG_DIR` 可覆盖）；项目内 `zealakit.config.json` 同名时优先。除 `presets` 外，config 还可以为每次 `create` 设置 `defaults`：
+
+```json
+{
+  "defaults": { "pm": "pnpm", "git": true, "install": true },
+  "presets": {
+    "team-next": { "template": "next", "recipes": ["biome", "mui", "vitest", "github-actions"] }
+  }
+}
+```
+
+CLI、JSON 输出与 `zealakit.json` 由契约测试和 `schema/` 中的 JSON Schema 固定——见 [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md)。
 
 ---
 
@@ -271,6 +307,9 @@ zealakit info --json --recipe biome
 | `shadcn-vue`            | UI             | Vite Vue、Nuxt                          | Tailwind + shadcn-vue                                      |
 | `nuxt-ui`               | UI             | Vite Vue、Nuxt                          | Tailwind + Nuxt UI                                         |
 | `storybook`             | 文档 / 测试    | Vite、Astro、Next、Nuxt                 | Storybook 配置与脚本                                       |
+| `docs`                  | 文档           | 全部 Node 模板                          | 面向 Agent 的 README 流程 + `docs:check`                   |
+| `docs-go`               | 文档           | Go 模板                                 | 面向 Agent 的 README 流程（`repo-docs` skill）             |
+| `docs-python`           | 文档           | Python 模板                             | 面向 Agent 的 README 流程（`repo-docs` skill）             |
 | `vitest`                | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                      |
 | `tanstack-query`        | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                              |
 | `better-auth`           | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler                |
@@ -370,8 +409,21 @@ npm install && npm run dev
 
 ---
 
+## 退出码
+
+| 退出码 | 含义                                      |
+| ------ | ----------------------------------------- |
+| `0`    | 成功，或用户取消了交互提示                |
+| `1`    | 意外的内部错误                            |
+| `2`    | 用法错误（未知参数、非法值、Recipe 冲突） |
+| `3`    | 校验、兼容性或项目检查失败                |
+
+退出码属于稳定性约定——见 [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md)。
+
+---
+
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](https://github.com/zealakit/zealakit/blob/main/LICENSE)
 
 源码：[github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

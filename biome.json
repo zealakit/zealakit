@@ -13,6 +13,7 @@
       "!**/node_modules",
       "!templates",
       "!recipes",
+      "!.agents",
       "!.cursor",
       "!tests/fixtures"
     ]

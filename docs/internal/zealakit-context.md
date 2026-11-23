@@ -895,7 +895,7 @@ pnpm test <filter...>   # lọc theo test name
 2. **Svelte hiện chỉ có SvelteKit SPA**: `vite-svelte` dùng `@sveltejs/adapter-static` + `ssr = false`, chưa có template Svelte SSR/hybrid/server.
 3. **`complete-product`** vẫn có trong enum nhưng không được hỗ trợ; CLI, Discovery `questions`, `recommendations`, và `validate` đều trả lỗi/thông báo nhất quán.
 4. **`discovery/api/operations.ts`** đã tách parse request sang `parse.ts`; phần còn lại vẫn gồm nhiều operation trong một file (~584 dòng). Có thể tách tiếp nếu contract thay đổi lớn.
-5. **Schema versioning thủ công**: đổi shape `info` phải bump `INFO_SCHEMA_VERSION` + cập nhật `docs/metadata-query-layer.md` + `scripts/test-e2e-pack.ts`; đổi Discovery API phải cập nhật `docs/discovery-json-api.md`. Không có codegen/type-level guard giữa doc và implementation.
+5. **Schema versioning thủ công**: đổi shape `info` phải bump `INFO_SCHEMA_VERSION` + cập nhật `./metadata-query-layer.md` + `scripts/test-e2e-pack.ts`; đổi Discovery API phải cập nhật `docs/discovery-json-api.md`. Không có codegen/type-level guard giữa doc và implementation.
 6. **Programmatic API chưa publish**: `@zealakit/*` là private workspace package; consumer bên ngoài chỉ có CLI. Đừng thiết kế feature chỉ dựa vào `createZealakit()` nếu chưa có kế hoạch publish subpath.
 7. **Recipe version pin** nằm rải trong từng file registry; update dependency phải chạy `pnpm test:pack` để chắc tarball vẫn đúng.
 

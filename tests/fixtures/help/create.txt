@@ -18,12 +18,13 @@ Options:
                              nanostores, client-shared-pieces, hookform-zod,
                              vee-validate-zod, kyjs, axios, tanstack-query,
                              antd, mui, shadcn-ui, nuxt-ui, shadcn-vue,
-                             storybook, vitest, docker, better-auth, nest-auth,
-                             github-actions, type-orm, mikro-orm, drizzle-orm,
-                             prisma, sqlalchemy, alembic, postgres-python,
-                             docker-python, github-actions-python, postgres,
-                             mysql, mongodb, docker-go, github-actions-go,
-                             goose, sqlc, redis
+                             storybook, vitest, docker, docs, better-auth,
+                             nest-auth, github-actions, type-orm, mikro-orm,
+                             drizzle-orm, prisma, sqlalchemy, alembic,
+                             postgres-python, docker-python, docs-python,
+                             github-actions-python, postgres, mysql, mongodb,
+                             docker-go, docs-go, github-actions-go, goose, sqlc,
+                             redis
   -y, --yes                  Non-interactive: never prompt; refuses a non-empty
                              target
   --force                    Overwrite a non-empty target directory without

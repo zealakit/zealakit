@@ -60,6 +60,7 @@ describe("Go recipe registration", () => {
       "mysql",
       "mongodb",
       "docker-go",
+      "docs-go",
       "github-actions-go",
       "goose",
       "sqlc",

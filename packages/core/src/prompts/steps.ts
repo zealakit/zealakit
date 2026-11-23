@@ -61,6 +61,25 @@ const AUTH_STEP: SelectStep = {
   noneLabel: "No authentication",
 };
 
+/** Docs recipes are per ecosystem; incompatible ones are skipped in prompts. */
+const DOCS_STEPS: PromptStep[] = [
+  {
+    kind: "confirm",
+    recipeId: "docs",
+    message: "Add a docs skill (agent-ready README)?",
+  },
+  {
+    kind: "confirm",
+    recipeId: "docs-go",
+    message: "Add the Go docs skill (agent-ready README)?",
+  },
+  {
+    kind: "confirm",
+    recipeId: "docs-python",
+    message: "Add the Python docs skill (agent-ready README)?",
+  },
+];
+
 const CI_STEP: SelectStep = {
   kind: "select",
   category: "ci",
@@ -94,6 +113,7 @@ const CLIENT_CORE_STEPS: PromptStep[] = [
     noneLabel: "No UI kit",
   },
   LINTER_STEP,
+  ...DOCS_STEPS,
   {
     kind: "confirm",
     recipeId: "storybook",
@@ -112,14 +132,20 @@ const HYBRID_STEPS: PromptStep[] = [
   CI_STEP,
 ];
 
-const SERVER_STEPS: PromptStep[] = [ORM_STEP_SERVER, AUTH_STEP, LINTER_STEP, CI_STEP];
+const SERVER_STEPS: PromptStep[] = [
+  ORM_STEP_SERVER,
+  AUTH_STEP,
+  LINTER_STEP,
+  ...DOCS_STEPS,
+  CI_STEP,
+];
 
 /** Interactive flow per template scope (also exported by `zealakit info`). */
 export const STEPS_BY_SCOPE: Record<Scope, PromptStep[]> = {
   client: CLIENT_STEPS,
   hybrid: HYBRID_STEPS,
   server: SERVER_STEPS,
-  infrastructure: [CI_STEP],
+  infrastructure: [...DOCS_STEPS, CI_STEP],
 };
 
 /** Recipes the step offers on `template`; an empty list means the step is skipped. */

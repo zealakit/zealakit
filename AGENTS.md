@@ -7,6 +7,7 @@ It is **not** a consumer frontend app. Skills under `templates/` and `recipes/` 
 
 - **Kit architecture:** [.agents/skills/zealakit/SKILL.md](.agents/skills/zealakit/SKILL.md) — layout, registry, scaffolder, conventions
 - **Extending:** [.agents/skills/zealakit/extending.md](.agents/skills/zealakit/extending.md) — add templates/recipes/overlays
+- **Docs:** [.agents/skills/repo-docs/SKILL.md](.agents/skills/repo-docs/SKILL.md) — load before creating or editing README / docs
 - **Rules:** [.agents/rules/](.agents/rules/)
 
 ## Quick map

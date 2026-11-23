@@ -36,6 +36,12 @@ jobs:
       - name: Check code quality
         run: pnpm check
 
+      - name: Check docs
+        run: pnpm docs:check
+
+      - name: Check shared skill copies
+        run: pnpm check:skills
+
       - name: Typecheck
         run: pnpm typecheck
 

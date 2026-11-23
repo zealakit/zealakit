@@ -5,6 +5,7 @@ import betterAuth from "./better-auth.js";
 import biome from "./biome.js";
 import clientSharedPieces from "./client-shared-pieces.js";
 import docker from "./docker.js";
+import docs from "./docs.js";
 import drizzleOrm from "./drizzle-orm.js";
 import eslint from "./eslint.js";
 import githubActions from "./github-actions.js";
@@ -47,6 +48,7 @@ export const RECIPE_LIST: RecipeConfig[] = [
   storybook,
   vitest,
   docker,
+  docs,
   betterAuth,
   nestAuth,
   githubActions,

@@ -11,6 +11,7 @@ Before changing structure, recipes, templates, or packages:
 
 1. Read [.agents/skills/zealakit/SKILL.md](../skills/zealakit/SKILL.md)
 2. When adding/changing templates or recipes, also read [.agents/skills/zealakit/extending.md](../skills/zealakit/extending.md)
+3. Before creating or editing `README*.md` or `docs/`, read [.agents/skills/repo-docs/SKILL.md](../skills/repo-docs/SKILL.md) and run `pnpm docs:check`
 
 Hard rules:
 
@@ -21,5 +22,6 @@ Hard rules:
 - Recipe `overlays/<id>/` must match `getTemplateOverlayId(template)`
 - Templates live under `templates/<ecosystem>/`; recipes under `recipes/<ecosystem>/`
 - Agent skills/rules live in **`.agents/`**; **`.cursor` → `.agents`** symlink everywhere (kit root, templates, recipes, generated apps)
+- The `repo-docs` skill is authored once in `recipes/_shared/repo-docs/`; run `pnpm sync:skills` after editing it (copies are parity-tested)
 - Do not confuse kit root `.agents/` (maintainers) with `templates/**` / `recipes/**` `.agents/` (shipped to apps)
 - Core (`@zealakit/core`) must not import ecosystem packages; CLI registers ecosystems at startup

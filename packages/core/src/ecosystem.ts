@@ -11,6 +11,23 @@ export {
 } from "./registry/index.js";
 export { getRecipeAgentEntry } from "./scaffold/agent-docs.js";
 export {
+  buildDocsProfile,
+  copyDocsChecker,
+  DOCS_CHECK_SCRIPT,
+  DOCS_PROFILE_FILE,
+  DOCS_SKILL_DIR,
+  type DocsLayout,
+  type DocsLinkStyle,
+  type DocsProfile,
+  type DocsProfileOptions,
+  type DocsSectionId,
+  type DocsUnit,
+  docsCheckCommand,
+  docsLayoutForTemplate,
+  docsSectionsForRecipes,
+  writeDocsProfile,
+} from "./scaffold/docs-profile.js";
+export {
   type DependencyStatus,
   emptyPackagePlan,
   type ManifestAdapter,
