@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
+
 import {
   buildDiscoverySessionRecord,
   clearDiscoveryFeedbackSessions,
@@ -24,6 +25,7 @@ import {
   setDiscoveryFeedbackEnabled,
   trimDiscoverySessions,
 } from "@zealakit/core/internal";
+
 import { noColorEnv } from "../helpers/env.js";
 
 const CLI_ENTRY = path.join(PACKAGE_ROOT, "apps/cli/src/index.ts");

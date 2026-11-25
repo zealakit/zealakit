@@ -19,6 +19,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+
 import {
   getRecipeCategories,
   RECIPE_CATEGORIES,
@@ -29,11 +30,11 @@ import { RECIPE_LIST, templateList } from "@zealakit/ecosystem-node";
 
 const execFileAsync = promisify(execFile);
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(moduleDir, "..");
 const HOST = "127.0.0.1";
 const PREFERRED_PORT = 4177;
-const INDEX_HTML = path.join(__dirname, "index.html");
+const INDEX_HTML = path.join(moduleDir, "index.html");
 const RECIPES_REGISTRY_DIR = "packages/ecosystem-node/src/registry/recipes";
 
 /** Workspace folders scanned one level deep (explicit, never a recursive walk). */
@@ -1046,6 +1047,7 @@ async function applyUpdate(
       `Package manager update failed; restored ${manifest.relativePath}. ${
         error instanceof Error ? error.message : String(error)
       }`,
+      { cause: error },
     );
   }
 }

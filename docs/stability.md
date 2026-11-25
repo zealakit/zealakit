@@ -41,4 +41,4 @@ Nothing.
 
 ## Experimental
 
-Nothing is marked experimental right now. The Discovery JSON API is **frozen under this contract** (see `docs/discovery-review.md`).
+Nothing is marked experimental right now. The Discovery JSON API is **frozen under this contract** (see `docs/internal/discovery-review.md`).

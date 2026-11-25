@@ -6,12 +6,14 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   DISCOVERY_API_SCHEMA_VERSION,
   type DiscoveryApiErrorCode,
   ExitCode,
   PACKAGE_ROOT,
 } from "@zealakit/core/internal";
+
 import { exitCodeForDiscoveryResponse } from "../../apps/cli/src/discovery/query.js";
 import { noColorEnv } from "../helpers/env.js";
 

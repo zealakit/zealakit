@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg?raw=true" alt="Zealakit logo" />
 </p>
 
 **Scaffold dự án đa ecosystem theo kiểu ghép recipe.**
@@ -10,9 +10,23 @@ Chọn template, thêm đúng những recipe cần dùng, nhận project sẵn s
 
 [English](https://github.com/zealakit/zealakit/blob/main/README.md) · [Tiếng Việt](https://github.com/zealakit/zealakit/blob/main/README_VI.md) · [中文](https://github.com/zealakit/zealakit/blob/main/README_CN.md)
 
+---
+
+## Cài đặt
+
+Không cần cài global — chạy CLI bằng `npx`:
+
 ```bash
 npx zealakit@latest create
 ```
+
+Hoặc cài global:
+
+```bash
+npm install --global zealakit
+```
+
+CLI cần Node.js 22.12+ (xem [Yêu cầu](#yêu-cầu)).
 
 ---
 
@@ -58,14 +72,14 @@ npm run dev
 ### Không tương tác
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w oxc,drizzle-orm -y
 ```
 
 ### Xem trước (không ghi file)
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook --dry-run
 ```
 
 - Không có `-w` / `-y` → CLI hỏi tương tác.
@@ -137,7 +151,7 @@ Tín hiệu từ `discovery stats` chỉ mang tính gợi ý — **không** tự
 
 ---
 
-## CLI
+## Lệnh
 
 ```text
 npx zealakit@latest create [tên-project] [options]
@@ -175,27 +189,18 @@ zealakit add github-actions -y --json   # không tương tác, đầu ra JSON
 
 ### Recipe ngoài, stack, MCP và API
 
-- **Recipe ngoài**: `-w ./my-recipe` hoặc `-w github:owner/repo/path#ref` — chỉ là dữ liệu (không chạy code), luôn cần xác nhận (`--trust-external` khi không tương tác). Xem [`docs/external-recipes.md`](docs/external-recipes.md); tạo bằng `zealakit recipe init|validate`.
+- **Recipe ngoài**: `-w ./my-recipe` hoặc `-w github:owner/repo/path#ref` — chỉ là dữ liệu (không chạy code), luôn cần xác nhận (`--trust-external` khi không tương tác). Xem [`docs/external-recipes.md`](https://github.com/zealakit/zealakit/blob/main/docs/external-recipes.md); tạo bằng `zealakit recipe init|validate`.
 - **Stack**: `zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` tạo workspace với `apps/web`, `apps/api`, `packages/contracts` và `zealakit.json` `schemaVersion: 2`; dùng `zealakit add <recipe> --app web`.
-- **MCP**: `zealakit mcp --root <dir>` (xem [`docs/mcp.md`](docs/mcp.md)); **API**: `import { createZealakit } from "zealakit/api"`.
+- **MCP**: `zealakit mcp --root <dir>` (xem [`docs/mcp.md`](https://github.com/zealakit/zealakit/blob/main/docs/mcp.md)); **API**: `import { createZealakit } from "zealakit/api"`.
 - Dạng cũ `zealakit [name] -t …` đã bị **gỡ bỏ**: dùng `zealakit create`.
 
-### `zealakit outdated` và hợp đồng ổn định
+### `zealakit outdated`
 
-`zealakit outdated` so sánh range dependency của project (từ template/recipe) với những gì kit đang cài sẽ ghi hôm nay; chỉ báo cáo, không sửa file (`--json` cho máy đọc). Preset còn đọc `./zealakit.config.json`, `--config <file>` và mục `defaults` (`pm`, `git`, `install`). CLI, các JSON output và `zealakit.json` được khóa bằng contract test + JSON Schema trong `schema/` — xem [`docs/stability.md`](docs/stability.md).
+`zealakit outdated` so sánh range dependency của project (từ template/recipe) với những gì kit đang cài sẽ ghi hôm nay; chỉ báo cáo, không sửa file (`--json` cho máy đọc).
 
-### `zealakit.json` và preset
+### `zealakit doctor`
 
-Mỗi project được tạo ra đều ghi `zealakit.json` (`kitVersion`, `template`, `recipes` đã resolve, `requestedRecipes`, `createdAt`); schema đi kèm package (`schema/zealakit.schema.json`), tắt bằng `--no-manifest`. Cài đặt hoặc git thất bại không làm hỏng việc tạo project (file đã được ghi, chỉ in cảnh báo, exit code vẫn là `0`).
-
-```bash
-zealakit preset save team-next -t next -w biome,zustand --pm pnpm
-zealakit create my-app --preset team-next
-```
-
-Preset người dùng nằm ở `~/.config/zealakit/presets.json` (đổi bằng `$ZEALAKIT_CONFIG_DIR`); `zealakit.config.json` trong project ưu tiên khi trùng tên.
-
-Lệnh khác: `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+Chạy trong project đã tạo (hoặc `--cwd`) để kiểm tra thêm `zealakit.json`, phiên bản kit, symlink `.cursor → .agents`, file recipe bị thiếu, `.env` so với `.env.example` và dependency đã cài. Lỗi thoát `3`; cảnh báo thì không.
 
 ### Truy vấn metadata (`zealakit info`)
 
@@ -210,6 +215,8 @@ zealakit info --json --recipe biome
 
 Các filter kết hợp bằng AND; giá trị sai thoát `2` và không in JSON ra stdout.
 
+Lệnh khác: `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+
 **Quy tắc**
 
 - `--discover` không kết hợp với `--template`, `-w`, `-y`, hoặc `--dry-run` (Discovery là interactive).
@@ -219,6 +226,35 @@ Các filter kết hợp bằng AND; giá trị sai thoát `2` và không in JSON
 - Generate ghi vào thư mục tạm, validate, rồi mới commit — lỗi giữa chừng không để lại project mới bị dở dang.
 - `--dry-run` dùng cùng logic resolve/validate như generate thật (kể cả recipe mặc định và `dependsOn`), in preview, thoát `0` nếu sẵn sàng hoặc `3` nếu bị chặn.
 - Mã thoát: `0` thành công hoặc hủy, `2` dùng sai flag, `3` lỗi validate/tương thích, `1` lỗi bất ngờ.
+
+---
+
+## Cấu hình
+
+### `zealakit.json`
+
+Mỗi project được tạo ra đều ghi `zealakit.json` (`kitVersion`, `template`, `recipes` đã resolve, `requestedRecipes`, `createdAt`); schema đi kèm package (`schema/zealakit.schema.json`), tắt bằng `--no-manifest`. Cài đặt hoặc git thất bại không làm hỏng việc tạo project (file đã được ghi, chỉ in cảnh báo, exit code vẫn là `0`).
+
+### Preset
+
+```bash
+zealakit preset save team-next -t next -w biome,zustand --pm pnpm
+zealakit create my-app --preset team-next
+zealakit preset list        # đọc thêm ./zealakit.config.json: { "presets": { … } }
+```
+
+Preset người dùng nằm ở `~/.config/zealakit/presets.json` (đổi bằng `$ZEALAKIT_CONFIG_DIR`); `zealakit.config.json` trong project ưu tiên khi trùng tên. Ngoài `presets`, file config có thể đặt `defaults` cho mọi lần `create`:
+
+```json
+{
+  "defaults": { "pm": "pnpm", "git": true, "install": true },
+  "presets": {
+    "team-next": { "template": "next", "recipes": ["biome", "mui", "vitest", "github-actions"] }
+  }
+}
+```
+
+CLI, các JSON output và `zealakit.json` được khóa bằng contract test + JSON Schema trong `schema/` — xem [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md).
 
 ---
 
@@ -256,6 +292,7 @@ Ngoại lệ:
 
 | Recipe                  | Nhóm           | Template                                | Nội dung                                                   |
 | ----------------------- | -------------- | --------------------------------------- | ---------------------------------------------------------- |
+| `oxc`                   | Linter         | Tất cả                                  | Oxlint + Oxfmt (lint + format nhanh)                       |
 | `biome`                 | Linter         | Tất cả                                  | Script lint + format                                       |
 | `eslint`                | Linter         | Tất cả                                  | ESLint flat config                                         |
 | `zustand`               | State          | Vite React, Astro, Next                 | Ví dụ store Zustand                                        |
@@ -271,6 +308,9 @@ Ngoại lệ:
 | `shadcn-vue`            | UI             | Vite Vue, Nuxt                          | Tailwind + shadcn-vue                                      |
 | `nuxt-ui`               | UI             | Vite Vue, Nuxt                          | Tailwind + Nuxt UI                                         |
 | `storybook`             | Docs / testing | Vite, Astro, Next, Nuxt                 | Config + script Storybook                                  |
+| `docs`                  | Tài liệu       | Tất cả template Node                    | Quy trình README cho agent + `docs:check`                  |
+| `docs-go`               | Tài liệu       | Template Go                             | Quy trình README cho agent (skill `repo-docs`)             |
+| `docs-python`           | Tài liệu       | Template Python                         | Quy trình README cho agent (skill `repo-docs`)             |
 | `vitest`                | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                      |
 | `tanstack-query`        | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                              |
 | `better-auth`           | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler                |
@@ -370,8 +410,21 @@ Chưa. Mỗi lần chạy tạo một project độc lập.
 
 ---
 
+## Mã thoát
+
+| Mã  | Ý nghĩa                                          |
+| --- | ------------------------------------------------ |
+| `0` | Thành công, hoặc người dùng hủy prompt           |
+| `1` | Lỗi nội bộ bất ngờ                               |
+| `2` | Dùng sai (flag lạ, giá trị sai, recipe xung đột) |
+| `3` | Lỗi validate, tương thích hoặc kiểm tra project  |
+
+Mã thoát thuộc hợp đồng ổn định — xem [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md).
+
+---
+
 ## Giấy phép
 
-[MIT](LICENSE)
+[MIT](https://github.com/zealakit/zealakit/blob/main/LICENSE)
 
 Mã nguồn: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

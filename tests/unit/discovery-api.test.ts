@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
+
 import {
   DISCOVERY_API_ERROR_CODES,
   DISCOVERY_API_SCHEMA_VERSION,
@@ -84,7 +85,7 @@ describe("Discovery API — questions", () => {
       assert.ok(question);
       const value = question.type === "multi-select" ? [] : question.options[0]?.value;
       assert.ok(value !== undefined, `${question.id} has no options`);
-      answers = { ...answers, [question.id]: value };
+      answers[question.id] = value;
       steps += 1;
     }
     assert.ok(steps < 40, "question flow should complete");

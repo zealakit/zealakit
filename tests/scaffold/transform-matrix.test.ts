@@ -2,6 +2,7 @@ import "../register.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { describe, it } from "node:test";
+
 import {
   getAllRecipes,
   getAllTemplateIds,
@@ -16,6 +17,7 @@ import {
   validateRecipeConflicts,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { listRecipeFiles, listTemplateFiles } from "../../packages/core/src/scaffold/inventory.js";
 
 /**

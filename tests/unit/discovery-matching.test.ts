@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   matchDiscovery,
   type ProjectRequirements,
@@ -184,8 +185,10 @@ describe("recipe matching", () => {
     const input = req({ projectType: "ui", frontend: { framework: "react" } });
     const templates = matchDiscovery(input);
     const result = matchDiscovery(input, { templateId: templates.recommendedTemplateId });
-    const linters = result.recommendedRecipeIds.filter((id) => id === "biome" || id === "eslint");
-    assert.deepEqual(linters, ["biome"]);
+    const linters = result.recommendedRecipeIds.filter(
+      (id) => id === "oxc" || id === "biome" || id === "eslint",
+    );
+    assert.deepEqual(linters, ["oxc"]);
     assert.equal(result.recipes.find((entry) => entry.recipeId === "eslint")?.role, "excluded");
   });
 

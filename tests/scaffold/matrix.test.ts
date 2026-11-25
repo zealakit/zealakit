@@ -1,5 +1,6 @@
 import "../register.js";
 import { describe, it } from "node:test";
+
 import type { RecipeConfig, TemplateConfig } from "@zealakit/core/internal";
 import {
   getAllRecipes,
@@ -10,6 +11,7 @@ import {
   isRecipeCompatible,
   RECIPE_CATEGORIES,
 } from "@zealakit/core/internal";
+
 import { assertScaffoldInvariants, expectRejected, scaffold } from "../helpers/scaffold.js";
 
 /**

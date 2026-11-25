@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+
 import { templateSuite } from "../helpers/cases.js";
 
 type BiomeConfig = { root?: boolean; linter?: { domains?: Record<string, string> } };

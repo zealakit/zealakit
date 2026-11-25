@@ -1,19 +1,21 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   matchDiscovery,
   normalizeDiscoveryAnswers,
   type ProjectRequirements,
   type RecipeMatchResult,
 } from "@zealakit/core/internal";
+
 import {
   buildRecipeChoices,
   defaultSelectedRecipeIds,
 } from "../../apps/cli/src/discovery/present.js";
 
 const ORM_IDS = ["type-orm", "mikro-orm", "drizzle-orm", "prisma"] as const;
-const LINTER_IDS = ["biome", "eslint"] as const;
+const LINTER_IDS = ["oxc", "biome", "eslint"] as const;
 
 function serverWithDatabase(): ProjectRequirements {
   return {
@@ -114,7 +116,7 @@ describe("linter relevance", () => {
     const linters = result.recommendedRecipeIds.filter((id) =>
       (LINTER_IDS as readonly string[]).includes(id),
     );
-    assert.deepEqual(linters, ["biome"]);
+    assert.deepEqual(linters, ["oxc"]);
     assert.equal(recipeEntry(result, "eslint")?.role, "excluded");
   });
 
@@ -127,8 +129,8 @@ describe("linter relevance", () => {
       const linters = result.recommendedRecipeIds.filter((id) =>
         (LINTER_IDS as readonly string[]).includes(id),
       );
-      assert.deepEqual(linters, ["biome"], templateId);
-      assert.ok(buildRecipeChoices(result).some((choice) => choice.value === "biome"));
+      assert.deepEqual(linters, ["oxc"], templateId);
+      assert.ok(buildRecipeChoices(result).some((choice) => choice.value === "oxc"));
     }
   });
 
@@ -191,7 +193,7 @@ describe("optional non-exclusive recipes", () => {
     assert.ok(choice, "Storybook should stay visible in the multiselect");
     assert.match(choice.hint ?? "", /optional/);
     assert.ok(!defaultSelectedRecipeIds(result).includes("storybook"));
-    assert.ok(result.recommendedRecipeIds.includes("biome"));
+    assert.ok(result.recommendedRecipeIds.includes("oxc"));
   });
 
   it("does not pre-select categories without a matching requirement", () => {

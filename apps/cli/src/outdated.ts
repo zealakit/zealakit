@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import {
   computeOutdated,
   ExitCode,
@@ -8,6 +9,7 @@ import {
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+
 import { loadProjectExternals } from "./external.js";
 import { printInfo, printValidationErrors } from "./output.js";
 

@@ -65,7 +65,11 @@ export function compareTemplateMatches(
   return a.templateId.localeCompare(b.templateId);
 }
 
-export function compareRecipeMatches(a: RecipeMatchResult, b: RecipeMatchResult): number {
+export function compareRecipeMatches(
+  a: RecipeMatchResult,
+  b: RecipeMatchResult,
+  registrationOrder?: ReadonlyMap<string, number>,
+): number {
   const roleRank = (role: RecipeMatchResult["role"]): number => {
     switch (role) {
       case "recommended":
@@ -90,6 +94,11 @@ export function compareRecipeMatches(a: RecipeMatchResult, b: RecipeMatchResult)
   }
   if (b.score !== a.score) {
     return b.score - a.score;
+  }
+  const orderA = registrationOrder?.get(a.recipeId);
+  const orderB = registrationOrder?.get(b.recipeId);
+  if (orderA !== undefined && orderB !== undefined && orderA !== orderB) {
+    return orderA - orderB;
   }
   return a.recipeId.localeCompare(b.recipeId);
 }

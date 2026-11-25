@@ -1,5 +1,5 @@
-import type { HomeHeroBannerData } from "../../_handlers";
 import { Link } from "@/i18n/navigation";
+import type { HomeHeroBannerData } from "../../_handlers";
 import styles from "./home-hero-banner.module.css";
 
 type HeroBannerTemplateProps = HomeHeroBannerData;

@@ -77,8 +77,7 @@ async function packCli(): Promise<string> {
   const tarball = packed.stdout
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.endsWith(".tgz"))
-    .pop();
+    .find((line) => line.endsWith(".tgz"));
   if (!tarball) {
     throw new Error(`Could not find packed tarball in pnpm output:\n${packed.stdout}`);
   }

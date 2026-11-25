@@ -44,7 +44,7 @@ versioned envelope, and stdout contains nothing else — no ANSI, no prompts:
   `recipes[].discovery`) and keeps Discovery-eligible entries. It never asks
   questionnaire questions, runs scoring, or generates a project.
 - `schemaVersion` changes only on breaking changes; field names inside `data`
-  are stable. Full contract and migration notes: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
+  are stable. Full contract and migration notes: [docs/internal/metadata-query-layer.md](docs/internal/metadata-query-layer.md).
 - The root alias `zealakit --info --json` is kept for compatibility but has no
   filters; use `zealakit info` for filtered queries.
 
@@ -123,6 +123,24 @@ The root `package.json` `files` allowlist includes the three public READMEs,
 `README.md` as the package README. Do not copy docs into `dist/`; `tsup` owns
 that directory.
 
+### Docs system
+
+READMEs and `docs/` follow the `repo-docs` skill
+([.agents/skills/repo-docs/SKILL.md](.agents/skills/repo-docs/SKILL.md)). The
+repository-specific facts (unit, layout, languages, link style) live in
+`.agents/skills/repo-docs/profile.json`; rules reference that file, not literal
+values.
+
+- `pnpm docs:check` validates the READMEs (H1, required sections and order,
+  absolute links, translation parity, scripts/env tables).
+- `docs/internal/` holds maintainer audits and reviews; reference pages
+  (`stability.md`, `mcp.md`, `external-recipes.md`, `programmatic-api.md`,
+  `release.md`, `discovery-json-api.md`) stay in `docs/`.
+- The same skill ships to generated projects through the `docs`, `docs-go` and
+  `docs-python` recipes. Canonical source:
+  `recipes/_shared/repo-docs/`; run `pnpm sync:skills` after editing it.
+  `pnpm check:skills` fails when a committed copy drifted.
+
 Release artifact flow:
 
 ```bash
@@ -154,7 +172,21 @@ Build output is generated; do not edit it by hand.
   `tests/unit/info.test.ts` (CLI + JSON contract); `pnpm test info` covers both
   files (file-path suites match the pattern too).
 - After changing the JSON shape, bump `INFO_SCHEMA_VERSION` and update
-  `docs/metadata-query-layer.md` and `scripts/test-e2e-pack.ts`.
+  `docs/internal/metadata-query-layer.md` and `scripts/test-e2e-pack.ts`.
+
+## Editor setup
+
+The kit lints with **Oxlint** and formats with **Oxfmt**.
+
+- Install the Oxc VS Code extension (`oxc.oxc-vscode`); `.vscode/extensions.json`
+  recommends it.
+- Format on save is enabled in `.vscode/settings.json`; Oxfmt reads
+  `.oxfmtrc.json` (100 columns, 2 spaces, double quotes, sorted imports).
+- Oxlint reads `.oxlintrc.json`. Rules that conflict with house style are
+  disabled with a one-line reason next to them — add a reason, not a silent
+  override.
+- Type-aware linting is not enabled: `pnpm typecheck` already runs `tsc` over
+  every workspace package.
 
 ## Programmatic API
 
@@ -170,7 +202,11 @@ See [docs/release.md](docs/release.md) for the repeatable release checklist.
 ## Verification
 
 ```bash
-pnpm check        # Biome (includes markdown table formatting)
+pnpm check        # Oxlint + Oxfmt (lint + format check)
+pnpm lint:fix     # apply Oxlint fixes
+pnpm format       # rewrite files with Oxfmt
+pnpm docs:check   # README layout / links / translation parity
+pnpm check:skills # repo-docs skill copies match recipes/_shared
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
 pnpm test         # unit + in-process scaffold tests
 pnpm test:pack    # build → pack → tarball smoke test (release gate)

@@ -142,16 +142,16 @@ Both prompts are generated client-side; the monitor never calls an AI API and wr
 
 Zealakit-specific content in `buildPrompt()`:
 
-| Block                    | Zealakit value                                                                                                                                                        |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Identity                 | Zealakit repository; published root `zealakit` package bundling `dist` + `templates/` + `recipes/`                                                                    |
-| Package / template lists | from `/api/packages` (`publishedPackageList()`, `templateList()`)                                                                                                     |
-| Architecture             | core ecosystem-independent ← `ecosystem-*` ← `apps/cli`; templates/recipes are data                                                                                   |
-| Inventory                | `Kind` column instead of `Ecosystem`; Type includes the recipe overlay                                                                                                |
-| Upgrade write path       | root/apps/packages/templates `package.json` + recipe buckets in `registry/recipes/<id>.ts`, then `pnpm install`                                                       |
-| Verification             | `pnpm build` → `pnpm typecheck` → `pnpm test` (includes scaffold suites for every template/recipe) → `pnpm check` (Biome); plus a sandbox build per affected template |
-| Investigation            | recipe ↔ template framework majors, overlays and `fileTransforms` still matching template source, tsup bundle / `pnpm test:pack`                                      |
-| Constraints              | no `dist/`, `.sandbox/`, `templates/go/**`; keep recipe versions compatible with templates; respect `minimumReleaseAge`                                               |
+| Block                    | Zealakit value                                                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Identity                 | Zealakit repository; published root `zealakit` package bundling `dist` + `templates/` + `recipes/`                                                                             |
+| Package / template lists | from `/api/packages` (`publishedPackageList()`, `templateList()`)                                                                                                              |
+| Architecture             | core ecosystem-independent ← `ecosystem-*` ← `apps/cli`; templates/recipes are data                                                                                            |
+| Inventory                | `Kind` column instead of `Ecosystem`; Type includes the recipe overlay                                                                                                         |
+| Upgrade write path       | root/apps/packages/templates `package.json` + recipe buckets in `registry/recipes/<id>.ts`, then `pnpm install`                                                                |
+| Verification             | `pnpm build` → `pnpm typecheck` → `pnpm test` (includes scaffold suites for every template/recipe) → `pnpm check` (Oxlint + Oxfmt); plus a sandbox build per affected template |
+| Investigation            | recipe ↔ template framework majors, overlays and `fileTransforms` still matching template source, tsup bundle / `pnpm test:pack`                                               |
+| Constraints              | no `dist/`, `.sandbox/`, `templates/go/**`; keep recipe versions compatible with templates; respect `minimumReleaseAge`                                                        |
 
 Find leftover strings from other ports before shipping changes:
 

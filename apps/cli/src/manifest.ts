@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { PACKAGE_ROOT } from "@zealakit/core/internal";
 
 export type KitManifest = {

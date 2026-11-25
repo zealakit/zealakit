@@ -4,7 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import { scaffoldProject } from "@zealakit/core/internal";
+
 import { composeFor } from "../../packages/ecosystem-go/src/registry/recipes/docker-go.js";
 import { hasOrmRecipe } from "../../packages/ecosystem-node/src/registry/recipes/docker.js";
 

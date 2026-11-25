@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dependency Monitor · Zealakit</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <style>
       :root {
         --pico-font-size: 14px;
@@ -423,7 +420,9 @@
         <div>
           <h1>Dependency Monitor · Zealakit</h1>
           <p>
-            Root + <code>apps/*</code> + <code>packages/*</code> + <code>templates/node/*</code> + recipe registry · <code>templates/go</code>, <code>tests/</code>, <code>.sandbox/</code> excluded ·
+            Root + <code>apps/*</code> + <code>packages/*</code> + <code>templates/node/*</code> +
+            recipe registry · <code>templates/go</code>, <code>tests/</code>,
+            <code>.sandbox/</code> excluded ·
             <span id="last-check">No registry check yet</span>
           </p>
         </div>
@@ -433,9 +432,7 @@
           <button id="upgrade-prompt-btn" class="contrast" type="button">
             Get AI Upgrade Prompt
           </button>
-          <button id="update-all-btn" class="secondary" type="button">
-            Update All Outdated
-          </button>
+          <button id="update-all-btn" class="secondary" type="button">Update All Outdated</button>
         </div>
       </header>
 
@@ -460,7 +457,7 @@
         </article>
       </section>
 
-      <form class="monitor-filters" onsubmit="return false">
+      <form class="monitor-filters" onsubmit="return false;">
         <label>
           Ecosystem
           <select id="filter-ecosystem">
@@ -499,9 +496,9 @@
 
     <dialog id="confirm-dialog">
       <article>
-        <header><h3 id="confirm-title" style="margin:0">Confirm update</h3></header>
+        <header><h3 id="confirm-title" style="margin: 0">Confirm update</h3></header>
         <div id="confirm-body"></div>
-        <footer style="display:flex;gap:0.45rem;justify-content:flex-end">
+        <footer style="display: flex; gap: 0.45rem; justify-content: flex-end">
           <button id="confirm-cancel" class="secondary" type="button">Cancel</button>
           <button id="confirm-ok" type="button">Confirm</button>
         </footer>
@@ -511,10 +508,11 @@
     <dialog id="batch-dialog">
       <article>
         <header>
-          <h3 style="margin:0">Review outdated updates</h3>
+          <h3 style="margin: 0">Review outdated updates</h3>
         </header>
-        <p style="margin-top:0;color:var(--muted);font-size:0.84rem">
-          Conservative targets prefer patch/minor. Majors require explicit selection and confirmation.
+        <p style="margin-top: 0; color: var(--muted); font-size: 0.84rem">
+          Conservative targets prefer patch/minor. Majors require explicit selection and
+          confirmation.
         </p>
         <div class="monitor-table-wrap">
           <table class="batch-table">
@@ -532,7 +530,7 @@
             <tbody id="batch-body"></tbody>
           </table>
         </div>
-        <footer style="display:flex;gap:0.45rem;justify-content:flex-end;margin-top:0.75rem">
+        <footer style="display: flex; gap: 0.45rem; justify-content: flex-end; margin-top: 0.75rem">
           <button id="batch-cancel" class="secondary" type="button">Cancel</button>
           <button id="batch-confirm" type="button">Apply updates</button>
         </footer>
@@ -541,14 +539,14 @@
 
     <dialog id="prompt-dialog">
       <article>
-        <header><h3 id="prompt-title" style="margin:0">AI Check Prompt</h3></header>
-        <p id="prompt-note" style="margin-top:0;color:var(--muted);font-size:0.84rem">
-          Copy into your AI coding assistant. This does not update packages.
-          Scope: selected outdated rows, otherwise outdated rows in the current
-          filter view (includes each row’s selected target version).
+        <header><h3 id="prompt-title" style="margin: 0">AI Check Prompt</h3></header>
+        <p id="prompt-note" style="margin-top: 0; color: var(--muted); font-size: 0.84rem">
+          Copy into your AI coding assistant. This does not update packages. Scope: selected
+          outdated rows, otherwise outdated rows in the current filter view (includes each row’s
+          selected target version).
         </p>
         <textarea id="prompt-text" readonly spellcheck="false"></textarea>
-        <footer style="display:flex;gap:0.45rem;justify-content:flex-end">
+        <footer style="display: flex; gap: 0.45rem; justify-content: flex-end">
           <button id="prompt-copy" type="button">Copy Prompt</button>
           <button id="prompt-close" class="secondary" type="button">Close</button>
         </footer>
@@ -615,16 +613,17 @@
       }
 
       function isOutdated(row) {
-        return [
-          "patch-available",
-          "minor-available",
-          "major-available",
-          "deprecated",
-        ].includes(row.registry.classification);
+        return ["patch-available", "minor-available", "major-available", "deprecated"].includes(
+          row.registry.classification,
+        );
       }
 
       function canUpdate(row) {
-        return !row.local && isOutdated(row) && Boolean(row.registry.latestPatch || row.registry.latestMinor || row.registry.latest);
+        return (
+          !row.local &&
+          isOutdated(row) &&
+          Boolean(row.registry.latestPatch || row.registry.latestMinor || row.registry.latest)
+        );
       }
 
       function statusLabel(value) {
@@ -736,9 +735,8 @@
                 )}</option>`,
             )
             .join("");
-        els.ecosystem.value = ecosystems.includes(currentEco) || currentEco === "all"
-          ? currentEco
-          : "all";
+        els.ecosystem.value =
+          ecosystems.includes(currentEco) || currentEco === "all" ? currentEco : "all";
 
         const currentPkg = els.package.value || "all";
         const packages = state.packages.filter((pkg) => {
@@ -751,10 +749,7 @@
         els.package.innerHTML =
           `<option value="all">All</option>` +
           packages
-            .map(
-              (pkg) =>
-                `<option value="${escapeHtml(pkg.id)}">${escapeHtml(pkg.label)}</option>`,
-            )
+            .map((pkg) => `<option value="${escapeHtml(pkg.id)}">${escapeHtml(pkg.label)}</option>`)
             .join("");
         els.package.value = [...packages.map((p) => p.id), "all"].includes(currentPkg)
           ? currentPkg
@@ -810,9 +805,7 @@
             <td>
               <a class="dep-name" href="https://www.npmjs.com/package/${encodeURIComponent(
                 row.dependency,
-              )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-                row.dependency,
-              )}</a>
+              )}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.dependency)}</a>
             </td>
             <td><code>${escapeHtml(typeLabel(row))}</code></td>
             <td><code>${escapeHtml(row.declared)}</code>${
@@ -857,9 +850,10 @@
       function packageCardTags(manifestId) {
         const pkg = packageInfo(manifestId);
         if (!pkg) return "";
-        const kind = pkg.kind && pkg.kind !== "root"
-          ? `<span class="tag" data-kind="kind">${escapeHtml(KIND_LABELS[pkg.kind] || pkg.kind)}</span>`
-          : "";
+        const kind =
+          pkg.kind && pkg.kind !== "root"
+            ? `<span class="tag" data-kind="kind">${escapeHtml(KIND_LABELS[pkg.kind] || pkg.kind)}</span>`
+            : "";
         const tags = (pkg.tags || [])
           .map(
             (tag) =>
@@ -873,7 +867,8 @@
 
       function packageCardNote(manifestId) {
         const pkg = packageInfo(manifestId);
-        if (pkg?.kind === "recipe") return " · versions written into generated projects (no install)";
+        if (pkg?.kind === "recipe")
+          return " · versions written into generated projects (no install)";
         if (pkg?.kind === "template") return " · shipped as a starter app";
         return "";
       }
@@ -950,9 +945,7 @@
       }
 
       function selectedTarget(id) {
-        const select = document.querySelector(
-          `select.target-version[data-id="${CSS.escape(id)}"]`,
-        );
+        const select = document.querySelector(`select.target-version[data-id="${CSS.escape(id)}"]`);
         return select?.value || conservativeTarget(rowById(id)) || null;
       }
 
@@ -1071,7 +1064,12 @@
       }
 
       function promptCell(value) {
-        return String(value ?? "—").replaceAll("|", "\\|").replace(/\s+/g, " ").trim() || "—";
+        return (
+          String(value ?? "—")
+            .replaceAll("|", "\\|")
+            .replace(/\s+/g, " ")
+            .trim() || "—"
+        );
       }
 
       function publishedPackageList() {
@@ -1305,10 +1303,7 @@ ${constraintsSection}
         const allowMajor = updates.some((item) =>
           isMajorBump(rowById(item.id), item.targetVersion),
         );
-        if (
-          allowMajor &&
-          !window.confirm("This batch includes major upgrades. Continue?")
-        ) {
+        if (allowMajor && !window.confirm("This batch includes major upgrades. Continue?")) {
           return;
         }
         els.batchConfirm.disabled = true;

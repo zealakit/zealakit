@@ -120,16 +120,8 @@ export {
   type TemplateProfile,
   validateProfiles,
 } from "./profiles/index.js";
-export {
-  type AddPlan,
-  applyAddPlan,
-  planAddRecipes,
-} from "./project/add.js";
-export {
-  checkProject,
-  compareKitVersions,
-  type ProjectReport,
-} from "./project/checks.js";
+export { type AddPlan, applyAddPlan, planAddRecipes } from "./project/add.js";
+export { checkProject, compareKitVersions, type ProjectReport } from "./project/checks.js";
 export { unifiedDiff } from "./project/diff.js";
 export {
   buildStackPlan,
@@ -178,10 +170,7 @@ export {
   registerRecipe,
   withDefaultRecipes,
 } from "./registry/index.js";
-export {
-  formatRecipeResolveError,
-  resolveRecipeDependencies,
-} from "./resolve-recipes.js";
+export { formatRecipeResolveError, resolveRecipeDependencies } from "./resolve-recipes.js";
 export {
   applyAgentEntry,
   ensureCursorAgentsSymlink,
@@ -233,7 +222,4 @@ export {
   validateScaffoldConfig,
   validateTemplate,
 } from "./validation/index.js";
-export {
-  computeOutdated,
-  type OutdatedReport,
-} from "./versions/outdated.js";
+export { computeOutdated, type OutdatedReport } from "./versions/outdated.js";

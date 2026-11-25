@@ -51,7 +51,4 @@ export {
   WORKER_SCHEDULES,
   WORKER_VOLUMES,
 } from "./types.js";
-export {
-  type DiscoveryAnswerValidationOptions,
-  validateDiscoveryAnswers,
-} from "./validate.js";
+export { type DiscoveryAnswerValidationOptions, validateDiscoveryAnswers } from "./validate.js";

@@ -1,0 +1,1 @@
+- **Docs:** [.agents/skills/repo-docs/SKILL.md](.agents/skills/repo-docs/SKILL.md) — load before creating or editing README / docs

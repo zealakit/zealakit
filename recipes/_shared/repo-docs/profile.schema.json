@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zealakit.dev/schema/repo-docs-profile.schema.json",
+  "title": "repo-docs profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["projectName", "ecosystem", "units", "languages", "linkStyle"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "projectName": { "type": "string", "minLength": 1 },
+    "ecosystem": { "enum": ["node", "go", "python"] },
+    "packageManager": {
+      "enum": ["npm", "pnpm", "yarn", "bun"],
+      "description": "Node only; null for other ecosystems."
+    },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dir", "name", "layout"],
+        "properties": {
+          "dir": {
+            "type": "string",
+            "description": "Unit directory relative to the repository root; \"\" for the root."
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "layout": {
+            "enum": ["app", "service", "worker", "cli", "library", "monorepo"]
+          },
+          "readme": {
+            "type": "string",
+            "description": "Override for the source-language file name (default README.md)."
+          }
+        }
+      }
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z]{2,3}$" },
+      "description": "Source language first. Later languages map to README_<CODE>.md."
+    },
+    "linkStyle": { "enum": ["absolute", "relative"] },
+    "absoluteBase": {
+      "type": ["string", "null"],
+      "description": "Required when linkStyle is absolute, e.g. https://github.com/owner/repo/blob/main."
+    },
+    "cover": {
+      "type": ["string", "null"],
+      "description": "Optional cover image URL shown under the H1."
+    },
+    "license": { "type": ["string", "null"] },
+    "sections": {
+      "type": "array",
+      "items": {
+        "enum": ["database", "docker", "authentication", "testing", "ci"]
+      },
+      "description": "Optional recipe sections enabled for this repository."
+    },
+    "requiredSections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Extra required H2 sections for every unit, appended to the layout's list."
+    },
+    "docsDir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "pages"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "pages": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "internalSkills": { "type": ["string", "null"] },
+    "userSkills": { "type": ["string", "null"] },
+    "check": {
+      "type": ["string", "null"],
+      "description": "Command that runs the checker, e.g. \"pnpm docs:check\"."
+    }
+  }
+}

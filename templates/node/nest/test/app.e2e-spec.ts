@@ -2,7 +2,6 @@ import { VersioningType } from "@nestjs/common";
 import { NodeAdapter, type NestNodeApplication } from "@nestjs/platform-node";
 import { Test, type TestingModule } from "@nestjs/testing";
 import request from "supertest";
-import type { App } from "supertest/types.js";
 import { AppModule } from "../src/bootstrap/app.module.js";
 
 describe("FeatureA (e2e)", () => {

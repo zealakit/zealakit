@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { PROJECT_MANIFEST_FILE, readProjectManifest } from "../project-manifest.js";
 import { getRecipe, getTemplate } from "../registry/index.js";
 import { listRecipeFiles } from "../scaffold/inventory.js";

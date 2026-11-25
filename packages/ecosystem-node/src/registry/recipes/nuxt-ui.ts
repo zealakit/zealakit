@@ -20,7 +20,7 @@ export default defineRecipe({
       {
         file: "src/main.ts",
         pattern: /import \{ createApp \} from "vue";/,
-        replacement: 'import { createApp } from "vue";\nimport ui from "@nuxt/ui/vue-plugin";',
+        replacement: 'import ui from "@nuxt/ui/vue-plugin";\nimport { createApp } from "vue";',
       },
       {
         file: "src/main.ts",

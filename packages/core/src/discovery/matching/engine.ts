@@ -91,6 +91,10 @@ function matchRecipes(
   const profileById = new Map(
     availableRecipeIds.map((id) => [id, resolveRecipeProfile(id)] as const),
   );
+  // Ties follow registration order (the prompt order), not the alphabet.
+  const registrationOrder = new Map(availableRecipeIds.map((id, index) => [id, index] as const));
+  const compare = (a: RecipeMatchResult, b: RecipeMatchResult): number =>
+    compareRecipeMatches(a, b, registrationOrder);
 
   const results: RecipeMatchResult[] = [];
 
@@ -163,7 +167,7 @@ function matchRecipes(
     });
   }
 
-  results.sort(compareRecipeMatches);
+  results.sort(compare);
 
   const chosenRecipeIds = selectNonConflictingRecipes(
     results,
@@ -194,7 +198,7 @@ function matchRecipes(
   }
 
   // Promote required dependencies of chosen recipes
-  for (const recipeId of [...recommendedRecipeIds]) {
+  for (const recipeId of recommendedRecipeIds) {
     const profile = profileById.get(recipeId);
     if (!profile) continue;
     for (const dep of profile.dependsOn) {
@@ -215,7 +219,7 @@ function matchRecipes(
     }
   }
 
-  results.sort(compareRecipeMatches);
+  results.sort(compare);
 
   return { results, recommendedRecipeIds };
 }

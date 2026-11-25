@@ -44,6 +44,7 @@ chọn template → chọn recipe → copy files
 | `RecipeCategory` | Nhóm recipe: `linter`, `state`, `ui`, `form`, `fetcher`, `orm`, `infrastructure`, `utils`, `testing`, `documentation` | `constants/recipe-categories.ts`        |
 
 `Scope` và `ProjectType` **khác nhau**:
+
 - `Scope` là thuộc tính của template (Next là `hybrid`, Nest là `server`).
 - `ProjectType` là nhánh ra quyết định của Discovery (UI, API, worker).
 - `complete-product` có trong enum nhưng **chưa hỗ trợ** (`SUPPORTED_PROJECT_TYPES` chỉ có 3 giá trị đầu).
@@ -789,7 +790,7 @@ Recipe có thể có `finalize(targetDir)` chạy sau tất cả recipe copy; d�
 ## 15. Testing & quality gates
 
 ```bash
-pnpm check        # Biome (lint + format, gồm markdown table)
+pnpm check        # Oxlint + Oxfmt (lint + format)
 pnpm typecheck    # core, ecosystems, cli, tests, scripts, monitor
 pnpm test         # unit + scaffold in-process
 pnpm test:unit
@@ -895,7 +896,7 @@ pnpm test <filter...>   # lọc theo test name
 2. **Svelte hiện chỉ có SvelteKit SPA**: `vite-svelte` dùng `@sveltejs/adapter-static` + `ssr = false`, chưa có template Svelte SSR/hybrid/server.
 3. **`complete-product`** vẫn có trong enum nhưng không được hỗ trợ; CLI, Discovery `questions`, `recommendations`, và `validate` đều trả lỗi/thông báo nhất quán.
 4. **`discovery/api/operations.ts`** đã tách parse request sang `parse.ts`; phần còn lại vẫn gồm nhiều operation trong một file (~584 dòng). Có thể tách tiếp nếu contract thay đổi lớn.
-5. **Schema versioning thủ công**: đổi shape `info` phải bump `INFO_SCHEMA_VERSION` + cập nhật `docs/metadata-query-layer.md` + `scripts/test-e2e-pack.ts`; đổi Discovery API phải cập nhật `docs/discovery-json-api.md`. Không có codegen/type-level guard giữa doc và implementation.
+5. **Schema versioning thủ công**: đổi shape `info` phải bump `INFO_SCHEMA_VERSION` + cập nhật `./metadata-query-layer.md` + `scripts/test-e2e-pack.ts`; đổi Discovery API phải cập nhật `docs/discovery-json-api.md`. Không có codegen/type-level guard giữa doc và implementation.
 6. **Programmatic API chưa publish**: `@zealakit/*` là private workspace package; consumer bên ngoài chỉ có CLI. Đừng thiết kế feature chỉ dựa vào `createZealakit()` nếu chưa có kế hoạch publish subpath.
 7. **Recipe version pin** nằm rải trong từng file registry; update dependency phải chạy `pnpm test:pack` để chắc tarball vẫn đúng.
 
@@ -911,6 +912,7 @@ pnpm test <filter...>   # lọc theo test name
 > Đây là source context của repo **zealakit** — một CLI scaffolding dựa trên recipe, không phải app frontend.
 > Hãy đọc kỹ các invariant ở mục 16 trước khi đề xuất code.
 > Khi trả lời:
+>
 > - Chỉ rõ file cần sửa và lý do.
 > - Không hardcode template/recipe id; dùng registry, `compat.ts`, profile.
 > - Không import ecosystem package từ `packages/core`.

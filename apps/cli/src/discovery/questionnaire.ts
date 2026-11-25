@@ -42,11 +42,14 @@ async function askQuestion(
 ): Promise<"cancel" | "ok" | "unsupported"> {
   const options = withNoPreference(
     question,
-    getQuestionOptions(question, answers).map((option) => ({
-      value: option.value,
-      label: option.label,
-      ...(option.hint ? { hint: option.hint } : {}),
-    })),
+    getQuestionOptions(question, answers).map((option) => {
+      const entry: { value: string; label: string; hint?: string } = {
+        value: option.value,
+        label: option.label,
+      };
+      if (option.hint) entry.hint = option.hint;
+      return entry;
+    }),
   );
 
   console.log(pc.dim(`  Question ${progress.index} of ${progress.total}`));

@@ -4,14 +4,14 @@ Hexagonal / Clean Architecture Hono + TypeScript base. Scaffolded by [zealakit](
 
 ## Layout
 
-| Folder | Role |
-| --- | --- |
-| `src/domain/` | Aggregates, VOs, domain events, repository ports |
-| `src/application/` | Commands/queries, handlers, DTOs, port tokens |
-| `src/presentation/` | HTTP routes, request/response DTOs, middleware |
-| `src/infrastructure/` | Persistence and other adapters |
-| `src/shared/` | Pure cross-cutting helpers |
-| `src/bootstrap/` | `main.ts`, `create-app.ts`, composition root |
+| Folder                | Role                                             |
+| --------------------- | ------------------------------------------------ |
+| `src/domain/`         | Aggregates, VOs, domain events, repository ports |
+| `src/application/`    | Commands/queries, handlers, DTOs, port tokens    |
+| `src/presentation/`   | HTTP routes, request/response DTOs, middleware   |
+| `src/infrastructure/` | Persistence and other adapters                   |
+| `src/shared/`         | Pure cross-cutting helpers                       |
+| `src/bootstrap/`      | `main.ts`, `create-app.ts`, composition root     |
 
 See [.agents/skills/structure-ddd/SKILL.md](.agents/skills/structure-ddd/SKILL.md).
 

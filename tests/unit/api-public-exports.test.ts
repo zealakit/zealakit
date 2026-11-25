@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import * as publicApi from "@zealakit/core";
 import {
   createZealakit,
@@ -54,8 +55,16 @@ describe("programmatic API public exports", () => {
       "handleDiscoveryRequest",
     ]);
     assert.deepEqual(Object.keys(ecosystemApi).sort(), [
+      "DOCS_CHECK_SCRIPT",
+      "DOCS_PROFILE_FILE",
+      "DOCS_SKILL_DIR",
       "adaptRunCommand",
       "assertStagingRealPath",
+      "buildDocsProfile",
+      "copyDocsChecker",
+      "docsCheckCommand",
+      "docsLayoutForTemplate",
+      "docsSectionsForRecipes",
       "emptyPackagePlan",
       "getNpmManifest",
       "getRecipe",
@@ -69,6 +78,7 @@ describe("programmatic API public exports", () => {
       "registerTemplate",
       "resolveStagingPath",
       "setManifestAdapter",
+      "writeDocsProfile",
     ]);
   });
 });

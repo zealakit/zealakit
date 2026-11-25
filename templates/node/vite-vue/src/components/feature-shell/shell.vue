@@ -1,11 +1,11 @@
 <script setup lang="ts" generic="TId extends EntityId = string, TFilter = unknown">
 import { computed, provide, reactive, ref } from "vue";
-import { featureShellKey } from "./context";
-import { resolvePresentation } from "./helpers";
 import { useFeatureBusy } from "./composables/use-feature-busy";
 import { useFeatureCapabilities } from "./composables/use-feature-capabilities";
 import { useFeatureList } from "./composables/use-feature-list";
 import { useFeatureOverlays } from "./composables/use-feature-overlays";
+import { featureShellKey } from "./context";
+import { resolvePresentation } from "./helpers";
 import type {
   EntityId,
   FeatureCapabilities,

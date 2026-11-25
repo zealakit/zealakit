@@ -27,6 +27,7 @@ import {
 } from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
+
 import {
   buildRecipeChoices,
   buildTemplateChoices,
@@ -306,11 +307,14 @@ export async function runDiscoveryPrompts(initial: {
         const selected = await ask(
           multiselect({
             message: "Select Recipes:",
-            options: choices.map((choice) => ({
-              value: choice.value,
-              label: choice.label,
-              ...(choice.hint ? { hint: choice.hint } : {}),
-            })),
+            options: choices.map((choice) => {
+              const entry: { value: string; label: string; hint?: string } = {
+                value: choice.value,
+                label: choice.label,
+              };
+              if (choice.hint) entry.hint = choice.hint;
+              return entry;
+            }),
             initialValues,
             required: false,
           }),

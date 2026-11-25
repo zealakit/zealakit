@@ -23,7 +23,7 @@ export default defineRecipe({
       {
         file: "src/main.ts",
         pattern: /import \{ createApp \} from "vue";/,
-        replacement: 'import { createApp } from "vue";\nimport { createPinia } from "pinia";',
+        replacement: 'import { createPinia } from "pinia";\nimport { createApp } from "vue";',
       },
       {
         file: "src/main.ts",

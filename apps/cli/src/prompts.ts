@@ -13,6 +13,7 @@ import {
 } from "@zealakit/core/internal";
 import { isValidNpmPackageName } from "@zealakit/ecosystem-node";
 import pc from "picocolors";
+
 import { type DiscoveryPromptResult, runDiscoveryPrompts } from "./discovery/flow.js";
 import {
   defaultRecipeIdsForScope,
@@ -61,11 +62,12 @@ async function runStep(
       options: [
         ...options.map((recipe) => {
           const hint = recipeOptionHint(recipe);
-          return {
+          const entry: { value: string; label: string; hint?: string } = {
             value: recipe.id,
             label: recipe.name,
-            ...(hint ? { hint } : {}),
           };
+          if (hint) entry.hint = hint;
+          return entry;
         }),
         { value: NONE, label: step.noneLabel },
       ],

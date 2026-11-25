@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+
+import { readProjectManifest } from "../project-manifest.js";
 import { inferProjectName } from "../project/add.js";
 import { compareKitVersions } from "../project/checks.js";
-import { readProjectManifest } from "../project-manifest.js";
 import { getNpmManifest, getRecipe, getTemplate, getTemplateOverlayId } from "../registry/index.js";
 import { stagePlan } from "../scaffold/index.js";
 import { getManifestAdapter } from "../scaffold/manifest.js";
@@ -81,7 +82,8 @@ function npmSource(
   templateId: string,
 ): string {
   const overlay = getTemplateOverlayId(templateId);
-  for (const id of [...recipeIds].reverse()) {
+  for (let index = recipeIds.length - 1; index >= 0; index -= 1) {
+    const id = recipeIds[index] as string;
     const npm = getNpmManifest(getRecipe(id) ?? ({ manifest: { ecosystem: "go" } } as never));
     if (!npm) continue;
     const own = field === "dependencies" ? npm.packages : npm.devDependencies;
@@ -95,7 +97,8 @@ function npmSource(
 }
 
 function adapterSource(name: string, recipeIds: string[], templateId: string): string {
-  for (const id of [...recipeIds].reverse()) {
+  for (let index = recipeIds.length - 1; index >= 0; index -= 1) {
+    const id = recipeIds[index] as string;
     const manifest = getRecipe(id)?.manifest;
     if (manifest?.ecosystem === "python") {
       const key = name.toLowerCase();

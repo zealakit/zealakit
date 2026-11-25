@@ -14,7 +14,7 @@ function diffLines(a: string[], b: string[]): Op[] {
     ];
   }
   const table: number[][] = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
+    Array.from({ length: b.length + 1 }, (): number => 0),
   );
   for (let i = a.length - 1; i >= 0; i -= 1) {
     for (let j = b.length - 1; j >= 0; j -= 1) {

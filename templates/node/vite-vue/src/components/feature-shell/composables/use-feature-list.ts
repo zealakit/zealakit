@@ -6,7 +6,7 @@ export function useFeatureList(initialList?: FeatureShellProps["initialList"]) {
   const searchString = ref(initialList?.searchString);
   const page = ref(initialList?.page ?? DEFAULT_PAGE);
   const limit = ref(initialList?.limit ?? DEFAULT_LIMIT);
-  const sub = reactive<Record<string, SubListEntry>>({ ...(initialList?.sub ?? {}) });
+  const sub = reactive<Record<string, SubListEntry>>({ ...initialList?.sub });
 
   const ensureSub = (key: string): SubListEntry =>
     sub[key] ?? { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT };

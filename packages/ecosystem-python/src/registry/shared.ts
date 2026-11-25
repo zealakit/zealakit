@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { assertStagingRealPath, resolveStagingPath } from "@zealakit/core/ecosystem";
 
 /** Append a section to `.env.example` once (no-op when absent or already present). */

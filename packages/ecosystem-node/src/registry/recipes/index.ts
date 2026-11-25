@@ -5,6 +5,7 @@ import betterAuth from "./better-auth.js";
 import biome from "./biome.js";
 import clientSharedPieces from "./client-shared-pieces.js";
 import docker from "./docker.js";
+import docs from "./docs.js";
 import drizzleOrm from "./drizzle-orm.js";
 import eslint from "./eslint.js";
 import githubActions from "./github-actions.js";
@@ -15,6 +16,7 @@ import mui from "./mui.js";
 import nanostores from "./nanostores.js";
 import nestAuth from "./nest-auth.js";
 import nuxtUi from "./nuxt-ui.js";
+import oxc from "./oxc.js";
 import pinia from "./pinia.js";
 import prisma from "./prisma.js";
 import shadcnUi from "./shadcn-ui.js";
@@ -28,6 +30,7 @@ import zustand from "./zustand.js";
 
 /** Registration order = prompt option order. One module per recipe: `./<id>.ts`. */
 export const RECIPE_LIST: RecipeConfig[] = [
+  oxc,
   biome,
   eslint,
   zustand,
@@ -47,6 +50,7 @@ export const RECIPE_LIST: RecipeConfig[] = [
   storybook,
   vitest,
   docker,
+  docs,
   betterAuth,
   nestAuth,
   githubActions,

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   ensureCursorAgentsSymlink,
   getNpmManifest,
@@ -12,6 +13,7 @@ import {
   scaffoldProject,
   validateGeneratedOutput,
 } from "@zealakit/core/internal";
+
 import { mergePackageJson } from "../../packages/ecosystem-node/src/manifest/package-json.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-integrity-test-"));

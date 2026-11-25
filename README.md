@@ -1,7 +1,7 @@
 # Zealakit
 
 <p align="center">
-  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg" alt="Zealakit logo" />
+  <img src="https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg?raw=true" alt="Zealakit logo" />
 </p>
 
 **Recipe-based scaffolding for multi-ecosystem projects.**
@@ -10,9 +10,23 @@ Pick a template, add only the recipes you need, and get a ready-to-install proje
 
 [English](https://github.com/zealakit/zealakit/blob/main/README.md) · [Tiếng Việt](https://github.com/zealakit/zealakit/blob/main/README_VI.md) · [中文](https://github.com/zealakit/zealakit/blob/main/README_CN.md)
 
+---
+
+## Install
+
+No global install is required — run the CLI with `npx`:
+
 ```bash
 npx zealakit@latest create
 ```
+
+Or install it globally:
+
+```bash
+npm install --global zealakit
+```
+
+Node.js 22.12+ is required for the CLI (see [Requirements](#requirements)).
 
 ---
 
@@ -58,14 +72,14 @@ npm run dev
 ### Non-interactive
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook -y
-npx zealakit@latest create api -t nest -w biome,drizzle-orm -y
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook -y
+npx zealakit@latest create api -t nest -w oxc,drizzle-orm -y
 ```
 
 ### Preview without writing
 
 ```bash
-npx zealakit@latest create my-app -t next -w biome,shadcn-ui,storybook --dry-run
+npx zealakit@latest create my-app -t next -w oxc,shadcn-ui,storybook --dry-run
 ```
 
 - Without `-w` / `-y`, the CLI is interactive.
@@ -137,7 +151,7 @@ Diagnostic signals from `discovery stats` are hints only — they do **not** aut
 
 ---
 
-## CLI
+## Commands
 
 ```text
 npx zealakit@latest create [project-name] [options]
@@ -175,10 +189,10 @@ zealakit add github-actions -y --json        # non-interactive, machine-readable
 
 ### External recipes, stacks and agents
 
-- **External recipes** — `-w ./my-recipe` or `-w github:owner/repo/path#ref`; data-only, confirmed before use. See [`docs/external-recipes.md`](docs/external-recipes.md); author them with `zealakit recipe init|validate`.
+- **External recipes** — `-w ./my-recipe` or `-w github:owner/repo/path#ref`; data-only, confirmed before use. See [`docs/external-recipes.md`](https://github.com/zealakit/zealakit/blob/main/docs/external-recipes.md); author them with `zealakit recipe init|validate`.
 - **Stacks** — one workspace, several apps: `zealakit create shop --stack web=next,api=hono -w web:mui,api:biome -y` creates `apps/web`, `apps/api` (each a normal zealakit project), `packages/contracts` and a root `zealakit.json` with `schemaVersion: 2`. Use `zealakit add <recipe> --app web`; `doctor` and `outdated` cover every app. Node templates only; root-level recipes and Discovery stack recommendations are not available yet.
-- **MCP** — `zealakit mcp --root <dir>` lets AI agents plan/create/add with confirmation gates. See [`docs/mcp.md`](docs/mcp.md).
-- **Programmatic API** — `import { createZealakit } from "zealakit/api"`; see [`docs/programmatic-api.md`](docs/programmatic-api.md).
+- **MCP** — `zealakit mcp --root <dir>` lets AI agents plan/create/add with confirmation gates. See [`docs/mcp.md`](https://github.com/zealakit/zealakit/blob/main/docs/mcp.md).
+- **Programmatic API** — `import { createZealakit } from "zealakit/api"`; see [`docs/programmatic-api.md`](https://github.com/zealakit/zealakit/blob/main/docs/programmatic-api.md).
 
 The old root form `zealakit [name] -t …` has been **removed**: use `zealakit create`.
 
@@ -189,6 +203,39 @@ Compares the dependency ranges your project got from its template and recipes wi
 ### `zealakit doctor` in a project
 
 Run it inside a generated project (or with `--cwd`) to also check `zealakit.json`, the kit version, the `.cursor → .agents` link, missing recipe files, `.env` against `.env.example`, and installed dependencies. Failures exit `3`; warnings do not.
+
+### Metadata queries (`zealakit info`)
+
+`zealakit info` prints templates, recipes, ecosystems, categories, and the compatibility rules from the registry. `--json` returns one versioned envelope (`schemaVersion: 4`, `command: "info"`, `filters`, `data`) for external UIs and integrations.
+
+```bash
+zealakit info --json --ecosystem node
+zealakit info --json --scope server
+zealakit info --json --template nest
+zealakit info --json --recipe biome
+zealakit info --json --category orm
+zealakit info --json --discover --scope server
+```
+
+Filters combine with AND semantics; unknown values exit `2` with diagnostics on stderr and no JSON on stdout. The same filters also narrow the human-readable summary. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](https://github.com/zealakit/zealakit/blob/main/docs/internal/metadata-query-layer.md).
+
+Python templates are managed with [uv](https://docs.astral.sh/uv/) (`uv sync`, `uv run …`); `zealakit doctor` reports whether it is installed, and `--install` runs `uv sync`. Python templates are not part of the Discovery questionnaire yet; choose them with `-t fastapi-api` / `-t python-worker`.
+
+Other commands: `zealakit add`, `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
+
+**Rules**
+
+- `--discover` cannot be combined with `--template`, `-w`, `-y`, or `--dry-run` (Discovery is interactive).
+- Project names follow npm naming (lowercase, no spaces).
+- Existing non-empty folders ask before overwrite; with `-y` they are rejected.
+- Invalid or conflicting recipes are rejected **before** any files are written.
+- Generation stages into a temp directory, validates the result, then commits — a failed run does not leave a half-written new project.
+- `--dry-run` uses the same resolution and validation as a real run (including default recipes and `dependsOn`), prints a preview, and exits `0` when ready or `3` when blocked.
+- Exit codes: `0` success or cancel, `2` invalid usage, `3` validation/compatibility failure, `1` unexpected error.
+
+---
+
+## Configuration
 
 ### `zealakit.json`
 
@@ -217,36 +264,7 @@ Config lives in `~/.config/zealakit/config.json` (`$ZEALAKIT_CONFIG_DIR` overrid
 
 Interactive runs end with "Save these choices as a preset?" (default no). The older `presets.json` is still read.
 
-The CLI surface, JSON outputs and `zealakit.json` are pinned by contract tests and JSON Schemas in `schema/` — see [`docs/stability.md`](docs/stability.md).
-
-Python templates are managed with [uv](https://docs.astral.sh/uv/) (`uv sync`, `uv run …`); `zealakit doctor` reports whether it is installed, and `--install` runs `uv sync`. Python templates are not part of the Discovery questionnaire yet; choose them with `-t fastapi-api` / `-t python-worker`.
-
-Other commands: `zealakit add`, `zealakit preset`, `zealakit info`, `zealakit doctor`, `zealakit discovery stats`, `zealakit discovery feedback`.
-
-### Metadata queries (`zealakit info`)
-
-`zealakit info` prints templates, recipes, ecosystems, categories, and the compatibility rules from the registry. `--json` returns one versioned envelope (`schemaVersion: 4`, `command: "info"`, `filters`, `data`) for external UIs and integrations.
-
-```bash
-zealakit info --json --ecosystem node
-zealakit info --json --scope server
-zealakit info --json --template nest
-zealakit info --json --recipe biome
-zealakit info --json --category orm
-zealakit info --json --discover --scope server
-```
-
-Filters combine with AND semantics; unknown values exit `2` with diagnostics on stderr and no JSON on stdout. The same filters also narrow the human-readable summary. `--discover` only adds Discovery profiles (`templates[].discovery`, `recipes[].discovery`) and keeps Discovery-eligible entries — it never asks questions, runs scoring, or scaffolds. Full contract: [docs/metadata-query-layer.md](docs/metadata-query-layer.md).
-
-**Rules**
-
-- `--discover` cannot be combined with `--template`, `-w`, `-y`, or `--dry-run` (Discovery is interactive).
-- Project names follow npm naming (lowercase, no spaces).
-- Existing non-empty folders ask before overwrite; with `-y` they are rejected.
-- Invalid or conflicting recipes are rejected **before** any files are written.
-- Generation stages into a temp directory, validates the result, then commits — a failed run does not leave a half-written new project.
-- `--dry-run` uses the same resolution and validation as a real run (including default recipes and `dependsOn`), prints a preview, and exits `0` when ready or `3` when blocked.
-- Exit codes: `0` success or cancel, `2` invalid usage, `3` validation/compatibility failure, `1` unexpected error.
+The CLI surface, JSON outputs and `zealakit.json` are pinned by contract tests and JSON Schemas in `schema/` — see [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md).
 
 ---
 
@@ -284,6 +302,7 @@ Exceptions:
 
 | Recipe                  | Category       | Templates                               | Adds                                                        |
 | ----------------------- | -------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `oxc`                   | Linter         | All                                     | Oxlint + Oxfmt (fast lint + format)                         |
 | `biome`                 | Linter         | All                                     | Lint + format scripts                                       |
 | `eslint`                | Linter         | All                                     | ESLint flat config                                          |
 | `zustand`               | State          | Vite React, Astro, Next                 | Zustand store example                                       |
@@ -299,6 +318,9 @@ Exceptions:
 | `shadcn-vue`            | UI             | Vite Vue, Nuxt                          | Tailwind + shadcn-vue                                       |
 | `nuxt-ui`               | UI             | Vite Vue, Nuxt                          | Tailwind + Nuxt UI                                          |
 | `storybook`             | Docs / testing | Vite, Astro, Next, Nuxt                 | Storybook config + scripts                                  |
+| `docs`                  | Documentation  | All Node templates                      | Agent-ready README workflow + `docs:check`                  |
+| `docs-go`               | Documentation  | Go templates                            | Agent-ready README workflow (`repo-docs` skill)             |
+| `docs-python`           | Documentation  | Python templates                        | Agent-ready README workflow (`repo-docs` skill)             |
 | `vitest`                | Testing        | Vite, Astro, Next, Nuxt                 | Vitest + Testing Library, sample test                       |
 | `tanstack-query`        | Data fetching  | Vite React/Vue/Svelte, Next, Nuxt       | Query provider + example hook                               |
 | `better-auth`           | Auth           | Next, Nuxt, Hono, Astro hybrid          | Better Auth server + client + route handler                 |
@@ -398,8 +420,21 @@ Not yet. Each run creates one standalone project.
 
 ---
 
+## Exit codes
+
+| Code | Meaning                                                      |
+| ---- | ------------------------------------------------------------ |
+| `0`  | Success, or the user cancelled an interactive prompt         |
+| `1`  | Unexpected internal error                                    |
+| `2`  | Invalid usage (unknown flag, bad value, conflicting recipes) |
+| `3`  | Validation, compatibility or project-check failure           |
+
+Exit codes are part of the stability contract — see [`docs/stability.md`](https://github.com/zealakit/zealakit/blob/main/docs/stability.md).
+
+---
+
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/zealakit/zealakit/blob/main/LICENSE)
 
 Source: [github.com/zealakit/zealakit](https://github.com/zealakit/zealakit) · [Issues](https://github.com/zealakit/zealakit/issues)

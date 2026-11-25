@@ -1,6 +1,7 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   checkRecipeCompatibility,
   getInfo,
@@ -60,6 +61,7 @@ describe("Go recipe registration", () => {
       "mysql",
       "mongodb",
       "docker-go",
+      "docs-go",
       "github-actions-go",
       "goose",
       "sqlc",

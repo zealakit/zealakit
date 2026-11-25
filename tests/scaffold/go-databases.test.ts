@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import { scaffold } from "../helpers/scaffold.js";
 
 const templateIds = ["stdlib-api", "gin-api", "stdlib-worker"] as const;

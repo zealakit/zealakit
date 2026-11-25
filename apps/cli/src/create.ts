@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import { confirm, isCancel, text } from "@clack/prompts";
 import {
   buildScaffoldPlan,
@@ -27,6 +28,7 @@ import {
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+
 import { runDiscoveryQuery } from "./discovery/query.js";
 import { describeExternals, loadExternalSpecs, splitRecipeList } from "./external.js";
 import type { CliOptions } from "./options.js";

@@ -1,0 +1,17 @@
+{
+  "$schema": "./profile.schema.json",
+  "projectName": "zealakit",
+  "ecosystem": "node",
+  "packageManager": "pnpm",
+  "units": [{ "dir": "", "name": "zealakit", "layout": "cli" }],
+  "languages": ["en", "vi", "cn"],
+  "linkStyle": "absolute",
+  "absoluteBase": "https://github.com/zealakit/zealakit/blob/main",
+  "cover": "https://github.com/zealakit/zealakit/blob/main/assets/images/zealakit-cover.jpg?raw=true",
+  "license": "MIT",
+  "sections": [],
+  "docsDir": { "enabled": false, "pages": [] },
+  "internalSkills": ".agents/skills",
+  "userSkills": null,
+  "check": "pnpm docs:check"
+}

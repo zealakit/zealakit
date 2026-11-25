@@ -4,14 +4,14 @@ Hexagonal / Clean Architecture NestJS + TypeScript base. Scaffolded by [zealakit
 
 ## Layout
 
-| Folder | Role |
-| --- | --- |
-| `src/domain/` | Aggregates, VOs, domain events, repository ports |
-| `src/application/` | Commands/queries, handlers, DTOs, DI tokens |
-| `src/presentation/` | HTTP controllers, request/response DTOs |
-| `src/infrastructure/` | Persistence and other adapters |
-| `src/shared/` | Pure cross-cutting helpers |
-| `src/bootstrap/` | `main.ts`, `app.module.ts`, feature Nest modules |
+| Folder                | Role                                             |
+| --------------------- | ------------------------------------------------ |
+| `src/domain/`         | Aggregates, VOs, domain events, repository ports |
+| `src/application/`    | Commands/queries, handlers, DTOs, DI tokens      |
+| `src/presentation/`   | HTTP controllers, request/response DTOs          |
+| `src/infrastructure/` | Persistence and other adapters                   |
+| `src/shared/`         | Pure cross-cutting helpers                       |
+| `src/bootstrap/`      | `main.ts`, `app.module.ts`, feature Nest modules |
 
 See [.agents/skills/structure-ddd/SKILL.md](.agents/skills/structure-ddd/SKILL.md).
 

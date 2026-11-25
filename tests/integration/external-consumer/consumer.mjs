@@ -240,17 +240,17 @@ async function main() {
   const overlay = template.overlay;
   const expectedDependencies = {
     ...recipe.packages,
-    ...(recipe.overlayPackages?.[overlay] ?? {}),
+    ...recipe.overlayPackages?.[overlay],
   };
   const expectedDevDependencies = {
     ...recipe.devDependencies,
-    ...(recipe.overlayDevDependencies?.[overlay] ?? {}),
+    ...recipe.overlayDevDependencies?.[overlay],
   };
-  for (const [name, version] of Object.entries(expectedDependencies)) {
-    assert.equal(pkg.dependencies?.[name], version, `dependency ${name}`);
+  for (const [name, declared] of Object.entries(expectedDependencies)) {
+    assert.equal(pkg.dependencies?.[name], declared, `dependency ${name}`);
   }
-  for (const [name, version] of Object.entries(expectedDevDependencies)) {
-    assert.equal(pkg.devDependencies?.[name], version, `devDependency ${name}`);
+  for (const [name, declared] of Object.entries(expectedDevDependencies)) {
+    assert.equal(pkg.devDependencies?.[name], declared, `devDependency ${name}`);
   }
   for (const [name, command] of Object.entries(recipe.scripts)) {
     assert.equal(pkg.scripts?.[name], command, `script ${name}`);

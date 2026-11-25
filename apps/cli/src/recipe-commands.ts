@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import {
   buildScaffoldPlan,
   ExitCode,
@@ -15,6 +16,7 @@ import {
 } from "@zealakit/core/internal";
 import type { Command } from "commander";
 import pc from "picocolors";
+
 import { failDiagnostic, printInfo, printValidationErrors } from "./output.js";
 
 type TemplateResult = { template: string; status: "ok" | "failed"; errors: string[] };

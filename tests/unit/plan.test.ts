@@ -5,12 +5,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   buildScaffoldPlan,
   PACKAGE_ROOT,
   planIsReady,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { noColorEnv } from "../helpers/env.js";
 
 const workRoot = fs.mkdtempSync(path.join(os.tmpdir(), "zealakit-plan-"));

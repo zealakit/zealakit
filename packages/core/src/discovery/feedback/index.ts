@@ -1,7 +1,4 @@
-export {
-  formatDiscoveryFeedbackStats,
-  formatDiscoveryFeedbackStatus,
-} from "./format.js";
+export { formatDiscoveryFeedbackStats, formatDiscoveryFeedbackStatus } from "./format.js";
 export {
   CONFIG_DIR_ENV,
   resolveDiscoveryFeedbackPaths,

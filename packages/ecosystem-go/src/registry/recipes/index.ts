@@ -1,5 +1,6 @@
 import type { RecipeConfig } from "@zealakit/core/ecosystem";
 import dockerGo from "./docker-go.js";
+import docsGo from "./docs-go.js";
 import githubActionsGo from "./github-actions-go.js";
 import goose from "./goose.js";
 import mongodb from "./mongodb.js";
@@ -14,6 +15,7 @@ export const RECIPE_LIST: RecipeConfig[] = [
   mysql,
   mongodb,
   dockerGo,
+  docsGo,
   githubActionsGo,
   goose,
   sqlc,

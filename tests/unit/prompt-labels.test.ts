@@ -1,7 +1,9 @@
 import "../register.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import { getRecipe, getTemplate } from "@zealakit/core/internal";
+
 import {
   defaultRecipeIdsForScope,
   formatSelectionSummary,
@@ -21,11 +23,14 @@ describe("prompt labels", () => {
   });
 
   it("includes recipe hints and dependsOn", () => {
+    const oxc = getRecipe("oxc");
+    assert.ok(oxc);
+    assert.match(recipeOptionHint(oxc), /recommended/i);
     const biome = getRecipe("biome");
     assert.ok(biome);
-    assert.match(recipeOptionHint(biome), /recommended/i);
+    assert.doesNotMatch(recipeOptionHint(biome), /recommended/i);
 
-    const withDeps = { ...biome, dependsOn: ["eslint"] };
+    const withDeps = { ...oxc, dependsOn: ["eslint"] };
     assert.match(recipeOptionHint(withDeps), /needs eslint/);
   });
 

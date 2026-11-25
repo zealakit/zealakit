@@ -4,12 +4,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, describe, it } from "node:test";
+
 import {
   applyAddPlan,
   planAddRecipes,
   scaffoldProject,
   withDefaultRecipes,
 } from "@zealakit/core/internal";
+
 import { renderGoWorkflow } from "../../packages/ecosystem-go/src/registry/recipes/github-actions-go.js";
 import { renderNodeWorkflow } from "../../packages/ecosystem-node/src/registry/recipes/github-actions-workflow.js";
 
@@ -51,6 +53,16 @@ jobs:
         run: docker build -t app .
 `,
     );
+  });
+
+  it("oxc runs the combined lint + format check", () => {
+    const yaml = renderNodeWorkflow({
+      packageManager: "npm",
+      templateId: "vite-react",
+      recipeIds: ["oxc"],
+    });
+    assert.match(yaml, /- name: Lint \+ format \(Oxc\)/);
+    assert.match(yaml, /run: npm run check/);
   });
 
   it("pnpm enables corepack and uses pnpm commands", () => {
