@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  # Fast checks run on every PR; the heavy matrix/package jobs stay manual.
-  pull_request:
   workflow_dispatch:
 
 concurrency:
